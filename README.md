@@ -1,2 +1,2 @@
-# EpiModel for High-Performance Computing
+# EpiModel HPC
 High-Performance Computing Extensions for EpiModel
