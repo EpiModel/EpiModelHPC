@@ -81,6 +81,8 @@ netsim_parallel <- function(x,
     par.type <- "single"
   }
   
+  top.pkg <- sessionInfo()$otherPkgs[[1]][[1]]
+  
   if (nsims == 1 | ncores == 1) {
     all <- netsim(x, param, init, control)
   } else {
@@ -94,7 +96,7 @@ netsim_parallel <- function(x,
     }
     
     out <- foreach(i = 1:nsims) %dopar% {
-      require(EpiModel)
+      require(top.pkg)
       control$nsims = 1
       control$currsim = i
       netsim(x, param, init, control)
