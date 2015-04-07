@@ -11,7 +11,7 @@ output:
 %\VignetteIndexEntry{EpiModel Introduction}
 -->
 
-```{r setup, echo=FALSE, message=FALSE}
+```{r setup, eval=FALSE, echo=FALSE, message=FALSE}
 library(EpiModel.hpc)
 ```
 
@@ -91,7 +91,7 @@ Contents of runsim.sh file:
 #!/bin/bash
 
 ### Specs
-#PBS -N sim$SIMNO
+#PBS -N MyProject
 #PBS -l nodes=1:ppn=16,mem=44gb,feature=16core,walltime=06:00:00
 #PBS -o <standard output directory>
 #PBS -e <standard error directory>
@@ -104,12 +104,12 @@ Contents of runsim.sh file:
 module load r_3.1.1
 
 ### App
-R CMD BATCH --vanilla sim$SIMNO.R sim$SIMNO.Rout
+R CMD BATCH --vanilla sim001.R sim001.Rout
 ```
 
-Contents of master.sh file:
+Running job at the command line:
 ```
-qsub -v SIMNO=001 runsim.sh
+qsub runsim.sh
 ```
 
 

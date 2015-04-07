@@ -1,4 +1,4 @@
-#' @export
+
 runsimHPC <- function(x, param, init, control, save.max = FALSE) {
   
   onHyak <- ifelse(Sys.info()[4] %in%

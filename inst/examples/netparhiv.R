@@ -1,5 +1,4 @@
 
-#' @export
 nethivpar <- function(x, type, param, init, control, merge = TRUE) {
   
   nsims <- control$nsims
