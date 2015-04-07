@@ -1,0 +1,20 @@
+---
+title: "EpiModel for High-Performance Computing"
+author: "Samuel M. Jenness"
+date: "Department of Epidemiology, University of Washington"
+output:
+  html_document:
+    theme: cerulean
+---
+<!--
+%\VignetteEngine{knitr::rmarkdown}
+%\VignetteIndexEntry{EpiModel Introduction}
+-->
+
+```{r, echo=FALSE}
+library(EpiModel.hpc)
+```
+
+<br>
+
+The **EpiModel.hpc** package provides extension functions for the core **EpiModel** software. 
