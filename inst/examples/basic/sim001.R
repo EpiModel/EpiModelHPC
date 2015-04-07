@@ -13,7 +13,7 @@ est <- netest(nw, formation, dissolution,
 param <- param.net(inf.prob = 0.01)
 init <- init.net(i.num = 50)
 control <- control.net(type = "SI", nsteps = 1000, verbose = FALSE,
-                       par.type = "mpi", nsims = 100, ncores = 100)
+                       par.type = "single", nsims = 16, ncores = 16)
 
 sim <- netsim_parallel(est, param, init, control)
 
