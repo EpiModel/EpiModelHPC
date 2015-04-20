@@ -119,13 +119,6 @@ netsim_par <- function(x,
       registerDoMPI(cl)
     }
 
-    if (!is.null(control$save.int)) {
-      dirname <- paste0("data/sim", control$simno)
-      if (file.exists(dirname) == FALSE) {
-        dir.create(dirname)
-      }
-    }
-
     if (type == "new") {
       out <- foreach(i = 1:nsims) %dopar% {
         for (j in seq_along(top.pkg)) {
