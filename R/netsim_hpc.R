@@ -53,6 +53,11 @@
 netsim_hpc <- function(x, param, init, control, 
                        save.min = TRUE, save.max = FALSE) {
   
+  # Set simno
+  if (is.null(control$simno)) {
+    control$simno <- 1
+  }
+  
   # Check for CP data
   cpDir <- check_cp(simno = control$simno)
   type <- ifelse(is.null(cpDir), "new", "cp")
