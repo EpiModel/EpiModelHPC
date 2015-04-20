@@ -107,16 +107,13 @@ netsim_par <- function(x,
   if (nsims == 1 | ncores == 1) {
     out <- netsim(x, param, init, control)
   } else {
-    suppressPackageStartupMessages(require(foreach))
     cluster.size <- min(nsims, ncores)
     if (par.type == "single") {
-      suppressPackageStartupMessages(require(doParallel))
-      registerDoParallel(cluster.size)
+      doParallel::registerDoParallel(cluster.size)
     }
     if (par.type == "mpi") {
-      suppressPackageStartupMessages(require(doMPI))
-      cl <- startMPIcluster(cluster.size)
-      registerDoMPI(cl)
+      cl <- doMPI::startMPIcluster(cluster.size)
+      doMPI::registerDoMPI(cl)
     }
 
     if (type == "new") {
@@ -162,7 +159,6 @@ netsim_par <- function(x,
 
     if (par.type == "mpi") {
       doMPI::closeCluster(cl)
-      mpi.finalize()
     }
 
     if (merge == TRUE) {
