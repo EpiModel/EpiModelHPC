@@ -47,13 +47,15 @@ This function performs the following tasks:
         "data/sim<simno>".
   \item Set a save interval of 100 time steps if one does not already exist
         on the control settings.
+  \item Resets the initialize module function to \code{\link{initialize_cp}}
+        if in checkpoint state.
   \item Run the simulation, either new or checkpointed, with a call to
         \code{\link{netsim_par}}.
   \item Save the completed simulation data, using the functionality of
         \code{\link{savesim}}.
-  \item Removes any files in the "verb/" subdirectory, which is typically
+  \item Remove any files in the "verb/" subdirectory, which is typically
         used to store incremental model tracking text files.
-  \item Removes the checkpointed data and file directory created in step 1.
+  \item Remove the checkpointed data and file directory created in step 1.
 }
 
 Note that the \code{x} argument must specify a \strong{file name} in a
