@@ -16,35 +16,46 @@ class \code{netsim}.}
 
 \item{init}{Initial conditions, as an object of class \code{init.net}.}
 
-\item{control}{Control settings, as an object of class
-\code{control.net}.}
+\item{control}{Control settings, as an object of class \code{control.net}.}
 
 \item{type}{Either \code{"new"} if running a new or restarted \code{netsim}
-simulation or \code{"cp"} if a checkpoint run is restarted. This would
-typically be set automatically by \code{\link{netsim_hpc}}.}
+simulation or \code{"cp"} if a checkpoint run is restarted.}
 
 \item{merge}{If \code{TRUE}, merge parallel simulations into one \code{netsim}
 object after simulation.}
 
-\item{required.pkgs}{}
+\item{required.pkgs}{A character vector of R packages that must be loaded
+       for the simulation, necessary for MPI-based parallel simulations. If
+       \code{NULL}, this will load \code{EpiModel} and the first package package
+       listed in the "other attached packages" section of \code{sessionInfo()}.}
 }
 \description{
 Simulates stochastic network epidemic models for infectious
              disease in parallel.
 }
 \details{
-This is an experimental implementation of the \code{netsim} function
-that runs model simulations in parallel, using the \code{doParallel} and
-\code{doMPI} R packages.
+This function facilitates running stochastic network models in parallel, with
+the intended use on linux-based high-performance computing systems. Parallel
+runs may be conducted either with multi-core, single-node systems or multiple
+node systems running MPI.
 
-To run models in parallel on a single node, add an argument to the control
-settings called \code{ncores} that is equal to the number of parallel cores
-the simulations should be initiated on.
+To run models in parallel using this function, it is necessary to add two
+parameters to the control settings specified in \code{control.net}. A parameter
+called \code{ncores} should be added that specifies the number of parallel
+cores the simulations should use. Second, a \code{par.type} parameter should
+equal either \code{"single"} to run on a single-node or \code{"mpi"} to run
+on multiple nodes using MPI.
 
-Also available is an MPI option, called by adding a control argument
-\code{par.type} set to \code{"mpi"}. This requires a local MPI installation on
-the computing cluster, and the run of a bash script with an mpirun call
-containing the R script with the \code{netsim_par} call.
+Running models in an MPI framework depends on correctly installed MPI
+applications, such as Open MPI. One way to test this is by installing and
+loading the \code{Rmpi} package. In fact, \code{netsim_par} uses the functionality
+of the \code{doMPI} package, which depends on \code{Rmpi}.
+
+The \code{type} argument here specifies whether the parallel simulations should
+load checkpointed data. Checkpointing is when simulation data are periodically
+saved in the case that a simulation job is cancelled and must be rerun from
+some intermediate time step. This parameter is typically set automatically
+by the \code{netsim_hpc} function, so would not need to be changed manually.
 }
 \examples{
 \dontrun{
