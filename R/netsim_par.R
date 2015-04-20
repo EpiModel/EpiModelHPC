@@ -8,7 +8,6 @@
 #'        class \code{netsim}.
 #' @param param Model parameters, as an object of class \code{param.net}.
 #' @param init Initial conditions, as an object of class \code{init.net}.
-#' @param control Control settings, as an object of class
 #'        \code{control.net}.
 #' @param type Either \code{"new"} if running a new or restarted \code{netsim} 
 #'        simulation or \code{"cp"} if a checkpoint run is restarted. This would
@@ -86,6 +85,9 @@ netsim_par <- function(x,
 
   if (is.null(required.pkgs)) {
     top.pkg <- sessionInfo()$otherPkgs[[1]]$Package
+    if (("EpiModel" %in% top.pkg) == FALSE) {
+      top.pkg <- c(top.pkg, "EpiModel")
+    }
   } else {
     top.pkg <- required.pkgs
   }
@@ -114,7 +116,9 @@ netsim_par <- function(x,
 
     if (type == "new") {
       out <- foreach(i = 1:nsims) %dopar% {
-        library(top.pkg, character.only = TRUE)
+        for (j in seq_along(top.pkg)) {
+          library(top.pkg[j], character.only = TRUE)
+        }
         control$nsims = 1
         control$currsim = i
         netsim(x, param, init, control)
@@ -124,7 +128,9 @@ netsim_par <- function(x,
     if (type == "cp") {
       xfn <- x
       out <- foreach(i = 1:nsims) %dopar% {
-        library(top.pkg, character.only = TRUE)
+        for (j in seq_along(top.pkg)) {
+          library(top.pkg[j], character.only = TRUE)
+        }
         control$nsims = 1
         control$currsim = i
         fn <- list.files(xfn, pattern = paste0("sim", i, ".cp.rda"), full.names = TRUE)
