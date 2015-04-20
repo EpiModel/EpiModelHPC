@@ -1,5 +1,31 @@
 
+#' @title Checks for Checkpointed Rdata Files
+#'
+#' @description Checks whether there are checkpointed data files in a specific
+#'              format given a simulation number.
+#'
+#' @param simno Simulation number for current model simulation, typically stored
+#'        in \code{control$simno}.
+#' 
+#' @details
+#' This function checks whether checkpointed data files are available for loading.
+#' Checkpointed data files are incrementally saved during the simulation and 
+#' loaded when a simulation job has been cancelled and restarted. This is done
+#' automatically within the \code{\link{netsim_hpc}} function.
+#' 
+#' Checkpointed data files are searched for in a specific subdirectory relative
+#' to the current working directory: \code{data/sim<x>}, where \code{<x>} is the
+#' \code{simno} value. Within that directory \code{check_cp} looks for files
+#' ending \code{.cp.rda}, which is the standard checkpoint data file name.
+#' 
+#' The files are tested to see that they are of similar size, meaning that no
+#' file is less than 50% of the average file size of the others. Smaller size
+#' files usually indicates that the interim file saving was interrupted. If the
+#' files exist and are of correct size, a full directory name is returned, else
+#' \code{NULL} is returned.
+#' 
 #' @export
+#' 
 check_cp <- function(simno) {
   
   out <- FALSE
