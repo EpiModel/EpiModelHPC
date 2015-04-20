@@ -1,4 +1,5 @@
 
+#' @export
 runsimHPC <- function(x, param, init, control, save.max = FALSE) {
   
   onHyak <- ifelse(Sys.info()[4] %in%
@@ -40,6 +41,13 @@ runsimHPC <- function(x, param, init, control, save.max = FALSE) {
   if (length(fn) > 0) {
     cat("Removing verbose txt files ... \n ")
     unlink(fn)
+  }
+  
+  if (!is.null(control$save.int) & control$keep.cpdata == FALSE) {
+    dirname <- paste0("data/sim", control$simno)
+    if (file.exists(dirname) == TRUE) {
+      unlink(dirname, recursive = TRUE)
+    }
   }
   
 }
