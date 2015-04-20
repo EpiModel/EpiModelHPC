@@ -1,10 +1,7 @@
 
 #' @export
-runsimHPC <- function(x, param, init, control, save.max = FALSE) {
+netsim_hpc <- function(x, param, init, control, save.max = FALSE) {
   
-  onHyak <- ifelse(Sys.info()[4] %in%
-                     c(paste0("n", 1:14), "union", "libra"),
-                   FALSE, TRUE)
   cpDir <- check_cp(simno = control$simno)
   type <- ifelse(is.null(cpDir), "new", "cp")
   if (type == "cp") {
@@ -29,11 +26,7 @@ runsimHPC <- function(x, param, init, control, save.max = FALSE) {
   }
   
   cat("Simulation complete. Saving data ... \n")
-  if (onHyak == TRUE) {
-    savesim(sim, send.email = FALSE, save.max = save.max)
-  } else {
-    savesim(sim, send.email = TRUE, save.max = save.max)
-  }
+  savesim(sim, send.email = FALSE, save.max = save.max)
   
   fn <- list.files("verb/",
                    pattern = paste0("sim", control$simno, ".*"),

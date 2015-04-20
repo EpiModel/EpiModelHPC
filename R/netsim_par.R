@@ -10,7 +10,9 @@
 #' @param init Initial conditions, as an object of class \code{init.net}.
 #' @param control Control settings, as an object of class
 #'        \code{control.net}.
-#' @param type
+#' @param type Either \code{"new"} if running a new or restarted \code{netsim} 
+#'        simulation or \code{"cp"} if a checkpoint run is restarted. This would
+#'        typically be set automatically by \code{\link{netsim_hpc}}.
 #' @param merge If \code{TRUE}, merge parallel simulations into one \code{netsim}
 #'        object after simulation.
 #' @param required.pkgs
