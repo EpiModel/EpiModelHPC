@@ -10,8 +10,10 @@
 #' @param init Initial conditions, as an object of class \code{init.net}.
 #' @param control Control settings, as an object of class
 #'        \code{control.net}.
+#' @param type
 #' @param merge If \code{TRUE}, merge parallel simulations into one \code{netsim}
 #'        object after simulation.
+#' @param required.pkgs
 #'
 #' @details
 #' This is an experimental implementation of the \code{netsim} function
@@ -69,68 +71,9 @@ netsim_par <- function(x,
                        param,
                        init,
                        control,
+                       type = "new",
                        merge = TRUE,
                        required.pkgs = NULL) {
-
-  nsims <- control$nsims
-  ncores <- control$ncores
-  par.type <- control$par.type
-  if (is.null(par.type)) {
-    par.type <- "single"
-  }
-
-  if (is.null(required.pkgs)) {
-    top.pkg <- sessionInfo()$otherPkgs[[1]]$Package
-  } else {
-    top.pkg <- required.pkgs
-  }
-
-
-  if (nsims == 1 | ncores == 1) {
-    all <- netsim(x, param, init, control)
-  } else {
-    cluster.size <- min(nsims, ncores)
-    if (par.type == "single") {
-      doParallel::registerDoParallel(cluster.size)
-    }
-    if (par.type == "mpi") {
-      cl <- doMPI::startMPIcluster(cluster.size)
-      doMPI::registerDoMPI(cl)
-    }
-
-    out <- foreach(i = 1:nsims) %dopar% {
-      library(top.pkg, character.only = TRUE)
-      control$nsims = 1
-      control$currsim = i
-      netsim(x, param, init, control)
-    }
-
-    if (par.type == "mpi") {
-      doMPI::closeCluster(cl)
-    }
-
-    if (merge == TRUE) {
-      all <- out[[1]]
-      for (i in 2:length(out)) {
-        all <- merge(all, out[[i]])
-      }
-    } else {
-      all <- out
-    }
-  }
-
-  return(all)
-}
-
-
-#' @export
-netsim_par_cp <- function(x,
-                          param,
-                          init,
-                          control,
-                          type,
-                          merge = TRUE,
-                          required.pkgs = NULL) {
 
   nsims <- control$nsims
   ncores <- control$ncores
@@ -218,12 +161,6 @@ netsim_par_cp <- function(x,
       all <- out
     }
 
-    if (!is.null(control$save.int) & control$keep.cpdata == FALSE) {
-      dirname <- paste0("data/sim", control$simno)
-      if (file.exists(dirname) == TRUE) {
-        unlink(dirname, recursive = TRUE)
-      }
-    }
   }
 
   return(all)
