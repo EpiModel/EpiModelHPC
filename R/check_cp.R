@@ -1,4 +1,5 @@
 
+#' @export
 check_cp <- function(simno) {
   
   out <- FALSE
