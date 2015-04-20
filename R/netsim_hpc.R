@@ -93,6 +93,7 @@ netsim_hpc <- function(x, param, init, control,
   # Replace initialization module if CP
   if (type == "cp") {
     control$initialize.FUN <- initialize.cp
+    control$skip.check <- TRUE
   }
 
   # Run a new simulation
