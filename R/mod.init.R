@@ -26,7 +26,7 @@
 initialize.cp <- function(x, param, init, control, s) {
 
   x$param <- param
-  x$param$modes <- ifelse(x$nw[[1]] %n% "bipartite", 2, 1)
+  x$param$modes <- ifelse(x$nw %n% "bipartite", 2, 1)
   x$init <- init
   x$control <- control
 
