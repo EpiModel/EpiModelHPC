@@ -3,6 +3,7 @@
 export(check_cp)
 export(netsim_hpc)
 export(netsim_par)
+export(save_cpdata)
 export(savesim)
 import(EpiModel)
 import(doParallel)

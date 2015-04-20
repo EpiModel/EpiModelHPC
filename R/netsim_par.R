@@ -1,3 +1,4 @@
+
 #' @title Stochastic Network Models in Parallel
 #'
 #' @description Simulates stochastic network epidemic models for infectious
