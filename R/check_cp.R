@@ -16,7 +16,11 @@
 #' Checkpointed data files are searched for in a specific subdirectory relative
 #' to the current working directory: \code{data/sim<x>}, where \code{<x>} is the
 #' \code{simno} value. Within that directory \code{check_cp} looks for files
-#' ending \code{.cp.rda}, which is the standard checkpoint data file name.
+#' ending \code{.cp.rda}, which is the standard checkpoint data file name. Note
+#' that these standards for file directory and name are consistent with the
+#' \code{\link{save_cpdata}} module function. If running simulations using the
+#' \code{\link{netsim_hpc}} function, this data saving module will automatically
+#' be inserted in the workflow of a simulation.
 #' 
 #' The files are tested to see that they are of similar size, meaning that no
 #' file is less than 50% of the average file size of the others. Smaller size
