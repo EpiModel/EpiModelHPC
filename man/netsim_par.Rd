@@ -92,5 +92,4 @@ sims <- netsim_par(est, param, init, control)
 
 }
 }
-\keyword{model}
 

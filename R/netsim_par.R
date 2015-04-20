@@ -42,7 +42,6 @@
 #' some intermediate time step. This parameter is typically set automatically
 #' by the \code{netsim_hpc} function, so would not need to be changed manually.
 #'
-#' @keywords model
 #' @export
 #'
 #' @examples
