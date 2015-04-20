@@ -1,5 +1,30 @@
 
+#' @title Save Simulation Data from Stochastic Network Models
+#'
+#' @description Saves an Rdata file containing stochastic network model output
+#'              from \code{netsim} function calls with time-stamped file names.
+#'
+#' @param sim An \code{EpiModel} object of class \code{netsim} to be saved to an
+#'        Rdata file.
+#' @param dataf If \code{TRUE}, saves data file within a subfolder called "data"
+#'        relative to the current working directory, otherwise saves file to 
+#'        current working directory. A data folder will be created if one does 
+#'        not already exist.
+#' @param save.min If \code{TRUE}, saves a small version of the \code{netsim}
+#'        object in which large elements of the data structure like the network
+#'        object and the transmission data frame are removed. The resulting
+#'        name for this small file will have ".min" appended at the end.
+#' @param save.max If \code{TRUE}, saves the full \code{netsim} object without
+#'        any deletions.
+#' 
+#' @details
+#' This function provides an automated method for saving a time-stamped Rdata
+#' file containing the simulation number of a stochastic network model run
+#' with \code{netsim}. This is used by default by the \code{\link{network_hpc}}
+#' function.
+#' 
 #' @export
+#' 
 savesim <- function(sim, 
                     dataf = TRUE,
                     save.min = TRUE,
