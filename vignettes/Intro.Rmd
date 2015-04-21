@@ -8,26 +8,29 @@ output:
 ---
 <!--
 %\VignetteEngine{knitr::rmarkdown}
-%\VignetteIndexEntry{EpiModel Introduction}
+%\VignetteIndexEntry{EpiModel.hpc Tutorial}
 -->
-
-```{r setup, eval=FALSE, echo=FALSE, message=FALSE}
-library(EpiModel.hpc)
-```
 
 <br>
 
 
 ## 1. Introduction
-The **EpiModel.hpc** package provides high-performance computing (HPC) extensions to the **EpiModel** software (http://epimodel.org). EpiModel supports the simulation of stochastic network models for infectious disease transmission dynamics based on the statistical framework of temporal exponential random graph models (ERGMs). HPC systems may be needed for research-level modeling over networks because ERGM-based model estimation and simulation is computationally intensive in terms of both CPU and memory utilization. 
+The **EpiModel.hpc** package provides high-performance computing (HPC) extensions to the **EpiModel** software (http://epimodel.org). EpiModel supports the simulation of stochastic network models for infectious disease transmission dynamics based on the statistical framework of temporal exponential random graph models (ERGMs). HPC systems may be needed for research-level modeling over networks because ERGM-based model estimation and simulation is computationally intensive with respect to both CPU and memory utilization. 
 
-This tutorial provides background and examples of how to use EpiModel.hpc. This software package was designed to run on MOAB/Torque HPC systems in which there is a job scheduler that uses standard PBS-based shell scripts. Elements of the package may also apply to less complex HPC systems, as the core functionality of this extension package is for MPI-based parallel simulation of models over multiple cores and nodes on an HPC.
+This tutorial provides background and examples of how to use **EpiModel.hpc** for large-scale network simulations. This software was designed to be run on Linux-based HPC systems with a Torque job scheduler that uses standard PBS-based shell scripts. However, elements of the software may also apply to less complex HPC systems, as the core functionality of this extension package is for MPI-based parallel simulation of models over multiple cores and nodes on an HPC.
 
-The structure of this tutorial is as follows. We first describe 
+To get started, we load the **EpiModel.hpc** library:
+```{r setup, eval=FALSE, message=FALSE}
+library(EpiModel.hpc)
+```
+
+This package has dependencies for **EpiModel** itself, so the core functionality of that package and the related Statnet software suite will also be loaded.
 
 
-## 2. A Basic Parallel Simulation
+## 2. A Basic Simulation in Parallel
+To get started, we demonstrate the functionality of `netsim_par`, which allows for the parallel simulation of stochastic network models that would ordinarily be run sequentially with the `netsim` function in **EpiModel**. 
 
+The following code initializes a network and fits a basic edges-only ERGM using the `netest` function. Readers without any prior exposure to estimating and simulating network models in **EpiModel** should consult the [Basic Network Models](http://statnet.github.io/tut/BasicNet.html) tutorial first.
 ```{r basic1, eval=FALSE}
 nw <- network.initialize(n = 1000, directed = FALSE)
 formation <- ~ edges
@@ -35,35 +38,59 @@ target.stats <- 500
 dissolution <- ~ offset(edges)
 duration <- 50
 coef.diss <- dissolution_coefs(dissolution, duration)
-
 est <- netest(nw, formation, dissolution,
               target.stats, coef.diss)
-
-param <- param.net(inf.prob = 0.25)
-init <- init.net(i.num = 50)
-
-control <- control.net(type = "SI", nsteps = 100, verbose = FALSE,
-                       par.type = "single", nsims = 4, ncores = 4)
-
-sim <- netsim_parallel(est, param, init, control)
 ```
+
+The epidemic model will be for an SI disease in an open population. This requires specifying parameters for the infection probability and vital dynamics rates, along with the initial number infected.
+```{r basic2, eval=FALSE}
+param <- param.net(inf.prob = 0.25, b.rate = 0.001, 
+                   ds.rate = 0.001, di.rate = 0.001)
+init <- init.net(i.num = 50)
+```
+
+We want to simulate this model 10 times over 250 time steps. The control settings look similar to standard settings, but we have added two arguments: `par.type` and `ncores`. The `par.type` argument sets whether this should be a single-node, multicore setup (`"single"`) or a multiple-node, MPI-based setup (`"mpi"`). The single node setup will run on any computing system with multiple cores, whereas the MPI setup requires an installation of MPI.
+```{r basic3, eval=FALSE}
+control <- control.net(type = "SI", nsteps = 250, verbose = FALSE,
+                       nsims = 10, par.type = "single", ncores = 10)
+```
+
+To simulate the model in parallel, use the `netsim_par` function rather than the `netsim` function in **EpiModel**. Everything with respect to parallelization will be handled internally by **EpiModel.hpc**. The output object `sim` may be analyzed just as one would for a standard sequential simulation.
+```{r basic4, eval=FALSE}
+sim <- netsim_par(est, param, init, control)
+```
+
+Note that the code above would not normally be executed in interactive mode, in which commands are executed manually within the console window, but in batch mode. To the above script could be named `sim1.R` and executed on the command line with:
+```{r, basic5, eval=FALSE}
+R CMD BATCH sim1.R
+```
+
+There are many variations and options to submitting batch jobs in R, which will be largely outside the scope of this tutorial.
 
 
 ## 3. Parallelization with MPI
+**EpiModel.hpc** also supports parallelization in an MPI framework, in which data are allowed to be passed between nodes in an HPC cluster. There are many potential options to running jobs with MPI, and we highlight here a basic form that we have found useful in our work.
 
+To utilize MPI, it is necessary to specify that the `par.type` argument accordingly in the `control.net` settings. This parameterization will allow for 25 simulations to be run in parallel across as many nodes as needed; note that there are some underlying MPI job distribution options of how this work is distributed across the nodes.
 ```{r mpi1, eval=FALSE}
 control <- control.net(type = "SI", nsteps = 100, verbose = FALSE,
                        par.type = "mpi", nsims = 25, ncores = 25)
-
-sim <- netsim_parallel(est, param, init, control)
+sim <- netsim_par(est, param, init, control)
 ```
 
+The model may be simulating using the same function call as in a single-node parallelization, but the command line execution must use `mpirun`:
+```{r mpi2, eval=FALSE}
+mpirun -np 1 R --slave CMD BATCH --vanilla sim1.R
+```
 
 
 ## 4. Running Parallel on Torque
+Torque is a standard job scheduling software platform for many scientific HPC systems. It has the benefit of standardized resource allocation for submitting large-scale simulation jobs like ours. If your HPC is not running Torque, this section may not be relevant.
 
-Contents of sim001.R file:
-```
+### A Starting Example
+To run jobs via Torque, it is necessary to build three layers of data commands. The first layer is the underlying R source file to run the simulation, as we already showed above. Here, we show it again in the context of a single-node parallelization. The following code chunk would be the contents of a file, `sim001.R`, containing the source code to run the network model in parallel.
+
+```{r sim1, eval=FALSE}
 library(EpiModel.hpc)
 
 nw <- network.initialize(n = 10000, directed = FALSE)
@@ -72,22 +99,20 @@ target.stats <- 5000
 dissolution <- ~ offset(edges)
 duration <- 50
 coef.diss <- dissolution_coefs(dissolution, duration)
-
 est <- netest(nw, formation, dissolution,
               target.stats, coef.diss)
 
 param <- param.net(inf.prob = 0.01)
 init <- init.net(i.num = 50)
 control <- control.net(type = "SI", nsteps = 1000, verbose = FALSE,
-                       par.type = "single", nsims = 16, ncores = 16)
+                       par.type = "single", nsims = 10, ncores = 10)
                        
-sim <- netsim_parallel(est, param, init, control)
-
+sim <- netsim_par(est, param, init, control)
 save(sim, file = "sim.rda")
 ```
 
-Contents of runsim.sh file:
-```
+The second layer is a shell script, `runsim.sh`, that contains the necessary Torque job directives. This is a bash shell script with the following specifications. These include things like the resources needed, as defined in the `-l` directive, which may vary from HPC system to system. Our HPC system requires specification of the number of nodes, processors per node, memory, and walltime (maximum processing time) for a job.
+```{r runsim, eval=FALSE}
 #!/bin/bash
 
 ### Specs
@@ -99,7 +124,6 @@ Contents of runsim.sh file:
 #PBS -m ae
 #PBS -M <email address for notifications>
 
-
 ### Modules
 module load r_3.1.1
 
@@ -107,15 +131,98 @@ module load r_3.1.1
 R CMD BATCH --vanilla sim001.R sim001.Rout
 ```
 
-Running job at the command line:
-```
+The software for R is loaded using the module command in the shell script. If using MPI, then the relevent MPI module would also need to be loaded. Finally, the application is run using the `R CMD BATCH` notation as demonstrated above. 
+
+At the command line terminal window, one executes a Torque job scheduling request most simply by using the `qsub` command with the shell script file name.
+```{r qsub, eval=FALSE}
 qsub runsim.sh
 ```
 
+### Environmental Variables
+If one has 10 different R script files to run, it may be easier to pass some environment variables that are read through the software layers. For example, let's say that the R script files are names sim1.R to sim10.R in sequence. In that case, it is possible to run 10 calls to qsub as follows, using the `-v` argument to pass an environmental parameter into `runsim.sh`.
+```{r qsub2, eval=FALSE}
+qsub -v SIMNO=1 runsim.sh
+...
+qsub -v SIMNO=10 runsim.sh
+```
+
+Then this would be read in `runsim.sh` as follows. Now a separate `runsim.sh` file is not needed to be edited for each R script file. This one shell script file can launch all 10 of those files.
+```{r runsim2, eval=FALSE}
+#!/bin/bash
+
+### Specs
+#PBS -N sim$SIMNO
+#PBS -l nodes=1:ppn=16,mem=44gb,feature=16core,walltime=06:00:00
+#PBS -o <standard output directory>
+#PBS -e <standard error directory>
+#PBS -d <data directory>
+#PBS -m ae
+#PBS -M <email address for notifications>
+
+### Modules
+module load r_3.1.1
+
+### App
+R CMD BATCH --vanilla sim$SIMNO.R sim$SIMNO.Rout
+```
+
+
+### Array Jobs
+Given some shared memory complications with MPI, we have found it more efficient to run our large-scale simulations using several calls to the same R script file. For example, instead of running one 100 simulation job on 7 16-core nodes, it is possible to run 7 sub-jobs and merge the data externally at the end. This is made possible through the array jobs specifications in Torque. To do this in our example, it is necessary to edit all three layers of the software.
+
+At the top layer, one would now execute the qsub function with a `-t` parameter. This tells `qsub` to execute the `runsim.sh` file over multiple instances, or 7 times in our case.
+```{r qsub3, eval=FALSE}
+qsub -t 1-7 -v SIMNO=1 runsim.sh
+```
+
+In the `runsim.sh` file, one uses this data as follows. The final line calling the application would now call on the `PBS_ARRAYID` environmental variable, which is what the `-t` argument sets in the layer above. This variable and the `SIMNO` variable are then used to reference input and output. The command below also passes an environmental variable down into the R script with the `-$SIMNO.${PBS_ARRAYID}` input: this would have the effect of passing a simulation number of 1.1 down for the first instance, 1.2 for the second and so on.
+```{r runsim3, eval=FALSE}
+R CMD BATCH --vanilla -$SIMNO.${PBS_ARRAYID} sim$SIMNO.R sim$SIMNO.${PBS_ARRAYID}.Rout
+```
+
+In the R script file, `sim1.R`, we pull that environmental variable and feed it into the control settings. The `commandArgs` processes that variable and we then input it as an argument into `control.net`.
+```{r rscript3, eval=FALSE}
+library(EpiModel.hpc)
+
+args <- commandArgs(FALSE)
+args <- args[length(args)]
+fsimno <- sub("-", "", args)
+print(fsimno)
+
+nw <- network.initialize(n = 10000, directed = FALSE)
+formation <- ~ edges
+target.stats <- 5000
+dissolution <- ~ offset(edges)
+duration <- 50
+coef.diss <- dissolution_coefs(dissolution, duration)
+est <- netest(nw, formation, dissolution,
+              target.stats, coef.diss)
+
+param <- param.net(inf.prob = 0.01)
+init <- init.net(i.num = 50)
+control <- control.net(simno = fsimno,
+                       type = "SI", nsteps = 1000, verbose = FALSE,
+                       par.type = "single", nsims = 10, ncores = 10)
+                       
+sim <- netsim_par(est, param, init, control)
+savesim(sim)
+```
+
+Once the simulation has completed running, we use the `savesim` function to save the Rdata file containing the `sim` object in a standardized way that includes a time-stamp on the file and also the reference to the `simno` passed down from the top.
+
+Note that this sort of array specification could also have been used to execute the 10 R script files, if instead of using the `PBS_ARRAYID` variable to create a subjob ID we have used it in place of the `SIMNO` environmental variable we passed with `-v`.
+
 
 ## 5. Checkpointing
+Checkpointing is defined as incrementally saving data to disk for the purposes of reloading it in the case that a simulation job is canceled and restarted. This canceling and restarting occurs on our HPC system when using a "backfill queue": one may execute jobs to run over the entire HPC system, not just the nodes that are owned by our local research group. The "catch" is that when the owners of those nodes submit jobs on them, your backfill job is preempted: it is canceled, requeued, and will restart in the next available backfill slot. Checkpointing is required so that a job restarts not at time 0 but at some intermediate point at which the data have been saved.
 
+There are many different methods for checkpointing, and we have designed one specifically for **EpiModel**, given its use of time-series data in which a simulation may be restarted where it stopped at any time step. The processes of checkpointing in EpiModel is defined in the function `netsim_hpc`. In short, that function wraps `netsim_par` to run parallel simulations with checkpointing. Within the workflow of the simulation, a checkpoint data saving module will be inserted that saves the data after every 100 time steps (this may be changed with a `save.int` control parameter). The data structure for this intermediate data will be created when the function runs. When a simulation job starts, `netsim_par` will check for the presence of any checkpointed data, and if it is there, will restart the simulation from it. If no checkpointed data exist, the simulation will start fresh. Once the simulation has completed, the data structure will be deleted.
 
+To use this form of automatic checkpointing, replace the call to `netsim_par` with a similar call to `netsim_hpc`. The first argument now must be a character vector with the file location of the fitted network model object (the output of `netest`). Additionally, instead of assinging this to a `sim` data element and then saving it using `save`, `netsim_hpc` handles all of this internally using the `savesim` function. 
+```{r netsimhpc, eval=FALSE}
+netsim_hpc("est.rda", param, init, control)
+```
 
-## 6. Array Jobs
+Checkpointing may be useful even in HPC systems in which there is no chance of job cancellation. It allows for restarting of long-running simulations that may have stopped due to software errors, or related issues. But if one is not concerned about checkpointing, it may be more straightforward to use the `netsim_par` function directly.
 
+<br>
