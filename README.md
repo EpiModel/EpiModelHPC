@@ -12,5 +12,5 @@ While there are many potential HPCs systems, this software is developed with the
 This software is currently hosted on Github only. It can be installed using the <a href="https://github.com/hadley/devtools" target="_blank">devtools package</a>:
 ```r
 if (!require("devtools")) install.packages("devtools")
-devtools::install_github("statnet/EpiModel.hpc")
+devtools::install_github("statnet/EpiModel.hpc", build_vignettes = TRUE)
 ```
