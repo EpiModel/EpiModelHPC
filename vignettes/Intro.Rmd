@@ -67,7 +67,10 @@ It is not expected that the code above be executed in interactive mode, in which
 R CMD BATCH sim1.R
 ```
 
-There are many variations and options to submitting batch jobs in R, which are outside the scope of this tutorial.
+There are many variations and options to submitting batch jobs in R, which are outside the scope of this tutorial. The files for this simulation example may be found in this directory of your system.
+```{r sf1, eval=FALSE}
+system.file("examples", "basic", package = "EpiModel.hpc")
+```
 
 
 ## 3. Parallelization with MPI
@@ -85,12 +88,17 @@ The model may be simulating using the same function call as in a single-node par
 mpirun -np 1 R --slave CMD BATCH --vanilla sim1.R
 ```
 
+The files for this simulation example may be found in this directory of your system.
+```{r sf2, eval=FALSE}
+system.file("examples", "basicmpi", package = "EpiModel.hpc")
+```
+
 
 ## 4. Job Submissions on Torque
 Torque is a standard computational job scheduling software platform used by many scientific HPC systems. It has the benefit of a systematic resource allocation method for submitting large-scale simulation jobs. If your HPC is not running Torque, this section may not be relevant.
 
 ### A Starting Example
-To run jobs via Torque, it is necessary to build three layers of scripts containing data commands. *Layer 1* is the underlying R script file to run the simulation, as demonstrated above. The following code chunk is one complete R script file, `sim001.R`, containing the source code to run the network model in parallel.
+To run jobs via Torque, it is necessary to build three layers of scripts containing data commands. *Layer 1* is the underlying R script file to run the simulation, as demonstrated above. The following code chunk is one complete R script file, `sim1.R`, containing the source code to run the network model in parallel.
 ```{r sim1, eval=FALSE}
 library(EpiModel.hpc)
 
@@ -129,7 +137,7 @@ save(sim, file = "sim.rda")
 module load r_3.1.1
 
 ### App
-R CMD BATCH --vanilla sim001.R sim001.Rout
+R CMD BATCH --vanilla sim1.R sim1.Rout
 ```
 
 The software for R is loaded using the `module` command in the script. If using MPI, then the applicable MPI module would also need to be loaded. Finally, the R script is run using the `R CMD BATCH` method as demonstrated earlier. 
@@ -140,6 +148,12 @@ qsub runsim.sh
 ```
 
 Note that this last layer can included in its own bash shell script if many of these qsub commands need to be run, rather than entering them manually.
+
+The files for this simulation example may be found in this directory of your system.
+```{r sf3, eval=FALSE}
+system.file("examples", "torque", package = "EpiModel.hpc")
+```
+
 
 ### Environmental Variables
 If one has many different R script files to run, it may be easier to pass environment variables that are read through the software layers. Let's say, for example, that we have 3 different R scripts, each with different parameters, with the files named `sim1.R` to `sim3.R`, in sequence. In *Layer 3*, it is possible to run 3 calls to `qsub` using the `-v` argument to pass an environmental variable into `runsim.sh`.
@@ -167,6 +181,11 @@ module load r_3.1.1
 
 ### App
 R CMD BATCH --vanilla sim$SIMNO.R sim$SIMNO.Rout
+```
+
+The files for this simulation example may be found in this directory of your system.
+```{r sf4, eval=FALSE}
+system.file("examples", "envvars", package = "EpiModel.hpc")
 ```
 
 
@@ -215,6 +234,11 @@ Once the simulation has completed, we use the `savesim` function to save the Rda
 
 Note that this sort of array specification could also have been used to execute the 3 R script files, if instead of using the `PBS_ARRAYID` variable to create a subjob ID, we used it in place of the `SIMNO` environmental variable we had passed down with the `-v` parameter.
 
+The files for this simulation example may be found in this directory of your system.
+```{r sf5, eval=FALSE}
+system.file("examples", "array", package = "EpiModel.hpc")
+```
+
 
 ## 5. Checkpointing
 Checkpointing is the practice of incrementally saving data to disk for the purposes of reloading it in the case that a simulation job is canceled and restarted. Canceling and restarting occurs on our HPC system reguarly when using a "backfill queue": one may execute jobs to run over the entire HPC system, not just the nodes that are owned by our local research group, but the "catch" is that when the owners of those nodes submit jobs on them, one's backfill job is preempted. Preemption means that a job is canceled, requeued, and restarts in the next available backfill slot. Checkpointing is required so that when preemption happens, a job restarts not at time 0 but at some intermediate time point.
@@ -229,5 +253,11 @@ netsim_hpc("est.rda", param, init, control)
 ```
 
 Checkpointing may be useful even in HPC systems in which there is little chance of routine job preemption. It allows for restarting of long-running simulations that may have stopped due to internal software errors or related issues. If one is not concerned about checkpointing, however, it may be more straightforward to use the `netsim_par` function directly.
+
+The files for this simulation example may be found in this directory of your system.
+```{r sf6, eval=FALSE}
+system.file("examples", "checkpoint", package = "EpiModel.hpc")
+```
+
 
 <br>
