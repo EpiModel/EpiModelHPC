@@ -1,6 +1,7 @@
 EpiModel.hpc 
 ================
-[![Build Status](https://travis-ci.org/statnet/EpiModel.hpc.svg?branch=master)](https://travis-ci.org/statnet/EpiModel.hpc)
+<a href='https://travis-ci.org/statnet/EpiModel.hpc' target="_blank"><img src='https://travis-ci.org/statnet/EpiModel.hpc.svg?branch=master' alt='Build Status' /></a>
+<a href='https://coveralls.io/r/statnet/EpiModel.hpc?branch=master' target="_blank"><img src='https://coveralls.io/repos/statnet/EpiModel.hpc/badge.svg?branch=master' alt='Coverage Status' /></a>
 
 
 ### Purpose
