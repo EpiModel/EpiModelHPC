@@ -105,7 +105,7 @@ netsim_par <- function(x,
   }
 
   if (nsims == 1 | ncores == 1) {
-    out <- netsim(x, param, init, control)
+    all <- netsim(x, param, init, control)
   } else {
     cluster.size <- min(nsims, ncores)
     if (par.type == "single") {
