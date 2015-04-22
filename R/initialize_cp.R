@@ -23,7 +23,7 @@
 #'
 #' @export
 #'
-initialize.cp <- function(x, param, init, control, s) {
+initialize_cp <- function(x, param, init, control, s) {
 
   x$param <- param
   x$param$modes <- ifelse(x$nw$gal$bipartite, 2, 1)

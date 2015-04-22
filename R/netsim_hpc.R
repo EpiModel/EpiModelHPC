@@ -35,7 +35,7 @@
 #'         "data/sim<simno>".
 #'   \item Set a save interval of 100 time steps if one does not already exist
 #'         on the control settings.
-#'   \item Resets the initialize module function to \code{\link{initialize.cp}}
+#'   \item Resets the initialize module function to \code{\link{initialize_cp}}
 #'         if in checkpoint state.
 #'   \item Run the simulation, either new or checkpointed, with a call to
 #'         \code{\link{netsim_par}}.
@@ -92,7 +92,7 @@ netsim_hpc <- function(x, param, init, control,
 
   # Replace initialization module if CP
   if (type == "cp") {
-    control$initialize.FUN <- initialize.cp
+    control$initialize.FUN <- initialize_cp
     control$skip.check <- TRUE
   }
 
