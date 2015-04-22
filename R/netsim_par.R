@@ -10,7 +10,7 @@
 #' @param param Model parameters, as an object of class \code{param.net}.
 #' @param init Initial conditions, as an object of class \code{init.net}.
 #' @param control Control settings, as an object of class \code{control.net}.
-#' @param type Either \code{"new"} if running a new or restarted \code{netsim} 
+#' @param type Either \code{"new"} if running a new or restarted \code{netsim}
 #'        simulation or \code{"cp"} if a checkpoint run is restarted.
 #' @param merge If \code{TRUE}, merge parallel simulations into one \code{netsim}
 #'        object after simulation.
@@ -24,19 +24,19 @@
 #' the intended use on linux-based high-performance computing systems. Parallel
 #' runs may be conducted either with multi-core, single-node systems or multiple
 #' node systems running MPI.
-#' 
-#' To run models in parallel using this function, it is necessary to add two 
+#'
+#' To run models in parallel using this function, it is necessary to add two
 #' parameters to the control settings specified in \code{control.net}. A parameter
 #' called \code{ncores} should be added that specifies the number of parallel
 #' cores the simulations should use. Second, a \code{par.type} parameter should
 #' equal either \code{"single"} to run on a single-node or \code{"mpi"} to run
-#' on multiple nodes using MPI. 
-#' 
-#' Running models in an MPI framework depends on correctly installed MPI 
-#' applications, such as Open MPI. One way to test this is by installing and 
+#' on multiple nodes using MPI.
+#'
+#' Running models in an MPI framework depends on correctly installed MPI
+#' applications, such as Open MPI. One way to test this is by installing and
 #' loading the \code{Rmpi} package. In fact, \code{netsim_par} uses the functionality
 #' of the \code{doMPI} package, which depends on \code{Rmpi}.
-#' 
+#'
 #' The \code{type} argument here specifies whether the parallel simulations should
 #' load checkpointed data. Checkpointing is when simulation data are periodically
 #' saved in the case that a simulation job is cancelled and must be rerun from
