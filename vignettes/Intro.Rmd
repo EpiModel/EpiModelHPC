@@ -24,7 +24,7 @@ To get started, start by loading the **EpiModel.hpc** library:
 library(EpiModel.hpc)
 ```
 
-This package depends on **EpiModel** itself, so that package and the related [Statnet](http://statnet.csde.washington.edu/trac/wiki) software suite will also be loaded. Readers without prior experience estimating and simulating network models in **EpiModel** should consult the [Basic Network Models](http://statnet.github.io/tut/BasicNet.html) tutorial first. This tutorial assumes readers are familiar with that material.
+This package depends on **EpiModel** itself, so that package and the related [Statnet](http://statnet.org/) software suite will also be loaded. Readers without prior experience estimating and simulating network models in **EpiModel** should consult the [Basic Network Models](http://statnet.github.io/tut/BasicNet.html) tutorial first. This tutorial assumes readers are familiar with that material.
 
 
 ## 2. A Basic Simulation in Parallel

@@ -1,6 +1,7 @@
 context("netsim_par")
 
 test_that("1 sim on 1 core", {
+  skip_on_cran()
   nw <- network.initialize(n = 50, directed = FALSE)
   formation <- ~ edges
   target.stats <- 25
@@ -19,6 +20,7 @@ test_that("1 sim on 1 core", {
 })
 
 test_that("2 sims on 1 core", {
+  skip_on_cran()
   nw <- network.initialize(n = 50, directed = FALSE)
   formation <- ~ edges
   target.stats <- 25
@@ -37,6 +39,7 @@ test_that("2 sims on 1 core", {
 })
 
 test_that("1 sim on (not really) 2 cores", {
+  skip_on_cran()
   nw <- network.initialize(n = 50, directed = FALSE)
   formation <- ~ edges
   target.stats <- 25
@@ -55,6 +58,7 @@ test_that("1 sim on (not really) 2 cores", {
 })
 
 test_that("2 sims on 2 cores", {
+  skip_on_cran()
   nw <- network.initialize(n = 50, directed = FALSE)
   formation <- ~ edges
   target.stats <- 25
