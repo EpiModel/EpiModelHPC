@@ -1,10 +1,10 @@
 Package: EpiModel.hpc
 Version: 1.0
-Date: 2014-03-23
+Date: 2014-04-23
 Title: EpiModel Extensions for High-Performance Computing
 Description: Extension package to EpiModel to run large-scale network models
       on modern high-performance computing systems. Functionality provided to run models in
-      parallel environments based on Torque computing systems. Checkpointing functions are 
+      parallel environments based on Torque computing systems. Checkpointing functions are
       included to save and restore simulation work.
 Maintainer: Samuel Jenness <sjenness@uw.edu>
 Authors@R: c(person("Samuel", "Jenness",
