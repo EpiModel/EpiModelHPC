@@ -23,12 +23,13 @@
 #' framework for extending EpiModel to run on modern high-performance computing
 #' (HPC) systems.
 #'
-#' While there are many potential HPCs systems, this software is
-#' developed with the standard within large-scale scientific computing:
-#' linux-based clusters that operate Torque/Moab job scheduling. However, this
-#' type of system is not a necessity for running EpiModel.hpc: the functionality
-#' of this package may be useful in any system that supports parallelization,
-#' including desktop computers with multiple cores.
+#' While there are many potential HPCs systems, this software is developed with
+#' the standard within large-scale scientific computing: linux-based clusters that
+#' operate job scheduling software like OpenPBS, or a commercial variation of it
+#' like Moab or TORQUE. This type of system, however, is not a necessity for
+#' running EpiModel.hpc: the functionality of this package may be useful in any
+#' system that supports parallelization, including desktop computers with multiple
+#' cores.
 #'
 #' Further details of the software and its intended uses are provided in the
 #' main package vignette, along with help documentation for the individual

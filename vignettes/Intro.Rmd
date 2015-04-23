@@ -17,7 +17,7 @@ output:
 ## 1. Introduction
 The **EpiModel.hpc** package is a set of high-performance computing (HPC) extensions to **EpiModel**  (http://epimodel.org). **EpiModel** is an **R** package that provides tools for the simulation of mathematical models of epidemics, including stochastic network models based on the statistical framework of temporal exponential random graph models (ERGMs). HPC systems may be needed for research-level modeling over networks in this framework because ERGM-based model estimation and simulation can bel computationally intensive with respect to both CPU and memory utilization. 
 
-This tutorial provides background and examples of how to use **EpiModel.hpc** for research-level  simulations of network models. This software was designed to be run on Linux-based HPC systems with a Torque job scheduler that uses standard PBS-based shell scripts. However, components of this software package may be used in less complex systems, since the core functionality of **EpiModel.hpc** is based on parallelization of simulation jobs, which is possible on both thousand-node MPI-based clusters or a multicore laptop computer. The only difference is scale.
+This tutorial provides background and examples of how to use **EpiModel.hpc** for research-level  simulations of network models. This software was designed to be run on Linux-based HPC systems with a Portable Batch System (PBS) job scheduling software that uses standard PBS-based shell scripts. These systems include OpenPBS, Moab, and TORQUE. However, components of this software package may be used in less complex systems, since the core functionality of **EpiModel.hpc** is based on parallelization of simulation jobs, which is possible on both thousand-node MPI-based clusters or a multicore laptop computer. The only difference is scale.
 
 To get started, start by loading the **EpiModel.hpc** library:
 ```{r setup, eval=FALSE, message=FALSE}
@@ -94,11 +94,11 @@ system.file("examples", "basicmpi", package = "EpiModel.hpc")
 ```
 
 
-## 4. Job Submissions on Torque
-Torque is a standard computational job scheduling software platform used by many scientific HPC systems. It has the benefit of a systematic resource allocation method for submitting large-scale simulation jobs. If your HPC is not running Torque, this section may not be relevant.
+## 4. Job Submissions on PBS
+Portable Batch System is computer software that schedules and runs computational jobs. Popular PBS software for scientific HPC systems include OpenPBS or commerical variations of it, including Moab and TORQUE. It has the benefit of a systematic resource allocation method for submitting large-scale simulation jobs. If your HPC is not running PBS, this section may not be relevant.
 
 ### A Starting Example
-To run jobs via Torque, it is necessary to build three layers of scripts containing data commands. *Layer 1* is the underlying R script file to run the simulation, as demonstrated above. The following code chunk is one complete R script file, `sim1.R`, containing the source code to run the network model in parallel.
+To run jobs via PBS, it is necessary to build three layers of scripts containing data commands. *Layer 1* is the underlying R script file to run the simulation, as demonstrated above. The following code chunk is one complete R script file, `sim1.R`, containing the source code to run the network model in parallel.
 ```{r sim1, eval=FALSE}
 library(EpiModel.hpc)
 
@@ -120,7 +120,7 @@ sim <- netsim_par(est, param, init, control)
 save(sim, file = "sim.rda")
 ```
 
-*Layer 2* is a shell script, called `runsim.sh`, that contains the Torque job directives along with the batch call to R. The Torque job specifications start with `#PBS`, and include elements like the resources needed, as defined in the `-l` directive, which may vary from HPC system to system. Our HPC system requires a spec for the number of nodes, processors per node, memory, and walltime (maximum processing time) for a job.
+*Layer 2* is a shell script, called `runsim.sh`, that contains the PBS job directives along with the batch call to R. The PBS job specifications start with `#PBS`, and include elements like the resources needed, as defined in the `-l` directive, which may vary from HPC system to system. Our HPC system requires a spec for the number of nodes, processors per node, memory, and walltime (maximum processing time) for a job.
 ```{r runsim, eval=FALSE}
 #!/bin/bash
 
@@ -142,7 +142,7 @@ R CMD BATCH --vanilla sim1.R sim1.Rout
 
 The software for R is loaded using the `module` command in the script. If using MPI, then the applicable MPI module would also need to be loaded. Finally, the R script is run using the `R CMD BATCH` method as demonstrated earlier. 
 
-*Layer 3* is the command line job execution. One executes a Torque job scheduling request by using the `qsub` command with the shell script file name.
+*Layer 3* is the command line job execution. One executes a PBS job scheduling request by using the `qsub` command with the shell script file name.
 ```{r qsub, eval=FALSE}
 qsub runsim.sh
 ```
@@ -151,7 +151,7 @@ Note that this last layer can included in its own bash shell script if many of t
 
 The files for this simulation example may be found in this directory of your system.
 ```{r sf3, eval=FALSE}
-system.file("examples", "torque", package = "EpiModel.hpc")
+system.file("examples", "pbs", package = "EpiModel.hpc")
 ```
 
 
@@ -190,7 +190,7 @@ system.file("examples", "envvars", package = "EpiModel.hpc")
 
 
 ### Array Jobs
-Given some memory complications with MPI, we have found it more efficient to run some large-scale simulations using several calls to the same R script file. For example, instead of running one 100-simulation job on 7 16-core nodes, it is possible to run 7 sub-jobs and then merge the data externally at the end. This is facilitated with array jobs specifications in Torque. To do this in our example, it is necessary to edit all three layers of the software.
+Given some memory complications with MPI, we have found it more efficient to run some large-scale simulations using several calls to the same R script file. For example, instead of running one 100-simulation job on 7 16-core nodes, it is possible to run 7 sub-jobs and then merge the data externally at the end. This is facilitated with array jobs specifications in PBS To do this in our example, it is necessary to edit all three layers of the software.
 
 In *Layer 3*, one would now execute the qsub function with a `-t` parameter. This tells `qsub` to execute the `runsim.sh` file over multiple instances, 7 times in our case.
 ```{r qsub3, eval=FALSE}
