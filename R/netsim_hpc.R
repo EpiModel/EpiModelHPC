@@ -112,13 +112,15 @@ netsim_hpc <- function(x, param, init, control,
     if ("sim" %in% ls()) {
       est <- sim
     }
-    sim <- netsim_par(est, param, init, control, type = "new")
+    sim <- netsim_par(est, param, init, control, type = "new",
+                      required.pkgs = required.pkgs)
   }
 
   # Run a checkpointed simulation
   if (type == "cp") {
     cat("Restarting simulation from checkpoint data ... \n")
-    sim <- netsim_par(x, param, init, control, type = "cp")
+    sim <- netsim_par(x, param, init, control, type = "cp",
+                      required.pkgs = required.pkgs)
   }
 
   # Save completed simulation data
