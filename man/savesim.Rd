@@ -4,7 +4,8 @@
 \alias{savesim}
 \title{Save Simulation Data from Stochastic Network Models}
 \usage{
-savesim(sim, dataf = TRUE, save.min = TRUE, save.max = TRUE)
+savesim(sim, dataf = TRUE, save.min = TRUE, save.max = TRUE,
+  compress = FALSE)
 }
 \arguments{
 \item{sim}{An \code{EpiModel} object of class \code{netsim} to be saved to an
@@ -21,7 +22,10 @@ object and the transmission data frame are removed. The resulting
 name for this small file will have ".min" appended at the end.}
 
 \item{save.max}{If \code{TRUE}, saves the full \code{netsim} object without
-       any deletions.}
+any deletions.}
+
+\item{compress}{Matches the \code{compress} argument for the \code{\link{save}}
+       function.}
 }
 \description{
 Saves an Rdata file containing stochastic network model output

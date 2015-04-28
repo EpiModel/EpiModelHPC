@@ -7,8 +7,8 @@
 #' @param sim An \code{EpiModel} object of class \code{netsim} to be saved to an
 #'        Rdata file.
 #' @param dataf If \code{TRUE}, saves data file within a subfolder called "data"
-#'        relative to the current working directory, otherwise saves file to 
-#'        current working directory. A data folder will be created if one does 
+#'        relative to the current working directory, otherwise saves file to
+#'        current working directory. A data folder will be created if one does
 #'        not already exist.
 #' @param save.min If \code{TRUE}, saves a small version of the \code{netsim}
 #'        object in which large elements of the data structure like the network
@@ -16,29 +16,32 @@
 #'        name for this small file will have ".min" appended at the end.
 #' @param save.max If \code{TRUE}, saves the full \code{netsim} object without
 #'        any deletions.
-#' 
+#' @param compress Matches the \code{compress} argument for the \code{\link{save}}
+#'        function.
+#'
 #' @details
 #' This function provides an automated method for saving a time-stamped Rdata
 #' file containing the simulation number of a stochastic network model run
 #' with \code{netsim}. This is used by default by the \code{\link{netsim_hpc}}
 #' function.
-#' 
+#'
 #' @export
-#' 
-savesim <- function(sim, 
+#'
+savesim <- function(sim,
                     dataf = TRUE,
                     save.min = TRUE,
-                    save.max = TRUE) {
-  
+                    save.max = TRUE,
+                    compress = FALSE) {
+
   if (!is.null(sim$control$simno)) {
     no <- sim$control$simno
   } else {
     no <- 1
   }
-  
+
   ctime <- format(Sys.time(), "%Y%m%d.%H%M")
   fn <- paste0("sim.n", no, ".", ctime, ".rda")
-  
+
   if (dataf == TRUE) {
     if (file.exists("data/") == FALSE) {
       dir.create("data/")
@@ -46,9 +49,9 @@ savesim <- function(sim,
     fn <- paste0("data/", fn)
   }
   if (save.max == TRUE) {
-    save(sim, file = fn)
+    save(sim, file = fn, compress = compress)
   }
-  
+
   if (save.min == TRUE) {
     sim$network <- NULL
     sim$stats$transmat <- NULL
@@ -62,7 +65,7 @@ savesim <- function(sim,
     if (dataf == TRUE) {
       fnm <- paste0("data/", fnm)
     }
-    save(sim, file = fnm)
+    save(sim, file = fnm, compress = compress)
   }
-  
+
 }
