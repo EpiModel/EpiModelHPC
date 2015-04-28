@@ -11,6 +11,10 @@
 #' @param param Model parameters, as an object of class \code{param.net}.
 #' @param init Initial conditions, as an object of class \code{init.net}.
 #' @param control Control settings, as an object of class \code{control.net}.
+#' @param required.pkgs A character vector of R packages that must be loaded
+#'        for the simulation, necessary for MPI-based parallel simulations. If
+#'        \code{NULL}, this will load \code{EpiModel} and the first package package
+#'        listed in the "other attached packages" section of \code{sessionInfo()}.
 #' @param save.min Argument passed to \code{\link{savesim}}.
 #' @param save.max Argument passed to \code{\link{savesim}}.
 #' @param compress Matches the \code{compress} argument for the \code{\link{save}}
@@ -55,7 +59,9 @@
 #'
 #' @export
 netsim_hpc <- function(x, param, init, control,
-                       save.min = TRUE, save.max = FALSE,
+                       required.pkgs = NULL,
+                       save.min = TRUE,
+                       save.max = FALSE,
                        compress = FALSE) {
 
   # Set simno
