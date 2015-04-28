@@ -13,6 +13,8 @@
 #' @param control Control settings, as an object of class \code{control.net}.
 #' @param save.min Argument passed to \code{\link{savesim}}.
 #' @param save.max Argument passed to \code{\link{savesim}}.
+#' @param compress Matches the \code{compress} argument for the \code{\link{save}}
+#'        function.
 #'
 #' @details
 #' This function provides a systematic method to running stochastic network
@@ -53,7 +55,8 @@
 #'
 #' @export
 netsim_hpc <- function(x, param, init, control,
-                       save.min = TRUE, save.max = FALSE) {
+                       save.min = TRUE, save.max = FALSE,
+                       compress = FALSE) {
 
   # Set simno
   if (is.null(control$simno)) {
@@ -114,7 +117,7 @@ netsim_hpc <- function(x, param, init, control,
 
   # Save completed simulation data
   cat("Simulation complete. Saving data ... \n")
-  savesim(sim, save.min = save.min, save.max = save.max)
+  savesim(sim, save.min = save.min, save.max = save.max, compress = compress)
 
   # Remove verbose txt files if present
   fn <- list.files("verb/", pattern = paste0("sim", control$simno, ".*"),
