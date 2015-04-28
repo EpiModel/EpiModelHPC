@@ -137,21 +137,11 @@ netsim_par <- function(x,
         control$currsim = i
         fn <- list.files(xfn, pattern = paste0("sim", i, ".cp.rda"), full.names = TRUE)
         load(fn)
-        if (class(x$epi$num) == "data.frame") {
-          ltstep <- nrow(x$epi$num)
-          if (ltstep == control$nsteps) {
-            control$start <- ltstep
-          } else {
-            control$start <- ltstep + 1
-          }
-        }
-        if (class(x$epi$num) == "integer") {
-          ltstep <- length(x$epi$num)
-          if (ltstep == control$nsteps) {
-            control$start <- ltstep
-          } else {
-            control$start <- ltstep + 1
-          }
+        ltstep <- x$last.ts
+        if (ltstep == control$nsteps) {
+          control$start <- ltstep
+        } else {
+          control$start <- ltstep + 1
         }
         netsim(x, param, init, control)
       }
