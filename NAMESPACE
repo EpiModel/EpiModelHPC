@@ -2,6 +2,7 @@
 
 export(check_cp)
 export(initialize_cp)
+export(merge_simfiles)
 export(netsim_hpc)
 export(netsim_par)
 export(save_cpdata)
