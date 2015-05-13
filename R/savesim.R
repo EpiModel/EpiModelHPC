@@ -17,7 +17,7 @@
 #' @param save.max If \code{TRUE}, saves the full \code{netsim} object without
 #'        any deletions.
 #' @param compress Matches the \code{compress} argument for the \code{\link{save}}
-#'        function.
+#'        function. Set to \code{FALSE} for no compression.
 #'
 #' @details
 #' This function provides an automated method for saving a time-stamped Rdata
@@ -31,7 +31,7 @@ savesim <- function(sim,
                     dataf = TRUE,
                     save.min = TRUE,
                     save.max = TRUE,
-                    compress = FALSE) {
+                    compress = "xz") {
 
   if (!is.null(sim$control$simno)) {
     no <- sim$control$simno
@@ -55,6 +55,7 @@ savesim <- function(sim,
   if (save.min == TRUE) {
     sim$network <- NULL
     sim$stats$transmat <- NULL
+    sim$attr <- NULL
     environment(sim$control$nwstats.formula) <- NULL
     for (i in seq_along(sim$nwparam)) {
       sim$nwparam[[i]][c("formation", "coef.form", "coef.form.crude",
