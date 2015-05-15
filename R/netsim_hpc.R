@@ -52,10 +52,12 @@
 #'   \item Remove the checkpointed data and file directory created in step 1.
 #' }
 #'
-#' Note that the \code{x} argument must specify a \strong{file name} in a
-#' character string, rather than a \code{netest} or \code{netsim} class object
-#' directly. This is mainly for efficency purposes in running the models in
-#' parallel.
+#' The \code{x} argument must specify a \strong{file name} in a character string,
+#' rather than a \code{netest} or \code{netsim} class object directly. This is
+#' mainly for efficency purposes in running the models in parallel.
+#'
+#' If \code{save.min} and \code{save.max} are both set to \code{FALSE}, then the
+#' function will return rather than save the output EpiModel object.
 #'
 #' @export
 netsim_hpc <- function(x, param, init, control,
@@ -125,7 +127,9 @@ netsim_hpc <- function(x, param, init, control,
 
   # Save completed simulation data
   cat("Simulation complete. Saving data ... \n")
-  savesim(sim, save.min = save.min, save.max = save.max, compress = compress)
+  if (save.min == TRUE | save.max == TRUE) {
+    savesim(sim, save.min = save.min, save.max = save.max, compress = compress)
+  }
 
   # Remove verbose txt files if present
   fn <- list.files("verb/", pattern = paste0("sim", control$simno, ".*"),
@@ -143,4 +147,8 @@ netsim_hpc <- function(x, param, init, control,
     }
   }
 
+  # Return object if not saved
+  if (save.min == FALSE & save.max == FALSE) {
+    return(sim)
+  }
 }

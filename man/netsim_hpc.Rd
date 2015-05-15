@@ -67,9 +67,11 @@ This function performs the following tasks:
   \item Remove the checkpointed data and file directory created in step 1.
 }
 
-Note that the \code{x} argument must specify a \strong{file name} in a
-character string, rather than a \code{netest} or \code{netsim} class object
-directly. This is mainly for efficency purposes in running the models in
-parallel.
+The \code{x} argument must specify a \strong{file name} in a character string,
+rather than a \code{netest} or \code{netsim} class object directly. This is
+mainly for efficency purposes in running the models in parallel.
+
+If \code{save.min} and \code{save.max} are both set to \code{FALSE}, then the
+function will return rather than save the output EpiModel object.
 }
 
