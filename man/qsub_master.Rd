@@ -12,13 +12,14 @@ qsub_master(outfile = "master.sh", runsimfile = "runsim.sh",
 will print to console.}
 
 \item{runsimfile}{Name of the bash shell script file that contains the R batch
-commands}
+commandsis}
 
 \item{simno.start}{Starting number for the \code{SIMNO} variable.}
 
 \item{nsubjobs}{Number of sub/array jobs to run per simulation set.}
 
-\item{backfill}{If \code{TRUE}, use the backfill queue to submit jobs.}
+\item{backfill}{If \code{TRUE}, use the backfill queue to submit jobs. If
+numeric, will specify the first X jobs on the grid as non-backfill.}
 
 \item{email}{If \code{TRUE}, send email on job termination or completion.}
 
@@ -31,5 +32,8 @@ Creates a master-level qsub script given a set of parameter
 \examples{
 vars <- list(A = 1:10, B = seq(0.5, 1.5, 0.5))
 qsub_master(vars = vars, outfile = "")
+
+qsub_master(vars = vars, outfile = "", backfill = TRUE)
+qsub_master(vars = vars, outfile = "", backfill = 10)
 }
 

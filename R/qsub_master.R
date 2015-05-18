@@ -7,10 +7,11 @@
 #' @param outfile Name of the output bash shell script file. If \code{""}, then
 #'        will print to console.
 #' @param runsimfile Name of the bash shell script file that contains the R batch
-#'        commands
+#'        commandsis
 #' @param simno.start Starting number for the \code{SIMNO} variable.
 #' @param nsubjobs Number of sub/array jobs to run per simulation set.
-#' @param backfill If \code{TRUE}, use the backfill queue to submit jobs.
+#' @param backfill If \code{TRUE}, use the backfill queue to submit jobs. If
+#'        numeric, will specify the first X jobs on the grid as non-backfill.
 #' @param email If \code{TRUE}, send email on job termination or completion.
 #' @param vars A list of parameters with varying values (see example).
 #'
@@ -19,6 +20,9 @@
 #' @examples
 #' vars <- list(A = 1:10, B = seq(0.5, 1.5, 0.5))
 #' qsub_master(vars = vars, outfile = "")
+#'
+#' qsub_master(vars = vars, outfile = "", backfill = TRUE)
+#' qsub_master(vars = vars, outfile = "", backfill = 10)
 #'
 qsub_master <- function(outfile = "master.sh",
                         runsimfile = "runsim.sh",
@@ -32,7 +36,15 @@ qsub_master <- function(outfile = "master.sh",
   SIMNO <- simno.start:(simno.start + nrow(grd.temp) - 1)
   grd <- data.frame(SIMNO, grd.temp)
 
-  backfill.ch <- ifelse(backfill == TRUE, "-q bf", "")
+  if (is.logical(backfill)) {
+    backfill.ch <- rep(ifelse(backfill == TRUE, "-q bf", ""), nrow(grd))
+  } else {
+    backfill.ch <- rep(c("", "-q bf"), c(backfill, nrow(grd) - backfill))
+    if (length(backfill.ch) > nrow(grd)) {
+      backfill.ch <- backfill.ch[1:nrow(grd)]
+    }
+  }
+
   email.ch <- ifelse(email == FALSE, "-m n", "-m ae")
   if (nsubjobs > 1) {
     nsubjobs.ch <- paste("1", nsubjobs, sep = "-")
@@ -48,7 +60,7 @@ qsub_master <- function(outfile = "master.sh",
     }
     v.args <- paste(v.args, collapse = ",")
 
-    cat("\nqsub", backfill.ch, "-t", nsubjobs.ch, email.ch, "-v", v.args, runsimfile,
+    cat("\nqsub", backfill.ch[i], "-t", nsubjobs.ch, email.ch, "-v", v.args, runsimfile,
         file = outfile, append = TRUE)
   }
   cat("\n", file = outfile, append = TRUE)
