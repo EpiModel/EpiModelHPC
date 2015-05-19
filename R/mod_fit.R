@@ -20,9 +20,6 @@
 #'
 #' @export
 #'
-#' @examples
-#' feql <- mod_fit(dir = "data", prev = 0.0475)
-#'
 mod_fit <- function(dir,
                     job.nos = "all",
                     nsteps = 1000,
