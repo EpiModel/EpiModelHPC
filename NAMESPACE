@@ -3,6 +3,7 @@
 export(check_cp)
 export(initialize_cp)
 export(merge_simfiles)
+export(mod_fit)
 export(netsim_hpc)
 export(netsim_par)
 export(qsub_master)
