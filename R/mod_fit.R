@@ -52,12 +52,8 @@ mod_fit <- function(dir,
   if (!is.null(prev)) {
     odf$epidiff <- abs(prev - odf$endprev)
     odf$epithresh <- odf$epidiff < threshold
-    odf$allthresh <- odf$thresh == TRUE & odf$epithresh
-    goodIds <- odf$job[odf$allthresh == TRUE]
-  } else {
-    goodIds <- odf$job[odf$thresh == TRUE]
   }
 
-  print(odf, print.gap = 3)
-  return(goodIds)
+  return(odf)
+}
 }
