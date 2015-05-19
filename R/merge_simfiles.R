@@ -37,11 +37,11 @@ merge_simfiles <- function(simno,
 
   if (ftype == "min") {
     fn <- list.files(indir,
-                     pattern = paste0("sim.n", simno, ".*.min.rda"),
+                     pattern = paste0("sim.n", simno, ".[0-9]+.*.min.rda"),
                      full.names = TRUE)
   } else if (ftype == "max") {
     fn <- list.files(indir,
-                     pattern = paste0("sim.n", simno, ".*.*[0-9].rda"),
+                     pattern = paste0("sim.n", simno, ".[0-9]+.*.*[0-9].rda"),
                      full.names = TRUE)
   }
   if (length(fn) == 0) {
