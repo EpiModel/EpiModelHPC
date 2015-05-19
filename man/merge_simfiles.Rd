@@ -4,7 +4,7 @@
 \alias{merge_simfiles}
 \title{Save Simulation Data from Stochastic Network Models}
 \usage{
-merge_simfiles(simno, ftype = "min", indir = "data/")
+merge_simfiles(simno, ftype = "min", indir = "data/", verbose = TRUE)
 }
 \arguments{
 \item{simno}{First components of the simulation number in the standard format
@@ -15,7 +15,9 @@ files or \code{"max"} for large files. File availability depends on
 what files were saved in \code{\link{savesim}}.}
 
 \item{indir}{File directory relative to working directory where simulation
-       files are stored.}
+files are stored.}
+
+\item{verbose}{If \code{TRUE}, print file load progress to console.}
 }
 \description{
 Saves an Rdata file containing stochastic network model output

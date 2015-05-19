@@ -11,6 +11,7 @@
 #'        what files were saved in \code{\link{savesim}}.
 #' @param indir File directory relative to working directory where simulation
 #'        files are stored.
+#' @param verbose If \code{TRUE}, print file load progress to console.
 #'
 #' @details
 #' This function merges individual simulation runs stored in separate Rdata files
@@ -29,7 +30,8 @@
 #'
 merge_simfiles <- function(simno,
                            ftype = "min",
-                           indir = "data/") {
+                           indir = "data/",
+                           verbose = TRUE) {
 
   if (!(ftype %in% c("min", "max"))) {
     stop("ftype must be either \"min\" or \"max\" ", call. = FALSE)
@@ -58,7 +60,9 @@ merge_simfiles <- function(simno,
     } else {
       out <- merge(out, sim, param.error = FALSE)
     }
-    cat("File ", i, "/", length(fn), " Loaded ... \n", sep = "")
+    if (verbose == TRUE) {
+      cat("File ", i, "/", length(fn), " Loaded ... \n", sep = "")
+    }
   }
 
   return(out)
