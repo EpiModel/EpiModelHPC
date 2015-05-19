@@ -56,4 +56,34 @@ mod_fit <- function(dir,
 
   return(odf)
 }
+
+#' @title Printing Method for mod_fit Objects
+#'
+#' @description Prints output from \code{mod_fit} calls.
+#'
+#' @param x Output object from \code{\link{mod_fit}} function.
+#' @param out Either \code{"all"} for full table, \code{"eql"} for table limited
+#'        to those jobs passing the equilibrium test, or \code{"epi"} for table
+#'        limited to those jobs passing both the equilibrium and epidemiology
+#'        test.
+#' @param print.gap Spacing method passed to \code{print} generic.
+#'
+#' @export
+#'
+print_modfit <- function(x, out = "all", print.gap = 3) {
+
+  if (out == "all") {
+    print(x, print.gap = print.gap)
+  }
+  if (out == "eql") {
+    x <- x[x$thresh == TRUE, ]
+    x <- x[order(x$reldiff), ]
+    print(x, print.gap = print.gap)
+  }
+  if (out == "epi") {
+    x <- x[x$thresh == TRUE & x$epithresh == TRUE, ]
+    x <- x[order(x$epidiff), ]
+    print(x, print.gap = print.gap)
+  }
+
 }
