@@ -54,6 +54,7 @@ mod_fit <- function(dir,
     odf$epithresh <- odf$epidiff < threshold
   }
 
+  class(odf) <- c("modfit", "data.frame")
   return(odf)
 }
 
@@ -66,11 +67,13 @@ mod_fit <- function(dir,
 #'        to those jobs passing the equilibrium test, or \code{"epi"} for table
 #'        limited to those jobs passing both the equilibrium and epidemiology
 #'        test.
-#' @param print.gap Spacing method passed to \code{print} generic.
+#' @param print.gap Spacing method passed to \code{print} method.
+#' @param ... Additional arguments passed to \code{print} method.
 #'
+#' @method print modfit
 #' @export
 #'
-print_modfit <- function(x, out = "all", print.gap = 3) {
+print.modfit <- function(x, out = "all", print.gap = 3, ...) {
 
   if (out == "all") {
     print(x, print.gap = print.gap)
