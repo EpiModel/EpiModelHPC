@@ -2,7 +2,7 @@
 % Please edit documentation in R/mod_fit.R
 \name{print.modfit}
 \alias{print.modfit}
-\title{Printing Method for mod_fit Objects}
+\title{Printing Method for modfit Objects}
 \usage{
 \method{print}{modfit}(x, out = "all", print.gap = 3, ...)
 }

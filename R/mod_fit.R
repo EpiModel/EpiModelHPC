@@ -58,7 +58,7 @@ mod_fit <- function(dir,
   return(odf)
 }
 
-#' @title Printing Method for mod_fit Objects
+#' @title Printing Method for modfit Objects
 #'
 #' @description Prints output from \code{mod_fit} calls.
 #'
