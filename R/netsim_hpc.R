@@ -66,6 +66,12 @@ netsim_hpc <- function(x, param, init, control,
                        save.max = FALSE,
                        compress = FALSE) {
 
+  # Check x validity
+  if (file.exists(x) == FALSE) {
+    stop("x must be a valid path to a file containing an object of class netest",
+         call. = FALSE)
+  }
+
   # Set simno
   if (is.null(control$simno)) {
     control$simno <- 1
