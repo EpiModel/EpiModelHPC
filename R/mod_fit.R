@@ -38,6 +38,7 @@ mod_fit <- function(dir,
   ujids <- sort(unique(df$jids))
 
   for (i in seq_along(ujids)) {
+    cat("\n|")
     sdat <- merge_simfiles(simno = ujids[i], indir = dir, verbose = FALSE)
     ce <- calc_eql(sdat, nsteps = nsteps, threshold = threshold, invisible = TRUE)
     if (i == 1) {
@@ -48,7 +49,9 @@ mod_fit <- function(dir,
                    data.frame(job = ujids[i],
                               nsims = sdat$control$nsims, as.data.frame(ce)))
     }
+    cat("*")
   }
+  cat("|\n")
   if (!is.null(prev)) {
     odf$epidiff <- abs(prev - odf$endprev)
     odf$epithresh <- odf$epidiff < threshold
