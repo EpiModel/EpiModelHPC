@@ -37,8 +37,8 @@ mod_fit <- function(dir,
   }
   ujids <- sort(unique(df$jids))
 
+  cat("\n|")
   for (i in seq_along(ujids)) {
-    cat("\n|")
     sdat <- merge_simfiles(simno = ujids[i], indir = dir, verbose = FALSE)
     ce <- calc_eql(sdat, nsteps = nsteps, threshold = threshold, invisible = TRUE)
     if (i == 1) {
