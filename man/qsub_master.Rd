@@ -5,7 +5,8 @@
 \title{Create qsub Bash Shell Script Parameter Combination}
 \usage{
 qsub_master(outfile = "master.sh", runsimfile = "runsim.sh",
-  simno.start = 1, nsubjobs = 4, backfill = TRUE, email = TRUE, vars)
+  simno.start = 1, nsubjobs = 4, backfill = TRUE, email = TRUE,
+  append = FALSE, vars)
 }
 \arguments{
 \item{outfile}{Name of the output bash shell script file. If \code{""}, then
@@ -22,6 +23,9 @@ commandsis}
 numeric, will specify the first X jobs on the grid as non-backfill.}
 
 \item{email}{If \code{TRUE}, send email on job termination or completion.}
+
+\item{append}{If \code{TRUE}, will append lines to a previously created shell
+script.}
 
 \item{vars}{A list of parameters with varying values (see example).}
 }

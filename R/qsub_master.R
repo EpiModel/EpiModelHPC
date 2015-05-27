@@ -13,6 +13,8 @@
 #' @param backfill If \code{TRUE}, use the backfill queue to submit jobs. If
 #'        numeric, will specify the first X jobs on the grid as non-backfill.
 #' @param email If \code{TRUE}, send email on job termination or completion.
+#' @param append If \code{TRUE}, will append lines to a previously created shell
+#'        script.
 #' @param vars A list of parameters with varying values (see example).
 #'
 #' @export
@@ -30,6 +32,7 @@ qsub_master <- function(outfile = "master.sh",
                         nsubjobs = 4,
                         backfill = TRUE,
                         email = TRUE,
+                        append = FALSE,
                         vars) {
 
   grd.temp <- do.call("expand.grid", vars)
@@ -52,7 +55,9 @@ qsub_master <- function(outfile = "master.sh",
     nsubjobs.ch <- "1 "
   }
 
-  cat("#!/bin/bash\n", file = outfile)
+  if (append == FALSE) {
+    cat("#!/bin/bash\n", file = outfile)
+  }
   for (i in 1:nrow(grd)) {
     v.args <- NA
     for (j in 1:ncol(grd)) {
