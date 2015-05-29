@@ -15,7 +15,9 @@ will print to console.}
 \item{runsimfile}{Name of the bash shell script file that contains the R batch
 commandsis}
 
-\item{simno.start}{Starting number for the \code{SIMNO} variable.}
+\item{simno.start}{Starting number for the \code{SIMNO} variable. If set to
+\code{"auto"} and \code{append=TRUE}, will read the lines of \code{outfile}
+and start numbering at one after the previous maximum.}
 
 \item{nsubjobs}{Number of sub/array jobs to run per simulation set.}
 

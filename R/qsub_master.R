@@ -8,7 +8,9 @@
 #'        will print to console.
 #' @param runsimfile Name of the bash shell script file that contains the R batch
 #'        commandsis
-#' @param simno.start Starting number for the \code{SIMNO} variable.
+#' @param simno.start Starting number for the \code{SIMNO} variable. If set to
+#'        \code{"auto"} and \code{append=TRUE}, will read the lines of \code{outfile}
+#'        and start numbering at one after the previous maximum.
 #' @param nsubjobs Number of sub/array jobs to run per simulation set.
 #' @param backfill If \code{TRUE}, use the backfill queue to submit jobs. If
 #'        numeric, will specify the first X jobs on the grid as non-backfill.
@@ -36,7 +38,20 @@ qsub_master <- function(outfile = "master.sh",
                         vars) {
 
   grd.temp <- do.call("expand.grid", vars)
-  SIMNO <- simno.start:(simno.start + nrow(grd.temp) - 1)
+  if (simno.start == "auto" & append == TRUE) {
+    t <- read.table(outfile)
+    t <- as.list(t[nrow(t), ])
+    tpos <- unname(which(sapply(t, function(x) grepl("SIMNO", x)) == TRUE))
+    vs <- as.character(t[[tpos]])
+    vs1 <- strsplit(vs, ",")[[1]][1]
+    sn <- as.numeric(strsplit(vs1, "=")[[1]][2])
+    SIMNO <- (sn + 1):(sn + nrow(grd.temp))
+  } else {
+    if (simno.start == "auto") {
+      stop("simno.start cannot be \"auto\" if append is FALSE", call. = FALSE)
+    }
+    SIMNO <- simno.start:(simno.start + nrow(grd.temp) - 1)
+  }
   grd <- data.frame(SIMNO, grd.temp)
 
   if (is.logical(backfill)) {
