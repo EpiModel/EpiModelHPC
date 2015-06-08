@@ -55,9 +55,9 @@ qsub_master <- function(outfile = "master.sh",
   grd <- data.frame(SIMNO, grd.temp)
 
   if (is.logical(backfill)) {
-    backfill.ch <- rep(ifelse(backfill == TRUE, "-q bf", ""), nrow(grd))
+    backfill.ch <- rep(ifelse(backfill == TRUE, "-q bf", "-q batch"), nrow(grd))
   } else {
-    backfill.ch <- rep(c("", "-q bf"), c(backfill, nrow(grd) - backfill))
+    backfill.ch <- rep(c("-q batch", "-q bf"), c(backfill, nrow(grd) - backfill))
     if (length(backfill.ch) > nrow(grd)) {
       backfill.ch <- backfill.ch[1:nrow(grd)]
     }
