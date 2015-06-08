@@ -57,6 +57,7 @@ mod_fit <- function(dir,
     odf$epithresh <- odf$epidiff < threshold
   }
 
+  class(odf) <- c("modfit", "data.frame")
   return(odf)
 }
 
@@ -72,22 +73,23 @@ mod_fit <- function(dir,
 #' @param print.gap Spacing method passed to \code{print} method.
 #' @param ... Additional arguments passed to \code{print} method.
 #'
+#' @method print modfit
 #' @export
 #'
-print_modfit <- function(x, out = "all", print.gap = 3, ...) {
+print.modfit <- function(x, out = "all", print.gap = 3, ...) {
 
   if (out == "all") {
-    print(x, print.gap = print.gap)
+    print.data.frame(x, print.gap = print.gap, ...)
   }
   if (out == "eql") {
     x <- x[x$thresh == TRUE, ]
     x <- x[order(x$reldiff), ]
-    print(x, print.gap = print.gap)
+    print.data.frame(x, print.gap = print.gap, ...)
   }
   if (out == "epi") {
     x <- x[x$thresh == TRUE & x$epithresh == TRUE, ]
     x <- x[order(x$epidiff), ]
-    print(x, print.gap = print.gap)
+    print.data.frame(x, print.gap = print.gap, ...)
   }
 
 }
