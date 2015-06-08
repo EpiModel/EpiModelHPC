@@ -5,7 +5,7 @@
 \title{Create qsub Bash Shell Script Parameter Combination}
 \usage{
 qsub_master(outfile = "master.sh", runsimfile = "runsim.sh",
-  simno.start = 1, nsubjobs = 4, backfill = TRUE, email = TRUE,
+  simno.start = 1, nsubjobs = 4, backfill = TRUE, email = FALSE,
   append = FALSE, vars)
 }
 \arguments{

@@ -33,7 +33,7 @@ qsub_master <- function(outfile = "master.sh",
                         simno.start = 1,
                         nsubjobs = 4,
                         backfill = TRUE,
-                        email = TRUE,
+                        email = FALSE,
                         append = FALSE,
                         vars) {
 
