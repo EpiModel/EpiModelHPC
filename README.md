@@ -3,8 +3,6 @@ EpiModelHPC
 <a href='https://travis-ci.org/statnet/EpiModelHPC' target="_blank"><img src='https://travis-ci.org/statnet/EpiModelHPC.svg?branch=master' alt='Build Status' /></a>
 <a href='https://coveralls.io/r/statnet/EpiModelHPC?branch=master' target="_blank"><img src='https://coveralls.io/repos/statnet/EpiModelHPC/badge.svg?branch=master' alt='Coverage Status' /></a>
 
-
-### Purpose
 EpiModelHPC is an R software package that provides extensions for simulating stochastic network models in EpiModel on high-performance computing (HPC) systems. Functionality provided to simulate models in parallel, with checkpointing functions to save and restore simulation work.
 
 While there are many potential HPCs systems, this software is developed with the standard within large-scale scientific computing: linux-based clusters that operate job scheduling software like OpenPBS, or a commercial variation of it like Moab or TORQUE. This type of system, however, is not a necessity for running EpiModelHPC: the functionality of this package may be useful in any system that supports parallelization, including desktop computers with multiple cores.
