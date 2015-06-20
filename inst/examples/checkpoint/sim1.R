@@ -1,4 +1,4 @@
-library(EpiModel.hpc)
+library(EpiModelHPC)
 
 args <- commandArgs(FALSE)
 args <- args[length(args)]

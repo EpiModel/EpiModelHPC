@@ -2,7 +2,7 @@
 #' EpiModel Extensions for High-Performance Computing
 #'
 #' \tabular{ll}{
-#'    Package: \tab EpiModel.hpc\cr
+#'    Package: \tab EpiModelHPC\cr
 #'    Type: \tab Package\cr
 #'    Version: \tab 1.0\cr
 #'    Date: \tab 2015-03-23\cr
@@ -19,7 +19,7 @@
 #'
 #' The level of statistical complexity of these models, based in Markov-chain
 #' Monte Carlo (MCMC) simulation, results in computationally intensive
-#' simulation processes. The goal of EpiModel.hpc is to provide a standardized
+#' simulation processes. The goal of EpiModelHPC is to provide a standardized
 #' framework for extending EpiModel to run on modern high-performance computing
 #' (HPC) systems.
 #'
@@ -27,7 +27,7 @@
 #' the standard within large-scale scientific computing: linux-based clusters that
 #' operate job scheduling software like OpenPBS, or a commercial variation of it
 #' like Moab or TORQUE. This type of system, however, is not a necessity for
-#' running EpiModel.hpc: the functionality of this package may be useful in any
+#' running EpiModelHPC: the functionality of this package may be useful in any
 #' system that supports parallelization, including desktop computers with multiple
 #' cores.
 #'
@@ -37,11 +37,11 @@
 #'
 #' @references The main website for EpiModel is at \url{http://epimodel.org/}.
 #'             The source code for this extension package is hosted on Github
-#'             at \url{http://github.com/statnet/EpiModel.hpc}. Bug reports and
+#'             at \url{http://github.com/statnet/EpiModelHPC}. Bug reports and
 #'             feature requests may be filed there.
 #'
-#' @name EpiModel.hpc-package
-#' @aliases EpiModel.hpc
+#' @name EpiModelHPC-package
+#' @aliases EpiModelHPC
 #' @import EpiModel doParallel foreach
 #' @docType package
 #' @keywords package

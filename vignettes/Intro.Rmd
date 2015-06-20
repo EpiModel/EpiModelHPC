@@ -1,5 +1,5 @@
 ---
-title: "EpiModel.hpc: EpiModel for High-Performance Computing"
+title: "EpiModelHPC: EpiModel for High-Performance Computing"
 author: "Samuel M. Jenness"
 date: "Department of Epidemiology, University of Washington"
 output:
@@ -8,27 +8,27 @@ output:
 ---
 <!--
 %\VignetteEngine{knitr::rmarkdown}
-%\VignetteIndexEntry{EpiModel.hpc Tutorial}
+%\VignetteIndexEntry{EpiModelHPC Tutorial}
 -->
 
 <br>
 
 
 ## 1. Introduction
-The **EpiModel.hpc** package is a set of high-performance computing (HPC) extensions to **EpiModel**  (http://epimodel.org). **EpiModel** is an **R** package that provides tools for the simulation of mathematical models of epidemics, including stochastic network models based on the statistical framework of temporal exponential random graph models (ERGMs). HPC systems may be needed for research-level modeling over networks in this framework because ERGM-based model estimation and simulation can bel computationally intensive with respect to both CPU and memory utilization. 
+The **EpiModelHPC** package is a set of high-performance computing (HPC) extensions to **EpiModel**  (http://epimodel.org). **EpiModel** is an **R** package that provides tools for the simulation of mathematical models of epidemics, including stochastic network models based on the statistical framework of temporal exponential random graph models (ERGMs). HPC systems may be needed for research-level modeling over networks in this framework because ERGM-based model estimation and simulation can bel computationally intensive with respect to both CPU and memory utilization. 
 
-This tutorial provides background and examples of how to use **EpiModel.hpc** for research-level  simulations of network models. This software was designed to be run on Linux-based HPC systems with a Portable Batch System (PBS) job scheduling software that uses standard PBS-based shell scripts. These systems include OpenPBS, Moab, and TORQUE. However, components of this software package may be used in less complex systems, since the core functionality of **EpiModel.hpc** is based on parallelization of simulation jobs, which is possible on both thousand-node MPI-based clusters or a multicore laptop computer. The only difference is scale.
+This tutorial provides background and examples of how to use **EpiModelHPC** for research-level  simulations of network models. This software was designed to be run on Linux-based HPC systems with a Portable Batch System (PBS) job scheduling software that uses standard PBS-based shell scripts. These systems include OpenPBS, Moab, and TORQUE. However, components of this software package may be used in less complex systems, since the core functionality of **EpiModelHPC** is based on parallelization of simulation jobs, which is possible on both thousand-node MPI-based clusters or a multicore laptop computer. The only difference is scale.
 
-To get started, start by loading the **EpiModel.hpc** library:
+To get started, start by loading the **EpiModelHPC** library:
 ```{r setup, eval=FALSE, message=FALSE}
-library(EpiModel.hpc)
+library(EpiModelHPC)
 ```
 
 This package depends on **EpiModel** itself, so that package and the related [Statnet](http://statnet.org/) software suite will also be loaded. Readers without prior experience estimating and simulating network models in **EpiModel** should consult the [Basic Network Models](http://statnet.github.io/tut/BasicNet.html) tutorial first. This tutorial assumes readers are familiar with that material.
 
 
 ## 2. A Basic Simulation in Parallel
-To get started, we demonstrate the **EpiModel.hpc** function `netsim_par`, which runs multiple simulations of stochastic network models in parallel. Such simulations would ordinarily be run sequentially with the **EpiModel** function `netsim`. 
+To get started, we demonstrate the **EpiModelHPC** function `netsim_par`, which runs multiple simulations of stochastic network models in parallel. Such simulations would ordinarily be run sequentially with the **EpiModel** function `netsim`. 
 
 The following code initializes a network and fits a basic edges-only (homogeneous mixing) ERGM using the `netest` function. The mean duration of edges is 50 time units, and the dissolution model is also homogeneous.
 ```{r basic1, eval=FALSE}
@@ -69,12 +69,12 @@ R CMD BATCH sim1.R
 
 There are many variations and options to submitting batch jobs in R, which are outside the scope of this tutorial. The files for this simulation example may be found in this directory of your system.
 ```{r sf1, eval=FALSE}
-system.file("examples", "basic", package = "EpiModel.hpc")
+system.file("examples", "basic", package = "EpiModelHPC")
 ```
 
 
 ## 3. Parallelization with MPI
-**EpiModel.hpc** supports parallelization of network models in an MPI system, in which data are passed between nodes in a cluster. While MPI systems may be set up in many ways, we demonstrate here a basic form useful epidemic simulations in **EpiModel**.
+**EpiModelHPC** supports parallelization of network models in an MPI system, in which data are passed between nodes in a cluster. While MPI systems may be set up in many ways, we demonstrate here a basic form useful epidemic simulations in **EpiModel**.
 
 To use MPI on multiple nodes, we set the `par.type` argument accordingly in the `control.net` settings. This setup will allow for 25 simulations to be run in parallel across as many nodes as needed (the default MPI job distribution options will determine how this work is distributed across the nodes).
 ```{r mpi1, eval=FALSE}
@@ -90,7 +90,7 @@ mpirun -np 1 R --slave CMD BATCH --vanilla sim1.R
 
 The files for this simulation example may be found in this directory of your system.
 ```{r sf2, eval=FALSE}
-system.file("examples", "basicmpi", package = "EpiModel.hpc")
+system.file("examples", "basicmpi", package = "EpiModelHPC")
 ```
 
 
@@ -100,7 +100,7 @@ Portable Batch System is computer software that schedules and runs computational
 ### A Starting Example
 To run jobs via PBS, it is necessary to build three layers of scripts containing data commands. *Layer 1* is the underlying R script file to run the simulation, as demonstrated above. The following code chunk is one complete R script file, `sim1.R`, containing the source code to run the network model in parallel.
 ```{r sim1, eval=FALSE}
-library(EpiModel.hpc)
+library(EpiModelHPC)
 
 nw <- network.initialize(n = 1000, directed = FALSE)
 formation <- ~ edges
@@ -151,7 +151,7 @@ Note that this last layer can included in its own bash shell script if many of t
 
 The files for this simulation example may be found in this directory of your system.
 ```{r sf3, eval=FALSE}
-system.file("examples", "pbs", package = "EpiModel.hpc")
+system.file("examples", "pbs", package = "EpiModelHPC")
 ```
 
 
@@ -185,7 +185,7 @@ R CMD BATCH --vanilla sim$SIMNO.R sim$SIMNO.Rout
 
 The files for this simulation example may be found in this directory of your system.
 ```{r sf4, eval=FALSE}
-system.file("examples", "envvars", package = "EpiModel.hpc")
+system.file("examples", "envvars", package = "EpiModelHPC")
 ```
 
 
@@ -204,7 +204,7 @@ R CMD BATCH --vanilla -$SIMNO.${PBS_ARRAYID} sim$SIMNO.R sim$SIMNO.${PBS_ARRAYID
 
 In the *Layer 1* R script file, `sim1.R`, we pull that environmental variable and feed it into the control settings. The `commandArgs` processes that variable and we then input it as an argument into `control.net`.
 ```{r rscript3, eval=FALSE}
-library(EpiModel.hpc)
+library(EpiModelHPC)
 
 args <- commandArgs(FALSE)
 args <- args[length(args)]
@@ -236,7 +236,7 @@ Note that this sort of array specification could also have been used to execute 
 
 The files for this simulation example may be found in this directory of your system.
 ```{r sf5, eval=FALSE}
-system.file("examples", "array", package = "EpiModel.hpc")
+system.file("examples", "array", package = "EpiModelHPC")
 ```
 
 
@@ -256,7 +256,7 @@ Checkpointing may be useful even in HPC systems in which there is little chance 
 
 The files for this simulation example may be found in this directory of your system.
 ```{r sf6, eval=FALSE}
-system.file("examples", "checkpoint", package = "EpiModel.hpc")
+system.file("examples", "checkpoint", package = "EpiModelHPC")
 ```
 
 

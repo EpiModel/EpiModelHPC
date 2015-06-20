@@ -1,2 +1,2 @@
 library(testthat)
-test_check("EpiModel.hpc")
+test_check("EpiModelHPC")

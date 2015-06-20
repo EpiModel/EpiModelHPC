@@ -1,4 +1,4 @@
-library(EpiModel.hpc)
+library(EpiModelHPC)
 
 nw <- network.initialize(n = 1000, directed = FALSE)
 formation <- ~ edges
