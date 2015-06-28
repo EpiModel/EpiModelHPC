@@ -1,13 +1,10 @@
 library(EpiModelHPC)
 
 nw <- network.initialize(n = 1000, directed = FALSE)
-formation <- ~ edges
+formation <- ~edges
 target.stats <- 500
-dissolution <- ~ offset(edges)
-duration <- 50
-coef.diss <- dissolution_coefs(dissolution, duration)
-est <- netest(nw, formation, dissolution,
-              target.stats, coef.diss)
+coef.diss <- dissolution_coefs(dissolution = ~offset(edges), duration = 50)
+est <- netest(nw, formation, target.stats, coef.diss)
 
 param <- param.net(inf.prob = 0.05)
 init <- init.net(i.num = 50)

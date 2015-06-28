@@ -10,7 +10,7 @@
 #PBS -M <email address for notifications>
 
 ### Modules
-module load r_3.1.1
+module load r_3.2.0
 
 ### App
 R CMD BATCH --vanilla -$SIMNO.${PBS_ARRAYID} sim$SIMNO.R sim$SIMNO.${PBS_ARRAYID}.Rout
