@@ -33,13 +33,10 @@ To get started, we demonstrate the **EpiModelHPC** function `netsim_par`, which 
 The following code initializes a network and fits a basic edges-only (homogeneous mixing) ERGM using the `netest` function. The mean duration of edges is 50 time units, and the dissolution model is also homogeneous.
 ```{r basic1, eval=FALSE}
 nw <- network.initialize(n = 1000, directed = FALSE)
-formation <- ~ edges
+formation <- ~edges
 target.stats <- 500
-dissolution <- ~ offset(edges)
-duration <- 50
-coef.diss <- dissolution_coefs(dissolution, duration)
-est <- netest(nw, formation, dissolution,
-              target.stats, coef.diss)
+  coef.diss <- dissolution_coefs(dissolution = ~offset(edges), duration = 50)
+est <- netest(nw, formation, target.stats, coef.diss)
 ```
 
 The epidemic model will be of an susceptible-infected (SI) disease in an open population. This requires specifying parameters for the per-contact infection probability, the birth and death rates, and the initial number infected.
@@ -103,13 +100,10 @@ To run jobs via PBS, it is necessary to build three layers of scripts containing
 library(EpiModelHPC)
 
 nw <- network.initialize(n = 1000, directed = FALSE)
-formation <- ~ edges
+formation <- ~edges
 target.stats <- 500
-dissolution <- ~ offset(edges)
-duration <- 50
-coef.diss <- dissolution_coefs(dissolution, duration)
-est <- netest(nw, formation, dissolution,
-              target.stats, coef.diss)
+coef.diss <- dissolution_coefs(dissolution = ~offset(edges), duration = 50)
+est <- netest(nw, formation, target.stats, coef.diss)
 
 param <- param.net(inf.prob = 0.01)
 init <- init.net(i.num = 50)
@@ -177,7 +171,7 @@ Then the *Layer 2* `runsim.sh` would be written as follows. A separate `runsim.s
 #PBS -M <email address for notifications>
 
 ### Modules
-module load r_3.1.1
+module load r_3.2.0
 
 ### App
 R CMD BATCH --vanilla sim$SIMNO.R sim$SIMNO.Rout
@@ -212,13 +206,10 @@ fsimno <- sub("-", "", args)
 print(fsimno)
 
 nw <- network.initialize(n = 1000, directed = FALSE)
-formation <- ~ edges
+formation <- ~edges
 target.stats <- 500
-dissolution <- ~ offset(edges)
-duration <- 50
-coef.diss <- dissolution_coefs(dissolution, duration)
-est <- netest(nw, formation, dissolution,
-              target.stats, coef.diss)
+coef.diss <- dissolution_coefs(dissolution = ~offset(edges), duration = 50)
+est <- netest(nw, formation, target.stats, coef.diss)
 
 param <- param.net(inf.prob = 0.01)
 init <- init.net(i.num = 50)
@@ -258,6 +249,5 @@ The files for this simulation example may be found in this directory of your sys
 ```{r sf6, eval=FALSE}
 system.file("examples", "checkpoint", package = "EpiModelHPC")
 ```
-
 
 <br>
