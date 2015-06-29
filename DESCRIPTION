@@ -19,7 +19,9 @@ Depends:
     EpiModel (>= 1.1.6)
 Imports:
     doParallel,
-    foreach
+    foreach,
+    ergm,
+    tergm
 Suggests:
     doMPI,
     knitr,

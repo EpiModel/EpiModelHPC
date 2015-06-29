@@ -15,7 +15,7 @@ test_that("netest_par for multiple target.stats", {
   nw <- network.initialize(n = 100, directed = FALSE)
   formation <- ~edges + concurrent
   target.stats <- list(c(50, 25),
-                       c(50, 10))
+                       c(50, 20))
   coef.diss <- dissolution_coefs(dissolution = ~offset(edges), duration = 10)
   est <- netest_par(nw, formation, target.stats, coef.diss, ncores = 2)
   expect_is(est[[1]], "netest")

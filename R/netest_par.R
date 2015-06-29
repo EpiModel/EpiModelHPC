@@ -76,12 +76,12 @@ netest_par <- function(nw, formation, target.stats, coef.diss,
     set.control.stergm <- control.stergm(EGMME.MCMC.burnin.min = 1e5)
   }
   if (missing(set.control.ergm)) {
-    set.control.ergm <- control.ergm(MCMC.burnin = 1e5,
-                                     MCMLE.maxit = 200)
+    set.control.ergm <- control.ergm(MCMC.burnin = 1e5, MCMLE.maxit = 200)
   }
 
   cluster.size <- min(nmods, ncores)
   registerDoParallel(cluster.size)
+  i <- NULL
 
   if (modvar == "ts") {
     out <- foreach(i = 1:nmods) %dopar% {
