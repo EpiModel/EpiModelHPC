@@ -4,8 +4,8 @@
 #' \tabular{ll}{
 #'    Package: \tab EpiModelHPC\cr
 #'    Type: \tab Package\cr
-#'    Version: \tab 1.0\cr
-#'    Date: \tab 2015-03-23\cr
+#'    Version: \tab 1.1.0\cr
+#'    Date: \tab 2015-06-28\cr
 #'    License: \tab GPL (>= 2)\cr
 #'    LazyLoad: \tab yes\cr
 #' }
@@ -42,7 +42,7 @@
 #'
 #' @name EpiModelHPC-package
 #' @aliases EpiModelHPC
-#' @import EpiModel doParallel foreach
+#' @import EpiModel doParallel foreach ergm tergm
 #' @docType package
 #' @keywords package
 #'
