@@ -28,10 +28,7 @@
 #'
 #' @export
 #'
-merge_simfiles <- function(simno,
-                           ftype = "min",
-                           indir = "data/",
-                           verbose = TRUE) {
+merge_simfiles <- function(simno, ftype = "min", indir = "data/", verbose = TRUE) {
 
   if (!(ftype %in% c("min", "max"))) {
     stop("ftype must be either \"min\" or \"max\" ", call. = FALSE)
@@ -66,4 +63,39 @@ merge_simfiles <- function(simno,
   }
 
   return(out)
+}
+
+
+#' @title Process sub-job simulation files saved as a series of Rdata files.
+#'
+#' @description Wraps the \code{merge_simfiles} function to merge all sub-job
+#'              Rdata files and saves into a single output file, with the option
+#'              to delete the sub-job files.
+#'
+#' @param indir File directory relative to working directory where simulation
+#'        files are stored.
+#' @param outdir File directory relative to working directory where simulation
+#'        files should be saved.
+#' @param delete.sub Delete sub-job files after merge and saving.
+#'
+#' @export
+#'
+process_simfiles <- function(indir = "data/", outdir = "data/", delete.sub = FALSE) {
+
+  fn <- list.files(indir, pattern = "sim.*.[0-9]+.*.min.rda", full.names = FALSE)
+
+  nums <- gsub("n", "",
+               unname(sapply(fn, function(x) strsplit(x, split = "[.]")[[1]][2])))
+  unique.nums <- unique(nums)
+
+  for (j in seq_along(unique.nums)) {
+    fnj <- list.files(indir, pattern = paste0("sim.n", unique.nums[j], "*.[0-9]+.*.min.rda"),
+                      full.names = TRUE)
+    sim <- merge_simfiles(simno = unique.nums[j], indir = indir, verbose = FALSE)
+    save(sim, file = paste0(indir, "sim.n", unique.nums[j], ".rda"))
+    if (delete.sub == TRUE) {
+      unlink(fnj)
+    }
+  }
+
 }
