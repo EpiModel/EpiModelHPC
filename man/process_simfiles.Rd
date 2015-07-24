@@ -4,9 +4,12 @@
 \alias{process_simfiles}
 \title{Process sub-job simulation files saved as a series of Rdata files.}
 \usage{
-process_simfiles(indir = "data/", outdir = "data/", delete.sub = FALSE)
+process_simfiles(simno = NA, indir = "data/", outdir = "data/",
+  delete.sub = FALSE)
 }
 \arguments{
+\item{simno}{Simulation number to process.}
+
 \item{indir}{File directory relative to working directory where simulation
 files are stored.}
 
