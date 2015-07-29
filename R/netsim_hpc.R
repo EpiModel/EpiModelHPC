@@ -97,7 +97,7 @@ netsim_hpc <- function(x, param, init, control,
 
   # Set CP save interval if missing
   if (is.null(control$save.int)) {
-    cat("Setting save.int on control settings at 100 time steps ... \n")
+    cat("\nSetting save.int on control settings at 100 time steps ... ")
     control$save.int <- 100
   }
 
@@ -115,7 +115,7 @@ netsim_hpc <- function(x, param, init, control,
 
   # Run a new simulation
   if (type == "new") {
-    cat("Running new simulation from netest object ... \n")
+    cat("\nRunning new simulation from netest object ...")
     load(x)
     if ("sim" %in% ls()) {
       est <- sim
@@ -126,13 +126,13 @@ netsim_hpc <- function(x, param, init, control,
 
   # Run a checkpointed simulation
   if (type == "cp") {
-    cat("Restarting simulation from checkpoint data ... \n")
+    cat("\nRestarting simulation from checkpoint data ...")
     sim <- netsim_par(x, param, init, control, type = "cp",
                       required.pkgs = required.pkgs)
   }
 
   # Save completed simulation data
-  cat("Simulation complete. Saving data ... \n")
+  cat("\nSaving simulation data ...")
   if (save.min == TRUE | save.max == TRUE) {
     savesim(sim, save.min = save.min, save.max = save.max, compress = compress)
   }
@@ -141,17 +141,20 @@ netsim_hpc <- function(x, param, init, control,
   fn <- list.files("verb/", pattern = paste0("sim", control$simno, ".*"),
                    full.names = TRUE)
   if (length(fn) > 0) {
-    cat("Removing verbose txt files ... \n ")
+    cat("\nRemoving verbose txt files ...")
     unlink(fn)
   }
 
   # Remove CP data
   if (!is.null(control$save.int)) {
+    cat("\nRemoving checkpoint data ...")
     dirname <- paste0("data/sim", control$simno)
     if (file.exists(dirname) == TRUE) {
       unlink(dirname, recursive = TRUE)
     }
   }
+
+  cat("\n\n Simulation COMPLETE! \n\n")
 
   # Return object if not saved
   if (save.min == FALSE & save.max == FALSE) {
