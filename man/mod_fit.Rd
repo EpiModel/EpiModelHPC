@@ -5,8 +5,8 @@
 \title{Find Best Fitting Modeling on Time-Series Equilibrium and Epidemic
        Prevalence}
 \usage{
-mod_fit(dir, job.nos = "all", nsteps = 1000, threshold = 0.001,
-  prev = NULL)
+mod_fit(dir, job.nos = "all", merge = FALSE, nsteps = 1000,
+  threshold = 0.001, prev = NULL)
 }
 \arguments{
 \item{dir}{File directory in which the simulations are stored.}
@@ -14,6 +14,9 @@ mod_fit(dir, job.nos = "all", nsteps = 1000, threshold = 0.001,
 \item{job.nos}{Set of simulation job numbers, as an integer, for fit calculations
 to be run. If \code{"all"}, then will use all simulation data within the
 specified directory.}
+
+\item{merge}{If \code{TRUE}, merge individual simulation files together using
+\code{merge_simfiles}.}
 
 \item{nsteps}{For the equilibrium threshold calculation, number of time steps
 from the end of the simulation over which to calculate equilbrium,

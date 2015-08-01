@@ -10,6 +10,8 @@
 #' @param job.nos Set of simulation job numbers, as an integer, for fit calculations
 #'        to be run. If \code{"all"}, then will use all simulation data within the
 #'        specified directory.
+#' @param merge If \code{TRUE}, merge individual simulation files together using
+#'        \code{merge_simfiles}.
 #' @param nsteps For the equilibrium threshold calculation, number of time steps
 #'        from the end of the simulation over which to calculate equilbrium,
 #'        following the methods in \code{calc_eql} in the EpiModel package.
@@ -20,18 +22,16 @@
 #'
 #' @export
 #'
-mod_fit <- function(dir,
-                    job.nos = "all",
-                    nsteps = 1000,
-                    threshold = 0.001,
-                    prev = NULL) {
+mod_fit <- function(dir, job.nos = "all", merge = FALSE, nsteps = 1000,
+                    threshold = 0.001, prev = NULL) {
 
   fn <- list.files(dir)
+  fnf <- list.files(dir, full.names = TRUE)
 
   jids <- as.numeric(gsub("n", "", unname(sapply(fn, function(x)
-                                           strsplit(x, split = "[.]")[[1]][2]))))
+    strsplit(x, split = "[.]")[[1]][2]))))
 
-  df <- data.frame(fn, jids)
+  df <- data.frame(fn, fnf, jids, stringsAsFactors = FALSE)
   if (is.numeric(job.nos)) {
     df <- df[df$jids %in% job.nos, ]
   }
@@ -39,7 +39,12 @@ mod_fit <- function(dir,
 
   cat("\n|")
   for (i in seq_along(ujids)) {
-    sdat <- merge_simfiles(simno = ujids[i], indir = dir, verbose = FALSE)
+    if (merge == TRUE) {
+      sdat <- merge_simfiles(simno = ujids[i], indir = dir, verbose = FALSE)
+    } else {
+      load(df$fnf[i])
+      sdat <- sim
+    }
     ce <- calc_eql(sdat, nsteps = nsteps, threshold = threshold, invisible = TRUE)
     if (i == 1) {
       odf <- data.frame(job = ujids[i],
@@ -60,6 +65,7 @@ mod_fit <- function(dir,
   class(odf) <- c("modfit", "data.frame")
   return(odf)
 }
+
 
 #' @title Printing Method for modfit Objects
 #'
