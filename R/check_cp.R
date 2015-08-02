@@ -32,7 +32,7 @@
 #'
 check_cp <- function(simno) {
 
-  goodFile <- FALSE
+  badFile <- FALSE
 
   dirname <- paste0("data/sim", simno)
 
@@ -42,14 +42,14 @@ check_cp <- function(simno) {
 
   fn <- list.files(path = dirname, pattern = "*.cp.rda", full.names = TRUE)
   if (length(fn) > 0) {
-    a <- unname(sapply(fn, function(x) file.info(x)$size))
-    goodFile <- ifelse(all(a > (mean(a) - mean(a) * 0.5)), TRUE, FALSE)
+    badFile <- any(sapply(1:length(fn),
+                          function(x) inherits(try(load(fn[x]), silent = TRUE), "try-error")))
   }
 
-  if (goodFile == TRUE) {
-    return(dirname)
-  } else {
+  if (badFile == TRUE) {
     return(NULL)
+  } else {
+    return(dirname)
   }
 
 }
