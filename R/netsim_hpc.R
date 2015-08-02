@@ -154,7 +154,7 @@ netsim_hpc <- function(x, param, init, control,
     }
   }
 
-  cat("\n\n Simulation COMPLETE! \n\n")
+  cat("\n\n* Simulation COMPLETE! *\n\n")
 
   # Return object if not saved
   if (save.min == FALSE & save.max == FALSE) {
