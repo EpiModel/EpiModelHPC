@@ -82,7 +82,7 @@ merge_simfiles <- function(simno, ftype = "min", indir = "data/", verbose = TRUE
 #' @export
 #'
 process_simfiles <- function(simno = NA, indir = "data/", outdir = "data/",
-                             delete.sub = FALSE) {
+                             delete.sub = TRUE) {
 
   if (is.na(simno)) {
     fn <- list.files(indir, pattern = "sim.*.[0-9]+.*.min.rda", full.names = FALSE)
