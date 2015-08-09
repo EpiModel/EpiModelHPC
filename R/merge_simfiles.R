@@ -49,9 +49,11 @@ merge_simfiles <- function(simno, ftype = "min", indir = "data/", verbose = TRUE
 
   for (i in seq_along(fn)) {
     load(fn[i])
-    sim$network <- NULL
-    sim$attr <- NULL
-    sim$temp <- NULL
+    if (ftype == "min") {
+      sim$network <- NULL
+      sim$attr <- NULL
+      sim$temp <- NULL
+    }
     if (i == 1) {
       out <- sim
     } else {
