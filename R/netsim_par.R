@@ -77,16 +77,10 @@
 #'
 #' # This would be included in the script file called by mpirun
 #' sims <- netsim_par(est, param, init, control)
-#'
 #' }
 #'
-netsim_par <- function(x,
-                       param,
-                       init,
-                       control,
-                       type = "new",
-                       merge = TRUE,
-                       required.pkgs = NULL) {
+netsim_par <- function(x, param, init, control, type = "new",
+                       merge = TRUE, required.pkgs = NULL) {
 
   nsims <- control$nsims
   ncores <- control$ncores

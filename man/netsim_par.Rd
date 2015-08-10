@@ -89,7 +89,6 @@ control <- control.net(type = "SI", nsteps = 100, verbose = FALSE,
 
 # This would be included in the script file called by mpirun
 sims <- netsim_par(est, param, init, control)
-
 }
 }
 
