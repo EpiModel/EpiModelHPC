@@ -76,6 +76,8 @@ netsim_hpc <- function(x, param, init, control,
   if (is.null(control$simno)) {
     control$simno <- 1
   }
+  cat("\nSTARTING Simulation ", control$simno, sep = "")
+
 
   # Check for CP data
   cpDir <- check_cp(simno = control$simno)
