@@ -76,7 +76,6 @@ netsim_hpc <- function(x, param, init, control,
   if (is.null(control$simno)) {
     control$simno <- 1
   }
-  cat("\nSTARTING Simulation ", control$simno, sep = "")
 
 
   # Check for CP data
@@ -95,6 +94,10 @@ netsim_hpc <- function(x, param, init, control,
     if (file.exists(dirname) == FALSE) {
       dir.create(dirname)
     }
+  }
+
+  if (type == "new") {
+    cat("\nSTARTING Simulation ", control$simno, sep = "")
   }
 
   # Set CP save interval if missing
