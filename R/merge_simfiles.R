@@ -11,6 +11,9 @@
 #'        what files were saved in \code{\link{savesim}}.
 #' @param indir File directory relative to working directory where simulation
 #'        files are stored.
+#' @param vars Character vector of variables stored in \code{epi} sub-list to
+#'        retain in output data. If any variables are specified, then network
+#'        statistics and other ancillary data are removed.
 #' @param verbose If \code{TRUE}, print file load progress to console.
 #'
 #' @details
@@ -28,7 +31,8 @@
 #'
 #' @export
 #'
-merge_simfiles <- function(simno, ftype = "min", indir = "data/", verbose = TRUE) {
+merge_simfiles <- function(simno, ftype = "min", indir = "data/",
+                           vars = NULL, verbose = TRUE) {
 
   if (!(ftype %in% c("min", "max"))) {
     stop("ftype must be either \"min\" or \"max\" ", call. = FALSE)
@@ -53,6 +57,13 @@ merge_simfiles <- function(simno, ftype = "min", indir = "data/", verbose = TRUE
       sim$network <- NULL
       sim$attr <- NULL
       sim$temp <- NULL
+      if (!is.null(vars)) {
+        sim$epi <- sim$epi[vars]
+        sim$stats <- NULL
+        if (!is.null(sim$riskh)) {
+          sim$riskh <- NULL
+        }
+      }
     }
     if (i == 1) {
       out <- sim

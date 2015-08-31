@@ -4,7 +4,8 @@
 \alias{merge_simfiles}
 \title{Save Simulation Data from Stochastic Network Models}
 \usage{
-merge_simfiles(simno, ftype = "min", indir = "data/", verbose = TRUE)
+merge_simfiles(simno, ftype = "min", indir = "data/", vars = NULL,
+  verbose = TRUE)
 }
 \arguments{
 \item{simno}{First components of the simulation number in the standard format
@@ -16,6 +17,10 @@ what files were saved in \code{\link{savesim}}.}
 
 \item{indir}{File directory relative to working directory where simulation
 files are stored.}
+
+\item{vars}{Character vector of variables stored in \code{epi} sub-list to
+retain in output data. If any variables are specified, then network
+statistics and other ancillary data are removed.}
 
 \item{verbose}{If \code{TRUE}, print file load progress to console.}
 }
