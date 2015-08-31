@@ -5,7 +5,7 @@
 \title{Process sub-job simulation files saved as a series of Rdata files.}
 \usage{
 process_simfiles(simno = NA, indir = "data/", outdir = "data/",
-  delete.sub = TRUE)
+  vars = NULL, min.n, compress = FALSE, delete.sub)
 }
 \arguments{
 \item{simno}{Simulation number to process.}
@@ -15,6 +15,13 @@ files are stored.}
 
 \item{outdir}{File directory relative to working directory where simulation
 files should be saved.}
+
+\item{vars}{Argument passed to \code{\link{merge_simfiles}}.}
+
+\item{min.n}{Integer value for the minimum number of simulation files to be
+eligible for processing.}
+
+\item{compress}{Argument passed to \code{\link{save}}.}
 
 \item{delete.sub}{Delete sub-job files after merge and saving.}
 }

@@ -90,29 +90,47 @@ merge_simfiles <- function(simno, ftype = "min", indir = "data/",
 #'        files are stored.
 #' @param outdir File directory relative to working directory where simulation
 #'        files should be saved.
+#' @param vars Argument passed to \code{\link{merge_simfiles}}.
+#' @param min.n Integer value for the minimum number of simulation files to be
+#'        eligible for processing.
+#' @param compress Argument passed to \code{\link{save}}.
 #' @param delete.sub Delete sub-job files after merge and saving.
 #'
 #' @export
 #'
 process_simfiles <- function(simno = NA, indir = "data/", outdir = "data/",
-                             delete.sub = TRUE) {
+                             vars = NULL, min.n, compress = FALSE, delete.sub) {
+
+  if (missing(delete.sub))  {
+    if (!is.null(vars)) {
+      delete.sub <- FALSE
+    } else {
+      delete.sub <- TRUE
+    }
+  }
 
   if (is.na(simno)) {
     fn <- list.files(indir, pattern = "sim.*.[0-9]+.*.min.rda", full.names = FALSE)
-
     nums <- gsub("n", "",
                  unname(sapply(fn, function(x) strsplit(x, split = "[.]")[[1]][2])))
     unique.nums <- unique(nums)
   } else {
-    fn <- list.files(indir, pattern = paste0("sim.n", simno, ".[0-9]+.*.min.rda"), full.names = FALSE)
+    fn <- list.files(indir, pattern = paste0("sim.n", simno, ".[0-9]+.*.min.rda"),
+                     full.names = FALSE)
     unique.nums <- simno
   }
 
   for (j in seq_along(unique.nums)) {
     fnj <- list.files(indir, pattern = paste0("sim.n", unique.nums[j], "*.[0-9]+.*.min.rda"),
                       full.names = TRUE)
-    sim <- merge_simfiles(simno = unique.nums[j], indir = indir, verbose = FALSE)
-    save(sim, file = paste0(indir, "sim.n", unique.nums[j], ".rda"))
+    if (!missing(min.n)) {
+      if (min.n > length(fnj)) next
+    }
+    sim <- merge_simfiles(simno = unique.nums[j], indir = indir, vars = vars, verbose = FALSE)
+    if (dir.exists(outdir) == FALSE) {
+      dir.create(outdir)
+    }
+    save(sim, file = paste0(outdir, "/sim.n", unique.nums[j], ".rda"), compress = compress)
     if (delete.sub == TRUE) {
       unlink(fnj)
     }
