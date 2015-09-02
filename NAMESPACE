@@ -2,6 +2,7 @@
 
 S3method(print,modfit)
 export(check_cp)
+export(get_epi)
 export(initialize_cp)
 export(merge_simfiles)
 export(mod_fit)
