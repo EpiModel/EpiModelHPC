@@ -136,6 +136,7 @@ process_simfiles <- function(simno = NA, indir = "data/", outdir = "data/",
     }
     cat("\nFile", unique.nums[j], "complete ...")
   }
+  cat("\n")
 
 }
 
