@@ -134,6 +134,7 @@ process_simfiles <- function(simno = NA, indir = "data/", outdir = "data/",
     if (delete.sub == TRUE) {
       unlink(fnj)
     }
+    cat("\nFile", unique.nums[j], "complete ...")
   }
 
 }
