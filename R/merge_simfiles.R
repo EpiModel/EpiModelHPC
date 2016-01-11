@@ -98,8 +98,8 @@ merge_simfiles <- function(simno, ftype = "min", indir = "data/",
 #'
 #' @export
 #'
-process_simfiles <- function(simno = NA, indir = "data/", outdir = "data/",
-                             vars = NULL, min.n, compress = FALSE, delete.sub) {
+process_simfiles <- function(simno = NA, indir = "data/", outdir = "data/save/",
+                             vars = NULL, min.n, compress = "xz", delete.sub) {
 
   if (missing(delete.sub))  {
     if (!is.null(vars)) {
