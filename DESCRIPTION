@@ -24,8 +24,8 @@ Imports:
     tergm
 Suggests:
     doMPI,
-    knitr,
+    rmarkdown,
     testthat,
     rmarkdown
-VignetteBuilder: knitr
+VignetteBuilder: rmarkdown
 RoxygenNote: 5.0.1
