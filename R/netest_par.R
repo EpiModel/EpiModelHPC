@@ -87,14 +87,14 @@ netest_par <- function(nw, formation, target.stats, coef.diss,
     out <- foreach(i = 1:nmods) %dopar% {
       netest(nw, formation, target.stats[[i]], coef.diss,
              constraints, coef.form = NULL, edapprox = TRUE, output = "fit",
-             set.control.ergm, set.control.stergm, nonconv.error = TRUE, verbose = FALSE)
+             set.control.ergm, set.control.stergm, verbose = FALSE)
     }
   }
   if (modvar == "cd") {
     out <- foreach(i = 1:nmods) %dopar% {
       netest(nw, formation, target.stats, coef.diss[[i]],
              constraints, coef.form = NULL, edapprox = TRUE, output = "fit",
-             set.control.ergm, set.control.stergm, nonconv.error = TRUE, verbose = FALSE)
+             set.control.ergm, set.control.stergm, verbose = FALSE)
     }
   }
 

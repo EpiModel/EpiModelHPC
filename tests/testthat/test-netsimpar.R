@@ -12,7 +12,7 @@ test_that("1 sim on 1 core", {
                          par.type = "single", nsims = 1, ncores = 1)
   sims <- netsim_par(est, param, init, control)
   expect_is(sims, "netsim")
-  expect_output(sims, "simulations: 1")
+  expect_output(print(sims), "simulations: 1")
 })
 
 test_that("2 sims on 1 core", {
@@ -27,7 +27,7 @@ test_that("2 sims on 1 core", {
                          par.type = "single", nsims = 2, ncores = 1)
   sims <- netsim_par(est, param, init, control)
   expect_is(sims, "netsim")
-  expect_output(sims, "simulations: 2")
+  expect_output(print(sims), "simulations: 2")
 })
 
 test_that("1 sim on (not really) 2 cores", {
@@ -42,7 +42,7 @@ test_that("1 sim on (not really) 2 cores", {
                          par.type = "single", nsims = 1, ncores = 2)
   sims <- netsim_par(est, param, init, control)
   expect_is(sims, "netsim")
-  expect_output(sims, "simulations: 1")
+  expect_output(print(sims), "simulations: 1")
 })
 
 test_that("2 sims on 2 cores", {
@@ -57,5 +57,5 @@ test_that("2 sims on 2 cores", {
                          par.type = "single", nsims = 2, ncores = 2)
   sims <- netsim_par(est, param, init, control)
   expect_is(sims, "netsim")
-  expect_output(sims, "simulations: 2")
+  expect_output(print(sims), "simulations: 2")
 })
