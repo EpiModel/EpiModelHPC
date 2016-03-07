@@ -25,7 +25,6 @@ Imports:
 Suggests:
     doMPI,
     rmarkdown,
-    testthat,
-    rmarkdown
+    testthat
 VignetteBuilder: rmarkdown
 RoxygenNote: 5.0.1
