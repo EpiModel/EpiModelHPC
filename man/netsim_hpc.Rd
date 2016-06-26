@@ -4,8 +4,8 @@
 \alias{netsim_hpc}
 \title{Stochastic Network Models on High-Performance Computing Systems}
 \usage{
-netsim_hpc(x, param, init, control, required.pkgs = NULL, save.min = TRUE,
-  save.max = FALSE, compress = FALSE)
+netsim_hpc(x, param, init, control, save.min = TRUE, save.max = FALSE,
+  compress = FALSE)
 }
 \arguments{
 \item{x}{Character vector containing the file location and name of an Rdata
@@ -18,11 +18,6 @@ object of class \code{netsim}.}
 \item{init}{Initial conditions, as an object of class \code{init.net}.}
 
 \item{control}{Control settings, as an object of class \code{control.net}.}
-
-\item{required.pkgs}{A character vector of R packages that must be loaded
-for the simulation, necessary for MPI-based parallel simulations. If
-\code{NULL}, this will load \code{EpiModel} and the first package package
-listed in the "other attached packages" section of \code{sessionInfo()}.}
 
 \item{save.min}{Argument passed to \code{\link{savesim}}.}
 

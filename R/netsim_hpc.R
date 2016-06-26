@@ -11,10 +11,6 @@
 #' @param param Model parameters, as an object of class \code{param.net}.
 #' @param init Initial conditions, as an object of class \code{init.net}.
 #' @param control Control settings, as an object of class \code{control.net}.
-#' @param required.pkgs A character vector of R packages that must be loaded
-#'        for the simulation, necessary for MPI-based parallel simulations. If
-#'        \code{NULL}, this will load \code{EpiModel} and the first package package
-#'        listed in the "other attached packages" section of \code{sessionInfo()}.
 #' @param save.min Argument passed to \code{\link{savesim}}.
 #' @param save.max Argument passed to \code{\link{savesim}}.
 #' @param compress Matches the \code{compress} argument for the \code{\link{save}}
@@ -61,7 +57,6 @@
 #'
 #' @export
 netsim_hpc <- function(x, param, init, control,
-                       required.pkgs = NULL,
                        save.min = TRUE,
                        save.max = FALSE,
                        compress = FALSE) {
@@ -123,17 +118,42 @@ netsim_hpc <- function(x, param, init, control,
     cat("\nRunning new simulation from netest object ...")
     load(x)
     if ("sim" %in% ls()) {
-      est <- sim
+      assign("est", sim)
     }
-    sim <- netsim_par(est, param, init, control, type = "new",
-                      required.pkgs = required.pkgs)
+    sim <- netsim(est, param, init, control)
   }
 
   # Run a checkpointed simulation
   if (type == "cp") {
     cat("\nRestarting simulation from checkpoint data ...")
-    sim <- netsim_par(x, param, init, control, type = "cp",
-                      required.pkgs = required.pkgs)
+  
+    nsims <- control$nsims
+    ncores <- ifelse(nsims == 1, 1, min(parallel::detectCores(), control$ncores))
+    
+    cluster.size <- min(nsims, ncores)
+    doParallel::registerDoParallel(cluster.size)
+    
+    xfn <- x
+    out <- foreach(i = 1:nsims) %dopar% {
+      control$nsims = 1
+      control$currsim = i
+      control$ncores = 1
+      fn <- list.files(xfn, pattern = paste0("sim", i, ".cp.rda"), full.names = TRUE)
+      load(fn)
+      ltstep <- x$last.ts
+      if (ltstep == control$nsteps) {
+        control$start <- ltstep
+      } else {
+        control$start <- ltstep + 1
+      }
+      netsim(x, param, init, control)
+    }
+    
+    all <- out[[1]]
+    for (j in 2:length(out)) {
+      all <- merge(all, out[[j]], param.error = FALSE)
+    }  
+    
   }
 
   # Save completed simulation data
