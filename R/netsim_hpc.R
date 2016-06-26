@@ -159,13 +159,6 @@ netsim_hpc <- function(x, param, init, control,
     }
   }
 
-  if (!is.null(sim$epi$timer)) {
-    tm <- round(sum(as.data.frame(sim)$timer, na.rm = TRUE)/60/60, 1)
-    cat("\nSimulation COMPLETE in", tm, "hours! \n\n")
-  } else {
-    cat("\nSimulation COMPLETE! \n\n")
-  }
-
   # Return object if not saved
   if (save.min == FALSE & save.max == FALSE) {
     return(sim)
