@@ -32,15 +32,13 @@ Simulates stochastic network epidemic models for infectious
 }
 \details{
 This function provides a systematic method to running stochastic network
-models in parallel on high-performance computing systems. The function wraps
-\code{\link{netsim_par}} that establishes the parallelization of the
-underlying sequential simulations run in \code{netsim}.
+models in parallel on high-performance computing systems.
 
 The main purpose of using \code{netsim_hpc} is for a standardized checkpointing
 method. Checkpointing is defined as incrementally saving simulation data for
 the purpose of reloading it if a simulation job is canceled and restarted. If
 checkpointing is not needed, users are advised to run their models directly
-with the \code{\link{netsim_par}} function.
+with the \code{EpiModel::netsim} function.
 
 This function performs the following tasks:
 \enumerate{
@@ -54,7 +52,7 @@ This function performs the following tasks:
   \item Resets the initialize module function to \code{\link{initialize_cp}}
         if in checkpoint state.
   \item Run the simulation, either new or checkpointed, with a call to
-        \code{\link{netsim_par}}.
+        \code{EpiModel::netsim}.
   \item Save the completed simulation data, using the functionality of
         \code{\link{savesim}}.
   \item Remove any files in the "verb/" subdirectory, which is typically
