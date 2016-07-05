@@ -11,6 +11,7 @@
 #' @param param Model parameters, as an object of class \code{param.net}.
 #' @param init Initial conditions, as an object of class \code{init.net}.
 #' @param control Control settings, as an object of class \code{control.net}.
+#' @param cp.save.int Checkpointing save interval. 
 #' @param save.min Argument passed to \code{\link{savesim}}.
 #' @param save.max Argument passed to \code{\link{savesim}}.
 #' @param compress Matches the \code{compress} argument for the \code{\link{save}}
@@ -33,8 +34,8 @@
 #'         checkpointed model will be run, else a new model will be run.
 #'   \item Create a checkpoint directory if one does not exist at
 #'         "data/sim<simno>".
-#'   \item Set a save interval of 100 time steps if one does not already exist
-#'         on the control settings.
+#'   \item Sets the checkpoint save interval at the number of time steps specified
+#'         in \code{cp.save.int}.
 #'   \item Resets the initialize module function to \code{\link{initialize_cp}}
 #'         if in checkpoint state.
 #'   \item Run the simulation, either new or checkpointed, with a call to
@@ -55,6 +56,7 @@
 #'
 #' @export
 netsim_hpc <- function(x, param, init, control,
+                       cp.save.int = 100,
                        save.min = TRUE,
                        save.max = FALSE,
                        compress = TRUE) {
@@ -95,8 +97,8 @@ netsim_hpc <- function(x, param, init, control,
 
   # Set CP save interval if missing
   if (is.null(control$save.int)) {
-    cat("\nSetting save.int on control settings at 100 time steps ... ")
-    control$save.int <- 100
+    cat("\nSetting save.int on control settings at", cp.save.int, "time steps ... ")
+    control$save.int <- cp.save.int
   }
 
   # Store save CP on control settings

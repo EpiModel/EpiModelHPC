@@ -4,8 +4,8 @@
 \alias{netsim_hpc}
 \title{Stochastic Network Models on High-Performance Computing Systems}
 \usage{
-netsim_hpc(x, param, init, control, save.min = TRUE, save.max = FALSE,
-  compress = TRUE)
+netsim_hpc(x, param, init, control, cp.save.int = 100, save.min = TRUE,
+  save.max = FALSE, compress = TRUE)
 }
 \arguments{
 \item{x}{Character vector containing the file location and name of an Rdata
@@ -18,6 +18,8 @@ object of class \code{netsim}.}
 \item{init}{Initial conditions, as an object of class \code{init.net}.}
 
 \item{control}{Control settings, as an object of class \code{control.net}.}
+
+\item{cp.save.int}{Checkpointing save interval.}
 
 \item{save.min}{Argument passed to \code{\link{savesim}}.}
 
@@ -47,8 +49,8 @@ This function performs the following tasks:
         checkpointed model will be run, else a new model will be run.
   \item Create a checkpoint directory if one does not exist at
         "data/sim<simno>".
-  \item Set a save interval of 100 time steps if one does not already exist
-        on the control settings.
+  \item Sets the checkpoint save interval at the number of time steps specified
+        in \code{cp.save.int}.
   \item Resets the initialize module function to \code{\link{initialize_cp}}
         if in checkpoint state.
   \item Run the simulation, either new or checkpointed, with a call to
