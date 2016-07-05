@@ -153,7 +153,8 @@ netsim_hpc <- function(x, param, init, control,
     all <- out[[1]]
     for (j in 2:length(out)) {
       all <- merge(all, out[[j]], param.error = FALSE)
-    }  
+    }
+    sim <- all
     
   }
 
