@@ -57,7 +57,7 @@
 netsim_hpc <- function(x, param, init, control,
                        save.min = TRUE,
                        save.max = FALSE,
-                       compress = FALSE) {
+                       compress = TRUE) {
 
   # Check x validity
   if (file.exists(x) == FALSE) {
