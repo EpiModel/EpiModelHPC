@@ -115,11 +115,11 @@ netsim_hpc <- function(x, param, init, control,
 
   # Run a new simulation
   if (type == "new") {
-    cat("\nRunning new simulation from netest object ...")
     load(x)
     if ("sim" %in% ls()) {
       assign("est", sim)
     }
+    cat("\nRunning new simulation from", class(est), "object ...")
     sim <- netsim(est, param, init, control)
   }
 
