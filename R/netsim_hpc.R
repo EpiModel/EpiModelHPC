@@ -174,7 +174,7 @@ netsim_hpc <- function(x, param, init, control,
 
   # Remove CP data
   if (!is.null(control$save.int)) {
-    cat("\nRemoving checkpoint data ...")
+    cat("\nRemoving checkpoint data ... \n")
     dirname <- paste0("data/sim", control$simno)
     if (file.exists(dirname) == TRUE) {
       unlink(dirname, recursive = TRUE)
