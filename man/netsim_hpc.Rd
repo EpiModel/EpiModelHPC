@@ -5,7 +5,7 @@
 \title{Stochastic Network Models on High-Performance Computing Systems}
 \usage{
 netsim_hpc(x, param, init, control, cp.save.int = 100, save.min = TRUE,
-  save.max = FALSE, compress = TRUE)
+  save.max = FALSE, compress = TRUE, verbose = TRUE)
 }
 \arguments{
 \item{x}{Character vector containing the file location and name of an Rdata
@@ -27,6 +27,8 @@ object of class \code{netsim}.}
 
 \item{compress}{Matches the \code{compress} argument for the \code{\link{save}}
 function.}
+
+\item{verbose}{If \code{FALSE}, supress all output messages except errors.}
 }
 \description{
 Simulates stochastic network epidemic models for infectious

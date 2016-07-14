@@ -16,6 +16,7 @@
 #' @param save.max Argument passed to \code{\link{savesim}}.
 #' @param compress Matches the \code{compress} argument for the \code{\link{save}}
 #'        function.
+#' @param verbose If \code{FALSE}, supress all output messages except errors.
 #'
 #' @details
 #' This function provides a systematic method to running stochastic network
@@ -59,7 +60,8 @@ netsim_hpc <- function(x, param, init, control,
                        cp.save.int = 100,
                        save.min = TRUE,
                        save.max = FALSE,
-                       compress = TRUE) {
+                       compress = TRUE,
+                       verbose = TRUE) {
 
   # Check x validity
   if (file.exists(x) == FALSE) {
@@ -91,13 +93,15 @@ netsim_hpc <- function(x, param, init, control,
     }
   }
 
-  if (type == "new") {
+  if (type == "new" & verbose == TRUE) {
     cat("\nSTARTING Simulation ", control$simno, sep = "")
   }
 
   # Set CP save interval if missing
   if (is.null(control$save.int)) {
-    cat("\nSetting save.int on control settings at", cp.save.int, "time steps ... ")
+    if (verbose == TRUE) {
+      cat("\nSetting save.int on control settings at", cp.save.int, "time steps ... ")
+    }
     control$save.int <- cp.save.int
   }
 
@@ -119,14 +123,18 @@ netsim_hpc <- function(x, param, init, control,
     if ("sim" %in% ls()) {
       assign("est", sim)
     }
-    cat("\nRunning new simulation from", class(est), "object ...")
+    if (verbose == TRUE) {
+      cat("\nRunning new simulation from", class(est), "object ...")
+    }
     sim <- netsim(est, param, init, control)
   }
 
   # Run a checkpointed simulation
   if (type == "cp") {
-    cat("\nRestarting simulation from checkpoint data ...")
-  
+    if (verbose == TRUE) {
+      cat("\nRestarting simulation from checkpoint data ...")
+    }
+
     nsims <- control$nsims
     ncores <- ifelse(nsims == 1, 1, min(parallel::detectCores(), control$ncores))
     
@@ -159,7 +167,9 @@ netsim_hpc <- function(x, param, init, control,
   }
 
   # Save completed simulation data
-  cat("\nSaving simulation data ...")
+  if (verbose == TRUE) {
+    cat("\nSaving simulation data ...")
+  }
   if (save.min == TRUE | save.max == TRUE) {
     savesim(sim, save.min = save.min, save.max = save.max, compress = compress)
   }
@@ -168,13 +178,17 @@ netsim_hpc <- function(x, param, init, control,
   fn <- list.files("verb/", pattern = paste0("sim", control$simno, ".*"),
                    full.names = TRUE)
   if (length(fn) > 0) {
-    cat("\nRemoving verbose txt files ...")
+    if (verbose == TRUE) {
+      cat("\nRemoving verbose txt files ...")
+    }
     unlink(fn)
   }
 
   # Remove CP data
   if (!is.null(control$save.int)) {
-    cat("\nRemoving checkpoint data ... \n")
+    if (verbose == TRUE) {
+      cat("\nRemoving checkpoint data ... \n")
+    }
     dirname <- paste0("data/sim", control$simno)
     if (file.exists(dirname) == TRUE) {
       unlink(dirname, recursive = TRUE)
