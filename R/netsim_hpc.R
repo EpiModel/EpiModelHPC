@@ -11,7 +11,7 @@
 #' @param param Model parameters, as an object of class \code{param.net}.
 #' @param init Initial conditions, as an object of class \code{init.net}.
 #' @param control Control settings, as an object of class \code{control.net}.
-#' @param cp.save.int Checkpointing save interval. 
+#' @param cp.save.int Checkpointing save interval.
 #' @param save.min Argument passed to \code{\link{savesim}}.
 #' @param save.max Argument passed to \code{\link{savesim}}.
 #' @param compress Matches the \code{compress} argument for the \code{\link{save}}
@@ -137,10 +137,10 @@ netsim_hpc <- function(x, param, init, control,
 
     nsims <- control$nsims
     ncores <- ifelse(nsims == 1, 1, min(parallel::detectCores(), control$ncores))
-    
+
     cluster.size <- min(nsims, ncores)
     doParallel::registerDoParallel(cluster.size)
-    
+
     xfn <- x
     i <- NULL # just to pass R CMD Check
     out <- foreach(i = 1:nsims) %dopar% {
@@ -157,13 +157,13 @@ netsim_hpc <- function(x, param, init, control,
       }
       netsim(x, param, init, control)
     }
-    
+
     all <- out[[1]]
     for (j in 2:length(out)) {
       all <- merge(all, out[[j]], param.error = FALSE)
     }
     sim <- all
-    
+
   }
 
   # Save completed simulation data
