@@ -11,7 +11,11 @@
 #' @param param Model parameters, as an object of class \code{param.net}.
 #' @param init Initial conditions, as an object of class \code{init.net}.
 #' @param control Control settings, as an object of class \code{control.net}.
-#' @param cp.save.int Checkpointing save interval.
+#' @param cp.save.int Check-pointing save interval, which is used to specify how
+#'        often intermediate data should be saved out to disk. When a job has been
+#'        check-pointed, it will resume automatically at the last saved time 
+#'        step stored on disk. If set to \code{NULL}, then no intermediate data
+#'        storage will occur.
 #' @param save.min Argument passed to \code{\link{savesim}}.
 #' @param save.max Argument passed to \code{\link{savesim}}.
 #' @param compress Matches the \code{compress} argument for the \code{\link{save}}
@@ -34,7 +38,8 @@
 #'         \code{\link{check_cp}} function. If CP data are available, a
 #'         checkpointed model will be run, else a new model will be run.
 #'   \item Create a checkpoint directory if one does not exist at
-#'         "data/sim<simno>".
+#'         "data/sim<simno>". This and the related checkpointing functions will 
+#'         not occur if \code{cp.save.int} is set to \code{NULL}.
 #'   \item Sets the checkpoint save interval at the number of time steps specified
 #'         in \code{cp.save.int}.
 #'   \item Resets the initialize module function to \code{\link{initialize_cp}}
@@ -45,7 +50,8 @@
 #'         \code{\link{savesim}}.
 #'   \item Remove any files in the "verb/" subdirectory, which is typically
 #'         used to store incremental model tracking text files.
-#'   \item Remove the checkpointed data and file directory created in step 1.
+#'   \item Remove the checkpointed data and file directory created in step 1, if
+#'         it exists.
 #' }
 #'
 #' The \code{x} argument must specify a \strong{file name} in a character string,
@@ -57,7 +63,7 @@
 #'
 #' @export
 netsim_hpc <- function(x, param, init, control,
-                       cp.save.int = 100,
+                       cp.save.int = NULL,
                        save.min = TRUE,
                        save.max = FALSE,
                        compress = TRUE,
@@ -82,65 +88,72 @@ netsim_hpc <- function(x, param, init, control,
     x <- cpDir
   }
 
-  # Creates CP directory
+  # New simulations ---------------------------------------------------------
+  
   if (type == "new") {
-    dirname <- paste0("data/sim", control$simno)
-    if (file.exists("data/") == FALSE) {
-      dir.create("data/")
-    }
-    if (file.exists(dirname) == FALSE) {
-      dir.create(dirname)
-    }
-  }
-
-  if (type == "new" & verbose == TRUE) {
-    cat("\nSTARTING Simulation ", control$simno, sep = "")
-  }
-
-  # Set CP save interval if missing
-  if (is.null(control$save.int)) {
+    
     if (verbose == TRUE) {
-      cat("\nSetting save.int on control settings at", cp.save.int, "time steps ... ")
+      cat("\nSTARTING Simulation ", control$simno, sep = "")
     }
-    control$save.int <- cp.save.int
+    
+    # Set CP save interval if missing
+    if (is.null(control$save.int) & !is.null(cp.save.int)) {
+      if (verbose == TRUE) {
+        cat("\nSetting save.int on control settings at", cp.save.int, "time steps ... ")
+      }
+      control$save.int <- cp.save.int
+    }
+    
+    # Store save CP on control settings
+    if (is.null(control$savedata.FUN) & !is.null(control$save.int)) {
+      control$savedata.FUN <- save_cpdata
+      control$bi.mods <- c(control$bi.mods, "savedata.FUN")
+    }
+    
+    # Creates CP directory
+    if (!is.null(control$save.int)) {
+      dirname <- paste0("data/sim", control$simno)
+      if (file.exists("data/") == FALSE) {
+        dir.create("data/")
+      }
+      if (file.exists(dirname) == FALSE) {
+        dir.create(dirname)
+      }
+    }
+    
+    # Run a new simulation
+    if (type == "new") {
+      load(x)
+      if ("sim" %in% ls()) {
+        assign("est", sim)
+      }
+      if (verbose == TRUE) {
+        cat("\nRunning new simulation from", class(est), "object ...")
+      }
+      sim <- netsim(est, param, init, control)
+    }
+    
   }
+  
 
-  # Store save CP on control settings
-  if (is.null(control$savedata.FUN)) {
-    control$savedata.FUN <- save_cpdata
-    control$bi.mods <- c(control$bi.mods, "savedata.FUN")
-  }
+  # CP resumed simulations --------------------------------------------------
 
-  # Replace initialization module if CP
   if (type == "cp") {
+    
+    # Replace initialization module
     control$initialize.FUN <- initialize_cp
     control$skip.check <- TRUE
-  }
-
-  # Run a new simulation
-  if (type == "new") {
-    load(x)
-    if ("sim" %in% ls()) {
-      assign("est", sim)
-    }
-    if (verbose == TRUE) {
-      cat("\nRunning new simulation from", class(est), "object ...")
-    }
-    sim <- netsim(est, param, init, control)
-  }
-
-  # Run a checkpointed simulation
-  if (type == "cp") {
+    
     if (verbose == TRUE) {
       cat("\nRestarting simulation from checkpoint data ...")
     }
-
+    
     nsims <- control$nsims
     ncores <- ifelse(nsims == 1, 1, min(parallel::detectCores(), control$ncores))
-
+    
     cluster.size <- min(nsims, ncores)
     doParallel::registerDoParallel(cluster.size)
-
+    
     xfn <- x
     i <- NULL # just to pass R CMD Check
     out <- foreach(i = 1:nsims) %dopar% {
@@ -157,14 +170,17 @@ netsim_hpc <- function(x, param, init, control,
       }
       netsim(x, param, init, control)
     }
-
+    
     all <- out[[1]]
     for (j in 2:length(out)) {
       all <- merge(all, out[[j]], param.error = FALSE)
     }
     sim <- all
-
+    
   }
+
+
+  # Post-Processing ---------------------------------------------------------
 
   # Save completed simulation data
   if (verbose == TRUE) {
@@ -199,4 +215,5 @@ netsim_hpc <- function(x, param, init, control,
   if (save.min == FALSE & save.max == FALSE) {
     return(sim)
   }
+  
 }
