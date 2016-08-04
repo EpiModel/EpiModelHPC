@@ -4,7 +4,7 @@
 \alias{netsim_hpc}
 \title{Stochastic Network Models on High-Performance Computing Systems}
 \usage{
-netsim_hpc(x, param, init, control, cp.save.int = 100, save.min = TRUE,
+netsim_hpc(x, param, init, control, cp.save.int = NULL, save.min = TRUE,
   save.max = FALSE, compress = TRUE, verbose = TRUE)
 }
 \arguments{
@@ -19,7 +19,11 @@ object of class \code{netsim}.}
 
 \item{control}{Control settings, as an object of class \code{control.net}.}
 
-\item{cp.save.int}{Checkpointing save interval.}
+\item{cp.save.int}{Check-pointing save interval, which is used to specify how
+often intermediate data should be saved out to disk. When a job has been
+check-pointed, it will resume automatically at the last saved time 
+step stored on disk. If set to \code{NULL}, then no intermediate data
+storage will occur.}
 
 \item{save.min}{Argument passed to \code{\link{savesim}}.}
 
@@ -50,7 +54,8 @@ This function performs the following tasks:
         \code{\link{check_cp}} function. If CP data are available, a
         checkpointed model will be run, else a new model will be run.
   \item Create a checkpoint directory if one does not exist at
-        "data/sim<simno>".
+        "data/sim<simno>". This and the related checkpointing functions will 
+        not occur if \code{cp.save.int} is set to \code{NULL}.
   \item Sets the checkpoint save interval at the number of time steps specified
         in \code{cp.save.int}.
   \item Resets the initialize module function to \code{\link{initialize_cp}}
@@ -61,7 +66,8 @@ This function performs the following tasks:
         \code{\link{savesim}}.
   \item Remove any files in the "verb/" subdirectory, which is typically
         used to store incremental model tracking text files.
-  \item Remove the checkpointed data and file directory created in step 1.
+  \item Remove the checkpointed data and file directory created in step 1, if
+        it exists.
 }
 
 The \code{x} argument must specify a \strong{file name} in a character string,
