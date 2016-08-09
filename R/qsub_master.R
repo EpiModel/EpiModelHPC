@@ -52,7 +52,8 @@ qsub_master <- function(outfile = "master.sh",
     }
     SIMNO <- simno.start:(simno.start + nrow(grd.temp) - 1)
   }
-  grd <- data.frame(SIMNO, grd.temp)
+  NJOBS <- nsubjobs
+  grd <- data.frame(SIMNO, NJOBS, grd.temp)
 
   if (is.logical(backfill)) {
     backfill.ch <- rep(ifelse(backfill == TRUE, "-q bf", "-q batch"), nrow(grd))
