@@ -8,15 +8,15 @@ Description: Extension package to EpiModel to run large-scale stochastic network
     functions that automatically save and restore simulation work, which may be 
     useful on HPC systems with Portable Batch System (PBS) job scheduling software 
     like OpenPBS, are also included.
-Maintainer: Samuel Jenness <sjenness@uw.edu>
+Maintainer: Samuel Jenness <samuel.m.jenness@emory.edu>
 Authors@R: c(person("Samuel", "Jenness",
-    role=c("cre","aut"), email="sjenness@uw.edu"))
-License: GPL-2
+    role=c("cre","aut"), email="samuel.m.jenness@emory.edu"))
+License: GPL-3
 URL: http://epimodel.org/
 BugReports: https://github.com/statnet/EpiModelHPC/issues
 Depends:
     R (>= 3.2),
-    EpiModel (>= 1.2.0)
+    EpiModel (>= 1.2.7)
 Imports:
     doParallel,
     foreach,
