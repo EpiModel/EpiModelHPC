@@ -53,9 +53,12 @@ savesim <- function(sim,
   }
 
   if (save.min == TRUE) {
-    sim$network <- NULL
-    sim$stats$transmat <- NULL
-    sim$attr <- NULL
+    sim[["network"]] <- NULL
+    sim$stats[["transmat"]] <- NULL
+    sim[["attr"]] <- NULL
+    sim[["el"]] <- NULL
+    sim[["p"]] <- NULL
+    sim[["temp"]]
     environment(sim$control$nwstats.formula) <- NULL
     for (i in seq_along(sim$nwparam)) {
       sim$nwparam[[i]][c("formation", "coef.form", "coef.form.crude",
