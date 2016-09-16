@@ -5,7 +5,7 @@
 \title{Process sub-job simulation files saved as a series of Rdata files.}
 \usage{
 process_simfiles(simno = NA, indir = "data/", outdir = "data/save/",
-  vars = NULL, min.n, compress = "xz", delete.sub)
+  vars = NULL, min.n, compress = TRUE, delete.sub, verbose = FALSE)
 }
 \arguments{
 \item{simno}{Simulation number to process.}
@@ -24,6 +24,8 @@ eligible for processing.}
 \item{compress}{Argument passed to \code{\link{save}}.}
 
 \item{delete.sub}{Delete sub-job files after merge and saving.}
+
+\item{verbose}{Logical, print progress to console.}
 }
 \description{
 Wraps the \code{merge_simfiles} function to merge all sub-job

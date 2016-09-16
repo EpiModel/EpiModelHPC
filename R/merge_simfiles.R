@@ -95,11 +95,13 @@ merge_simfiles <- function(simno, ftype = "min", indir = "data/",
 #'        eligible for processing.
 #' @param compress Argument passed to \code{\link{save}}.
 #' @param delete.sub Delete sub-job files after merge and saving.
+#' @param verbose Logical, print progress to console.
 #'
 #' @export
 #'
 process_simfiles <- function(simno = NA, indir = "data/", outdir = "data/save/",
-                             vars = NULL, min.n, compress = "xz", delete.sub) {
+                             vars = NULL, min.n, compress = TRUE, delete.sub,
+                             verbose = FALSE) {
 
   if (missing(delete.sub))  {
     if (!is.null(vars)) {
@@ -134,7 +136,9 @@ process_simfiles <- function(simno = NA, indir = "data/", outdir = "data/save/",
     if (delete.sub == TRUE) {
       unlink(fnj)
     }
-    cat("\nFile", unique.nums[j], "complete ...")
+    if (verbose == TRUE) {
+      cat("File", unique.nums[j], "complete ... \n")
+    }
   }
 
 }
