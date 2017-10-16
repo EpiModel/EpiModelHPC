@@ -57,6 +57,8 @@ merge_simfiles <- function(simno, ftype = "min", indir = "data/",
       sim$network <- NULL
       sim$attr <- NULL
       sim$temp <- NULL
+      sim$el <- NULL
+      sim$p <- NULL
       if (!is.null(vars)) {
         sim$epi <- sim$epi[vars]
         sim$stats <- NULL

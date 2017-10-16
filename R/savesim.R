@@ -58,7 +58,7 @@ savesim <- function(sim,
     sim[["attr"]] <- NULL
     sim[["el"]] <- NULL
     sim[["p"]] <- NULL
-    sim[["temp"]]
+    sim[["temp"]] <- NULL
     environment(sim$control$nwstats.formula) <- NULL
     for (i in seq_along(sim$nwparam)) {
       sim$nwparam[[i]][c("formation", "coef.form", "coef.form.crude",
