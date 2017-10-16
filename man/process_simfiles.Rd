@@ -5,7 +5,8 @@
 \title{Process sub-job simulation files saved as a series of Rdata files.}
 \usage{
 process_simfiles(simno = NA, indir = "data/", outdir = "data/save/",
-  vars = NULL, min.n, compress = TRUE, delete.sub, verbose = FALSE)
+  vars = NULL, truncate.at = NULL, min.n, compress = TRUE, delete.sub,
+  verbose = FALSE)
 }
 \arguments{
 \item{simno}{Simulation number to process.}
@@ -17,6 +18,9 @@ files are stored.}
 files should be saved.}
 
 \item{vars}{Argument passed to \code{\link{merge_simfiles}}.}
+
+\item{truncate.at}{Left-truncates a simulation epidemiological summary
+statistics and network statistics at a specified time step.}
 
 \item{min.n}{Integer value for the minimum number of simulation files to be
 eligible for processing.}
