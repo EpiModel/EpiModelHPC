@@ -35,4 +35,3 @@ files usually indicates that the interim file saving was interrupted. If the
 files exist and are of correct size, a full directory name is returned, else
 \code{NULL} is returned.
 }
-

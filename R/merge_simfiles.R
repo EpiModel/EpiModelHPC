@@ -14,6 +14,8 @@
 #' @param vars Character vector of variables stored in \code{epi} sub-list to
 #'        retain in output data. If any variables are specified, then network
 #'        statistics and other ancillary data are removed.
+#' @param truncate.at Left-truncates a simulation epidemiological summary
+#'        statistics and network statistics at a specified time step.
 #' @param verbose If \code{TRUE}, print file load progress to console.
 #'
 #' @details
@@ -32,7 +34,7 @@
 #' @export
 #'
 merge_simfiles <- function(simno, ftype = "min", indir = "data/",
-                           vars = NULL, verbose = TRUE) {
+                           vars = NULL, truncate.at = NULL, verbose = TRUE) {
 
   if (!(ftype %in% c("min", "max"))) {
     stop("ftype must be either \"min\" or \"max\" ", call. = FALSE)
@@ -53,6 +55,11 @@ merge_simfiles <- function(simno, ftype = "min", indir = "data/",
 
   for (i in seq_along(fn)) {
     load(fn[i])
+
+    if (!is.null(truncate.at)) {
+
+      sim <- EpiModelHIV::truncate_sim(sim, truncate.at)
+
     if (ftype == "min") {
       sim$network <- NULL
       sim$attr <- NULL
@@ -76,7 +83,7 @@ merge_simfiles <- function(simno, ftype = "min", indir = "data/",
       cat("File ", i, "/", length(fn), " Loaded ... \n", sep = "")
     }
   }
-
+  }
   return(out)
 }
 
