@@ -20,7 +20,8 @@ files should be saved.}
 \item{vars}{Argument passed to \code{\link{merge_simfiles}}.}
 
 \item{truncate.at}{Left-truncates a simulation epidemiological summary
-statistics and network statistics at a specified time step.}
+statistics and network statistics at a specified time step,
+passed to \code{\link{merge_simfiles}}.}
 
 \item{min.n}{Integer value for the minimum number of simulation files to be
 eligible for processing.}

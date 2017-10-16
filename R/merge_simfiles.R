@@ -101,7 +101,8 @@ merge_simfiles <- function(simno, ftype = "min", indir = "data/",
 #'        files should be saved.
 #' @param vars Argument passed to \code{\link{merge_simfiles}}.
 #' @param truncate.at Left-truncates a simulation epidemiological summary
-#'        statistics and network statistics at a specified time step.
+#'        statistics and network statistics at a specified time step,
+#'        passed to \code{\link{merge_simfiles}}.
 #' @param min.n Integer value for the minimum number of simulation files to be
 #'        eligible for processing.
 #' @param compress Argument passed to \code{\link{save}}.
