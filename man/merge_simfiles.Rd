@@ -5,7 +5,7 @@
 \title{Save Simulation Data from Stochastic Network Models}
 \usage{
 merge_simfiles(simno, ftype = "min", indir = "data/", vars = NULL,
-  verbose = TRUE)
+  truncate.at = NULL, verbose = TRUE)
 }
 \arguments{
 \item{simno}{First components of the simulation number in the standard format
@@ -21,6 +21,9 @@ files are stored.}
 \item{vars}{Character vector of variables stored in \code{epi} sub-list to
 retain in output data. If any variables are specified, then network
 statistics and other ancillary data are removed.}
+
+\item{truncate.at}{Left-truncates a simulation epidemiological summary
+statistics and network statistics at a specified time step.}
 
 \item{verbose}{If \code{TRUE}, print file load progress to console.}
 }
