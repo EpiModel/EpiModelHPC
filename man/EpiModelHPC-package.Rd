@@ -2,8 +2,8 @@
 % Please edit documentation in R/EpiModelHPC-package.r
 \docType{package}
 \name{EpiModelHPC-package}
-\alias{EpiModelHPC-package}
 \alias{EpiModelHPC}
+\alias{EpiModelHPC-package}
 \title{EpiModel Extensions for High-Performance Computing}
 \description{
 \tabular{ll}{
@@ -47,3 +47,4 @@ The main website for EpiModel is at \url{http://epimodel.org/}.
             feature requests may be filed there.
 }
 \keyword{package}
+

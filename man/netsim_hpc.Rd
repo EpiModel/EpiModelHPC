@@ -77,3 +77,4 @@ mainly for efficency purposes in running the models in parallel.
 If \code{save.min} and \code{save.max} are both set to \code{FALSE}, then the
 function will return rather than save the output EpiModel object.
 }
+

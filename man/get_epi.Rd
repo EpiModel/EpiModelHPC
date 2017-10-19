@@ -27,3 +27,4 @@ Loads a series of simulation files processed with \code{process_simfiles},
              extracts epidemiological output for smaller file sizes, and then
              saves the output.
 }
+
