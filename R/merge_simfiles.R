@@ -100,8 +100,6 @@ merge_simfiles <- function(simno, ftype = "min", indir = "data/",
 #' @param outdir File directory relative to working directory where simulation
 #'        files should be saved.
 #' @param vars Argument passed to \code{\link{merge_simfiles}}.
-#' @param truncate.at Left-truncates a simulation epidemiological summary
-#'        statistics and network statistics at a specified time step.
 #' @param min.n Integer value for the minimum number of simulation files to be
 #'        eligible for processing.
 #' @param compress Argument passed to \code{\link{save}}.
@@ -111,8 +109,7 @@ merge_simfiles <- function(simno, ftype = "min", indir = "data/",
 #' @export
 #'
 process_simfiles <- function(simno = NA, indir = "data/", outdir = "data/save/",
-                             vars = NULL, truncate.at = NULL,
-                             min.n, compress = TRUE, delete.sub,
+                             vars = NULL, min.n, compress = TRUE, delete.sub,
                              verbose = FALSE) {
 
   if (missing(delete.sub))  {
@@ -140,8 +137,7 @@ process_simfiles <- function(simno = NA, indir = "data/", outdir = "data/save/",
     if (!missing(min.n)) {
       if (min.n > length(fnj)) next
     }
-    sim <- merge_simfiles(simno = unique.nums[j], indir = indir, vars = vars,
-                          truncate.at = truncate.at, verbose = FALSE)
+    sim <- merge_simfiles(simno = unique.nums[j], indir = indir, vars = vars, verbose = FALSE)
     if (dir.exists(outdir) == FALSE) {
       dir.create(outdir)
     }
