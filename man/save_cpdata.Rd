@@ -21,4 +21,3 @@ for the purposes of checkpointing. This is intended to be used when running
 these simulations with \code{\link{netsim_hpc}}, and will be automatically
 inserted into the workflow when this is done.
 }
-

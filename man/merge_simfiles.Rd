@@ -41,4 +41,3 @@ in \code{qsub}. For example, if one would like to aggregate the two files for
 simulation number 1 stored in the \code{sim.n1.1.*} and \code{sim.n1.2.*} files,
 the \code{simno} argument would be \code{1}.
 }
-

@@ -37,4 +37,3 @@ file containing the simulation number of a stochastic network model run
 with \code{netsim}. This is used by default by the \code{\link{netsim_hpc}}
 function.
 }
-
