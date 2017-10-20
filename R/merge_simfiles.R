@@ -57,8 +57,8 @@ merge_simfiles <- function(simno, ftype = "min", indir = "data/",
     load(fn[i])
 
     if (!is.null(truncate.at)) {
-
       sim <- EpiModel::truncate_sim(sim, truncate.at)
+    }
 
     if (ftype == "min") {
       sim$network <- NULL
@@ -82,7 +82,7 @@ merge_simfiles <- function(simno, ftype = "min", indir = "data/",
     if (verbose == TRUE) {
       cat("File ", i, "/", length(fn), " Loaded ... \n", sep = "")
     }
-    }
+
 
   }
 
