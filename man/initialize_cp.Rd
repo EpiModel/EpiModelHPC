@@ -32,4 +32,3 @@ high-performance computing settings using \code{\link{netsim_hpc}}. That
 function automatically replaces the original initialization function with this
 checkpointed version when the simulation is in a checkpoint state.
 }
-
