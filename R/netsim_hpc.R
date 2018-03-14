@@ -20,7 +20,7 @@
 #' @param save.max Argument passed to \code{\link{savesim}}.
 #' @param compress Matches the \code{compress} argument for the \code{\link{save}}
 #'        function.
-#' @param verbose If \code{FALSE}, supress all output messages except errors.
+#' @param verbose If \code{FALSE}, suppress all output messages except errors.
 #'
 #' @details
 #' This function provides a systematic method to running stochastic network
@@ -48,8 +48,6 @@
 #'         \code{EpiModel::netsim}.
 #'   \item Save the completed simulation data, using the functionality of
 #'         \code{\link{savesim}}.
-#'   \item Remove any files in the "verb/" subdirectory, which is typically
-#'         used to store incremental model tracking text files.
 #'   \item Remove the checkpointed data and file directory created in step 1, if
 #'         it exists.
 #' }
@@ -188,16 +186,6 @@ netsim_hpc <- function(x, param, init, control,
   }
   if (save.min == TRUE | save.max == TRUE) {
     savesim(sim, save.min = save.min, save.max = save.max, compress = compress)
-  }
-
-  # Remove verbose txt files if present
-  fn <- list.files("verb/", pattern = paste0("sim", control$simno, ".*"),
-                   full.names = TRUE)
-  if (length(fn) > 0) {
-    if (verbose == TRUE) {
-      cat("\nRemoving verbose txt files ...")
-    }
-    unlink(fn)
   }
 
   # Remove CP data
