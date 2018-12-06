@@ -9,9 +9,9 @@ netsim_hpc(x, param, init, control, cp.save.int = NULL,
   verbose = TRUE)
 }
 \arguments{
-\item{x}{Character vector containing the file location and name of an Rdata
+\item{x}{Character vector containing the file path of an Rdata
 file where an object of class \code{netest} is stored. Alternatively,
-if restarting a previous simulation, this may be a file name for an
+if restarting a previous simulation, this may be a file path for an
 object of class \code{netsim}.}
 
 \item{param}{Model parameters, as an object of class \code{param.net}.}
@@ -37,7 +37,7 @@ function.}
 }
 \description{
 Simulates stochastic network epidemic models for infectious
-             disease in parallel.
+             disease dynamics in parallel.
 }
 \details{
 This function provides a systematic method to running stochastic network

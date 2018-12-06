@@ -1,6 +1,6 @@
 Package: EpiModelHPC
-Version: 1.5.0
-Date: 2018-03-14
+Version: 2.0.0
+Date: 2018-12-06
 Title: EpiModel Extensions for High-Performance Computing
 Description: Extension package to EpiModel to run large-scale stochastic network
     models on modern high-performance computing systems. Functionality provided to
@@ -24,6 +24,7 @@ Imports:
     tergm
 Suggests:
     rmarkdown,
-    testthat
+    testthat,
+    network
 VignetteBuilder: rmarkdown
 RoxygenNote: 6.1.1
