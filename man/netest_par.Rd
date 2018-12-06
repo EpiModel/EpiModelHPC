@@ -5,7 +5,7 @@
 \title{Dynamic Network Model Estimation in Parallel}
 \usage{
 netest_par(nw, formation, target.stats, coef.diss, constraints,
-  coef.form = NULL, edapprox = TRUE, output = "fit", set.control.ergm,
+  coef.form = NULL, edapprox = TRUE, set.control.ergm,
   set.control.stergm, ncores)
 }
 \arguments{
@@ -30,10 +30,6 @@ formula.}
 \item{edapprox}{If \code{TRUE}, use the indirect edges dissolution approximation
 method for the dynamic model fit, otherwise use the more time-intensive
 full STERGM estimation (see details).}
-
-\item{output}{If using the edges dissolution approximation method, \code{"sim"}
-simulates a static network from the fitted network model, for
-storage efficiency purposes.}
 
 \item{set.control.ergm}{Control arguments passed to \code{simulate.ergm} (see
 details).}
@@ -70,7 +66,7 @@ est
 nw <- network.initialize(n = 100, directed = FALSE)
 formation <- ~edges + concurrent
 target.stats <- list(c(50, 25),
-                     c(50, 10))
+                     c(50, 20))
 coef.diss <- dissolution_coefs(dissolution = ~offset(edges), duration = 10)
 est <- netest_par(nw, formation, target.stats, coef.diss, ncores = 2)
 est
