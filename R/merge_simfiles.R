@@ -126,18 +126,18 @@ process_simfiles <- function(simno = NA, indir = "data/", outdir = "data/save/",
   }
 
   if (is.na(simno)) {
-    fn <- list.files(indir, pattern = "sim.*.[0-9]+.*.min.rda", full.names = FALSE)
+    fn <- list.files(indir, pattern = "sim.*.[0-9]+.*.rda", full.names = FALSE)
     nums <- gsub("n", "",
                  unname(sapply(fn, function(x) strsplit(x, split = "[.]")[[1]][2])))
     unique.nums <- unique(nums)
   } else {
-    fn <- list.files(indir, pattern = paste0("sim.n", simno, ".[0-9]+.*.min.rda"),
+    fn <- list.files(indir, pattern = paste0("sim.n", simno, ".[0-9]+.*.rda"),
                      full.names = FALSE)
     unique.nums <- simno
   }
 
   for (j in seq_along(unique.nums)) {
-    fnj <- list.files(indir, pattern = paste0("sim.n", unique.nums[j], "*.[0-9]+.*.min.rda"),
+    fnj <- list.files(indir, pattern = paste0("sim.n", unique.nums[j], "*.[0-9]+.*.rda"),
                       full.names = TRUE)
     if (!missing(min.n)) {
       if (min.n > length(fnj)) next
