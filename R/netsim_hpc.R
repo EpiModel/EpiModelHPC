@@ -2,11 +2,11 @@
 #' @title Stochastic Network Models on High-Performance Computing Systems
 #'
 #' @description Simulates stochastic network epidemic models for infectious
-#'              disease in parallel.
+#'              disease dynamics in parallel.
 #'
-#' @param x Character vector containing the file location and name of an Rdata
+#' @param x Character vector containing the file path of an Rdata
 #'        file where an object of class \code{netest} is stored. Alternatively,
-#'        if restarting a previous simulation, this may be a file name for an
+#'        if restarting a previous simulation, this may be a file path for an
 #'        object of class \code{netsim}.
 #' @param param Model parameters, as an object of class \code{param.net}.
 #' @param init Initial conditions, as an object of class \code{init.net}.

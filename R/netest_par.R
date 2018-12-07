@@ -32,14 +32,14 @@
 #' nw <- network.initialize(n = 100, directed = FALSE)
 #' formation <- ~edges + concurrent
 #' target.stats <- list(c(50, 25),
-#'                      c(50, 10))
+#'                      c(50, 20))
 #' coef.diss <- dissolution_coefs(dissolution = ~offset(edges), duration = 10)
 #' est <- netest_par(nw, formation, target.stats, coef.diss, ncores = 2)
 #' est
 #' }
 #'
 netest_par <- function(nw, formation, target.stats, coef.diss,
-                       constraints, coef.form = NULL, edapprox = TRUE, output = "fit",
+                       constraints, coef.form = NULL, edapprox = TRUE,
                        set.control.ergm, set.control.stergm, ncores) {
 
   modvar <- NULL
@@ -86,14 +86,14 @@ netest_par <- function(nw, formation, target.stats, coef.diss,
   if (modvar == "ts") {
     out <- foreach(i = 1:nmods) %dopar% {
       netest(nw, formation, target.stats[[i]], coef.diss,
-             constraints, coef.form = NULL, edapprox = TRUE, output = "fit",
+             constraints, coef.form = NULL, edapprox = TRUE,
              set.control.ergm, set.control.stergm, verbose = FALSE)
     }
   }
   if (modvar == "cd") {
     out <- foreach(i = 1:nmods) %dopar% {
       netest(nw, formation, target.stats, coef.diss[[i]],
-             constraints, coef.form = NULL, edapprox = TRUE, output = "fit",
+             constraints, coef.form = NULL, edapprox = TRUE, 
              set.control.ergm, set.control.stergm, verbose = FALSE)
     }
   }
