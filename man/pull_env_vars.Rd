@@ -4,7 +4,17 @@
 \alias{pull_env_vars}
 \title{Pull Standard Environmental Variables in Slurm Jobs}
 \usage{
-pull_env_vars()
+pull_env_vars(standard.vars = TRUE, num.vars, char.vars)
+}
+\arguments{
+\item{standard.vars}{Pull and assign four standard Slurm variables: simno,
+jobno, ncores, njobs.}
+
+\item{num.vars}{Vector of environmental variables to pull and assign as 
+numeric in the global environment.}
+
+\item{char.vars}{Vector of environmental variables to pull and assign as
+character in the global environment.}
 }
 \description{
 Pulls four environmental variables commonly used in Slurm jobs
@@ -16,8 +26,13 @@ Sys.setenv("SLURM_ARRAY_TASK_ID"=4)
 Sys.setenv("SLURM_NTASKS_PER_NODE"=4)
 Sys.setenv("SLURM_ARRAY_TASK_MAX"=10)
 
-ls()
-pull_env_vars()
-ls()
+pull_env_vars(standard.vars = TRUE)
+
+Sys.setenv("tprob"=0.1)
+Sys.setenv("rrate"=14)
+Sys.setenv("scenario"="base")
+
+pull_env_vars(num.vars = c("tprob", "rrate"),
+              char.vars = "scenario")
 
 }
