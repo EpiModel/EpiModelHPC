@@ -112,7 +112,7 @@ merge_simfiles <- function(simno, ftype = "min", indir = "data/",
 #'
 #' @export
 #'
-process_simfiles <- function(simno = NA, indir = "data/", outdir = "data/save/",
+process_simfiles <- function(simno = NA, indir = "data/", outdir = "data/",
                              vars = NULL, truncate.at = NULL,
                              min.n, compress = TRUE, delete.sub,
                              verbose = FALSE) {
