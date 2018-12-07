@@ -4,23 +4,40 @@
 \alias{sbatch_master}
 \title{Create sbatch Bash Shell Script with Parameter Combination}
 \usage{
-sbatch_master(vars, outfile = "", runsimfile = "runsim.sh",
-  simno.start, narray = 0, ckpt = FALSE, append = FALSE)
+sbatch_master(vars, master.file = "", runsim.file = "runsim.sh",
+  build.runsim = FALSE, env.file = "~/loadR.sh",
+  rscript.file = "sim.R", simno.start, narray = 0, ckpt = FALSE,
+  append = FALSE, ncores = 16, mem = "58G", walltime = "1:00:00",
+  jobname, partition.main = "csde", partition.ckpt = "ckpt",
+  account.main = "csde", account.ckpt = "csde-ckpt")
 }
 \arguments{
 \item{vars}{A list of parameters with varying values (see examples below).}
 
-\item{outfile}{Name of the output bash shell script file to write. If \code{""}, 
-then will print to console.}
+\item{master.file}{Name of the output bash shell script file to write. If 
+\code{""}, then will print to console.}
 
-\item{runsimfile}{Name of the bash shell script file that contains the R batch
-commands}
+\item{runsim.file}{Name of the bash shell script file that contains the R batch
+commands to be executed by \code{sbatch}.}
+
+\item{build.runsim}{If \code{TRUE}, will write out a bash shell script with the
+file name \code{runsim.file} that loads the R environment listed in
+\code{env.file} and execute \code{Rscript} on the file listed in 
+\code{rscript.file}.}
+
+\item{env.file}{Bash shell script to load the R environment desired. Optionally
+kept in a user's home directory with the default file name. Example 
+script below.}
+
+\item{rscript.file}{Name of the \code{.R} file that contains the primary 
+simulation to be executed by \code{Rscript}.}
 
 \item{simno.start}{Starting number for the \code{SIMNO} variable. If missing
 and \code{append=TRUE}, will read the lines of \code{outfile}
 and start numbering at one after the previous maximum.}
 
-\item{narray}{Number of array jobs to run per scenario set.}
+\item{narray}{Number of array jobs to run per scenario set. If 0, then array 
+jobs will not be used.}
 
 \item{ckpt}{If \code{TRUE}, use the checkpoint queue to submit jobs. If
 numeric, will specify the first X jobs on the grid as non-backfill.}
@@ -28,25 +45,53 @@ numeric, will specify the first X jobs on the grid as non-backfill.}
 \item{append}{If \code{TRUE}, will append lines to a previously created shell
 script. New simno will either start with value of \code{simno.start}
 or the previous value if missing.}
+
+\item{ncores}{Number of cores per node to use within each Slurm job.}
+
+\item{mem}{Amount of memory needed per node within each Slurm job.}
+
+\item{walltime}{Amount of clock time needed per Slurm job.}
+
+\item{jobname}{Job name assigned to Slurm job. If unspecified, defaults to the
+simulation number in each job.}
+
+\item{partition.main}{Name of primary HPC partition (passed to -p).}
+
+\item{partition.ckpt}{Name of checkpoint HPC partition (passed to -p).}
+
+\item{account.main}{Name of primary account (passed to -A).}
+
+\item{account.ckpt}{Name of checkpoint account (passed to -A).}
 }
 \description{
 Creates a master-level SLURM::sbatch script given a set of parameter
              combinations implied by environmental arguments used as parameters.
 }
 \examples{
-vars <- list(A = 1:10, B = seq(0.5, 1.5, 0.5))
-sbatch_master(vars = vars)
-sbatch_master(vars = vars, narray = 10)
-sbatch_master(vars = vars, narray = 4, ckpt = TRUE)
-sbatch_master(vars = vars, narray = 4, ckpt = 10)
-sbatch_master(vars = vars, simno.start = 1000)
+vars <- list(A = 1:5, B = seq(0.5, 1.5, 0.5))
+sbatch_master(vars)
+sbatch_master(vars, narray = 10)
+sbatch_master(vars, narray = 4, ckpt = TRUE)
+sbatch_master(vars, narray = 4, ckpt = 10)
+sbatch_master(vars, simno.start = 1000)
+sbatch_master(vars, jobname = "epiSim")
 
 \dontrun{
-sbatch_master(vars = vars, narray = 4, simno.start = 1000, outfile = "master.sh")
-sbatch_master(vars = vars, narray = 4, append = TRUE, outfile = "master.sh")
+sbatch_master(vars, narray = 4, simno.start = 1000, master.file = "master.sh")
+sbatch_master(vars, narray = 4, append = TRUE, master.file = "master.sh")
 
-sbatch_master(vars = vars, simno.start = 1000, outfile = "master.sh")
-sbatch_master(vars = vars, simno.start = 2000, append = TRUE, outfile = "master.sh")
+sbatch_master(vars, simno.start = 1000, 
+              build.runsim = TRUE, master.file = "master.sh")
+sbatch_master(vars, simno.start = 2000, append = TRUE, 
+              master.file = "master.sh")
+
+## Example bash environment file
+#!/bin/bash
+
+. /gscratch/csde/sjenness/spack/share/spack/setup-env.sh
+module load gcc-8.2.0-gcc-4.8.5-rhsxipz
+module load r-3.5.1-gcc-8.2.0-4suigve
+
 }
 
 }
