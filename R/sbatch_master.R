@@ -21,14 +21,13 @@
 #' @param simno.start Starting number for the \code{SIMNO} variable. If missing
 #'        and \code{append=TRUE}, will read the lines of \code{outfile}
 #'        and start numbering at one after the previous maximum.
-#' @param narray Number of array jobs to run per scenario set. If 0, then array 
-#'        jobs will not be used.
+#' @param nsims Total number of simulations across all array jobs.
+#' @param ncores Number of cores per node to use within each Slurm job. 
 #' @param ckpt If \code{TRUE}, use the checkpoint queue to submit jobs. If
 #'        numeric, will specify the first X jobs on the grid as non-backfill.
 #' @param append If \code{TRUE}, will append lines to a previously created shell
 #'        script. New simno will either start with value of \code{simno.start}
 #'        or the previous value if missing.
-#' @param ncores Number of cores per node to use within each Slurm job. 
 #' @param mem Amount of memory needed per node within each Slurm job.
 #' @param walltime Amount of clock time needed per Slurm job.
 #' @param jobname Job name assigned to Slurm job. If unspecified, defaults to the
@@ -43,15 +42,15 @@
 #' @examples
 #' vars <- list(A = 1:5, B = seq(0.5, 1.5, 0.5))
 #' sbatch_master(vars)
-#' sbatch_master(vars, narray = 10)
-#' sbatch_master(vars, narray = 4, ckpt = TRUE)
-#' sbatch_master(vars, narray = 4, ckpt = 10)
+#' sbatch_master(vars, nsims = 250)
+#' sbatch_master(vars, ckpt = TRUE)
+#' sbatch_master(vars, nsims = 50, ckpt = 10)
 #' sbatch_master(vars, simno.start = 1000)
 #' sbatch_master(vars, jobname = "epiSim")
 #' 
 #' \dontrun{
-#' sbatch_master(vars, narray = 4, simno.start = 1000, master.file = "master.sh")
-#' sbatch_master(vars, narray = 4, append = TRUE, master.file = "master.sh")
+#' sbatch_master(vars, nsims = 50, simno.start = 1000, master.file = "master.sh")
+#' sbatch_master(vars, nsims = 50, append = TRUE, master.file = "master.sh")
 #' 
 #' sbatch_master(vars, simno.start = 1000, 
 #'               build.runsim = TRUE, master.file = "master.sh")
@@ -74,11 +73,11 @@ sbatch_master <- function(vars,
                           env.file = "~/loadR.sh",
                           rscript.file = "sim.R",
                           simno.start,
-                          narray = 0,
+                          nsims = 100,
+                          ncores = 16,
                           ckpt = FALSE,
                           append = FALSE,
-                          ncores = 16,
-                          mem = "58G",
+                          mem = "55G",
                           walltime = "1:00:00",
                           jobname,
                           partition.main = "csde",
@@ -107,12 +106,10 @@ sbatch_master <- function(vars,
     }
     SIMNO <- simno.start:(simno.start + nrow(grd.temp) - 1)
   }
-  if (narray == 0) {
-    NJOBS <- 1
-  } else {
-    NJOBS <- narray
-  }
-  grd <- data.frame(SIMNO, NJOBS, grd.temp)
+  narray <- ceiling(nsims/ncores)
+  NJOBS <- narray
+  NSIMS <- nsims
+  grd <- data.frame(SIMNO, NJOBS, NSIMS, grd.temp)
 
   pA.ckpt <- paste("-p", partition.ckpt, "-A", account.ckpt)
   pA.main <- paste("-p", partition.main, "-A", account.main)

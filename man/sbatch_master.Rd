@@ -6,8 +6,8 @@
 \usage{
 sbatch_master(vars, master.file = "", runsim.file = "runsim.sh",
   build.runsim = FALSE, env.file = "~/loadR.sh",
-  rscript.file = "sim.R", simno.start, narray = 0, ckpt = FALSE,
-  append = FALSE, ncores = 16, mem = "58G", walltime = "1:00:00",
+  rscript.file = "sim.R", simno.start, nsims = 100, ncores = 16,
+  ckpt = FALSE, append = FALSE, mem = "55G", walltime = "1:00:00",
   jobname, partition.main = "csde", partition.ckpt = "ckpt",
   account.main = "csde", account.ckpt = "csde-ckpt")
 }
@@ -36,8 +36,9 @@ simulation to be executed by \code{Rscript}.}
 and \code{append=TRUE}, will read the lines of \code{outfile}
 and start numbering at one after the previous maximum.}
 
-\item{narray}{Number of array jobs to run per scenario set. If 0, then array 
-jobs will not be used.}
+\item{nsims}{Total number of simulations across all array jobs.}
+
+\item{ncores}{Number of cores per node to use within each Slurm job.}
 
 \item{ckpt}{If \code{TRUE}, use the checkpoint queue to submit jobs. If
 numeric, will specify the first X jobs on the grid as non-backfill.}
@@ -45,8 +46,6 @@ numeric, will specify the first X jobs on the grid as non-backfill.}
 \item{append}{If \code{TRUE}, will append lines to a previously created shell
 script. New simno will either start with value of \code{simno.start}
 or the previous value if missing.}
-
-\item{ncores}{Number of cores per node to use within each Slurm job.}
 
 \item{mem}{Amount of memory needed per node within each Slurm job.}
 
@@ -70,15 +69,15 @@ Creates a master-level SLURM::sbatch script given a set of parameter
 \examples{
 vars <- list(A = 1:5, B = seq(0.5, 1.5, 0.5))
 sbatch_master(vars)
-sbatch_master(vars, narray = 10)
-sbatch_master(vars, narray = 4, ckpt = TRUE)
-sbatch_master(vars, narray = 4, ckpt = 10)
+sbatch_master(vars, nsims = 250)
+sbatch_master(vars, ckpt = TRUE)
+sbatch_master(vars, nsims = 50, ckpt = 10)
 sbatch_master(vars, simno.start = 1000)
 sbatch_master(vars, jobname = "epiSim")
 
 \dontrun{
-sbatch_master(vars, narray = 4, simno.start = 1000, master.file = "master.sh")
-sbatch_master(vars, narray = 4, append = TRUE, master.file = "master.sh")
+sbatch_master(vars, nsims = 50, simno.start = 1000, master.file = "master.sh")
+sbatch_master(vars, nsims = 50, append = TRUE, master.file = "master.sh")
 
 sbatch_master(vars, simno.start = 1000, 
               build.runsim = TRUE, master.file = "master.sh")
