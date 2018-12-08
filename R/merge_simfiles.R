@@ -106,6 +106,7 @@ merge_simfiles <- function(simno, ftype = "min", indir = "data/",
 #'        statistics and network statistics at a specified time step.
 #' @param min.n Integer value for the minimum number of simulation files to be
 #'        eligible for processing.
+#' @param nsims Total number of simulations across all sub-jobs.
 #' @param compress Argument passed to \code{\link{save}}.
 #' @param delete.sub Delete sub-job files after merge and saving.
 #' @param verbose Logical, print progress to console.
@@ -114,7 +115,7 @@ merge_simfiles <- function(simno, ftype = "min", indir = "data/",
 #'
 process_simfiles <- function(simno = NA, indir = "data/", outdir = "data/",
                              vars = NULL, truncate.at = NULL,
-                             min.n, compress = TRUE, delete.sub,
+                             min.n, nsims, compress = TRUE, delete.sub,
                              verbose = FALSE) {
 
   if (missing(delete.sub))  {
@@ -144,6 +145,9 @@ process_simfiles <- function(simno = NA, indir = "data/", outdir = "data/",
     }
     sim <- merge_simfiles(simno = unique.nums[j], indir = indir, vars = vars,
                           truncate.at = truncate.at, verbose = FALSE)
+    if (!missing(nsims) && sim$control$nsims > nsims) {
+      sim <- get_sims(sim, sims = sample(nsims))
+    }
     if (dir.exists(outdir) == FALSE) {
       dir.create(outdir)
     }
