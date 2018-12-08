@@ -107,7 +107,12 @@ sbatch_master <- function(vars,
     }
     SIMNO <- simno.start:(simno.start + nrow(grd.temp) - 1)
   }
-  grd <- data.frame(SIMNO, grd.temp)
+  if (narray == 0) {
+    NJOBS <- 1
+  } else {
+    NJOBS <- narray
+  }
+  grd <- data.frame(SIMNO, NJOBS, grd.temp)
 
   pA.ckpt <- paste("-p", partition.ckpt, "-A", account.ckpt)
   pA.main <- paste("-p", partition.main, "-A", account.main)

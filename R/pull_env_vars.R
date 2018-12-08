@@ -59,7 +59,7 @@ pull_env_vars <- function(standard.vars = TRUE,
       assign("ncores", 1L, pos = 1)
     }
     
-    njobs <- as.numeric(Sys.getenv("SLURM_ARRAY_TASK_MAX"))
+    njobs <- as.numeric(Sys.getenv("NJOBS"))
     if (!is.na(njobs)) {
       assign("njobs", njobs, pos = 1)
     } else {

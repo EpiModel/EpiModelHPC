@@ -4,7 +4,7 @@
 \alias{process_simfiles}
 \title{Process sub-job simulation files saved as a series of Rdata files.}
 \usage{
-process_simfiles(simno = NA, indir = "data/", outdir = "data/save/",
+process_simfiles(simno = NA, indir = "data/", outdir = "data/",
   vars = NULL, truncate.at = NULL, min.n, compress = TRUE,
   delete.sub, verbose = FALSE)
 }
