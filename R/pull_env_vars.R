@@ -17,7 +17,8 @@
 #' Sys.setenv("SIMNO"=1000)
 #' Sys.setenv("SLURM_ARRAY_TASK_ID"=4)
 #' Sys.setenv("SLURM_NTASKS_PER_NODE"=4)
-#' Sys.setenv("SLURM_ARRAY_TASK_MAX"=10)
+#' Sys.setenv("NJOBS"=10)
+#' Sys.setenv("NSIMS"=100)
 #' 
 #' pull_env_vars(standard.vars = TRUE)
 #' 
@@ -51,14 +52,18 @@ pull_env_vars <- function(standard.vars = TRUE,
     } else {
       assign("fsimno", 1L, pos = 1)
     }
-    
     ncores <- as.numeric(Sys.getenv("SLURM_NTASKS_PER_NODE"))
     if (!is.na(ncores)) {
       assign("ncores", ncores, pos = 1)
     } else {
       assign("ncores", 1L, pos = 1)
     }
-    
+    nsims <- as.numeric(Sys.getenv("NSIMS"))
+    if (!is.na(nsims)) {
+      assign("nsims", nsims, pos = 1)
+    } else {
+      assign("nsims", 1L, pos = 1)
+    }
     njobs <- as.numeric(Sys.getenv("NJOBS"))
     if (!is.na(njobs)) {
       assign("njobs", njobs, pos = 1)
