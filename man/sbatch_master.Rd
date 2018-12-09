@@ -6,11 +6,11 @@
 \usage{
 sbatch_master(vars, master.file = "", runsim.file = "runsim.sh",
   build.runsim = FALSE, env.file = "~/loadR.sh",
-  rscript.file = "sim.R", param.sheet, simno.start, nsims = 100,
-  ncores = 16, ckpt = FALSE, append = FALSE, mem = "55G",
-  walltime = "1:00:00", jobname, partition.main = "csde",
-  partition.ckpt = "ckpt", account.main = "csde",
-  account.ckpt = "csde-ckpt")
+  rscript.file = "sim.R", param.sheet, param.tag, simno.start,
+  nsims = 100, ncores = 16, ckpt = FALSE, append = FALSE,
+  mem = "55G", walltime = "1:00:00", jobname,
+  partition.main = "csde", partition.ckpt = "ckpt",
+  account.main = "csde", account.ckpt = "csde-ckpt")
 }
 \arguments{
 \item{vars}{A list of parameters with varying values (see examples below).}
@@ -35,6 +35,9 @@ simulation to be executed by \code{Rscript}.}
 
 \item{param.sheet}{Name of a csv file to write out the list of varying 
 parameters and simulation numbers set within the function.}
+
+\item{param.tag}{Character string for current scenario batch added to 
+param.sheet.}
 
 \item{simno.start}{Starting number for the \code{SIMNO} variable. If missing
 and \code{append=TRUE}, will read the lines of \code{outfile}

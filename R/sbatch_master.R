@@ -20,6 +20,8 @@
 #'        simulation to be executed by \code{Rscript}.
 #' @param param.sheet Name of a csv file to write out the list of varying 
 #'        parameters and simulation numbers set within the function. 
+#' @param param.tag Character string for current scenario batch added to 
+#'        param.sheet.
 #' @param simno.start Starting number for the \code{SIMNO} variable. If missing
 #'        and \code{append=TRUE}, will read the lines of \code{outfile}
 #'        and start numbering at one after the previous maximum.
@@ -74,6 +76,7 @@ sbatch_master <- function(vars,
                           env.file = "~/loadR.sh",
                           rscript.file = "sim.R",
                           param.sheet,
+                          param.tag,
                           simno.start,
                           nsims = 100,
                           ncores = 16,
@@ -170,6 +173,9 @@ sbatch_master <- function(vars,
   # build params sheet
   if (!missing(param.sheet)) {
     out <- grd[, -2]
+    if (!missing(param.tag)) {
+      out <- cbind(tag = param.tag, out)
+    }
     if (append == FALSE) {
       write.csv(out, file = param.sheet, row.names = FALSE)
     } else {
