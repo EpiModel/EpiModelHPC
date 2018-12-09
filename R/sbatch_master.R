@@ -18,6 +18,8 @@
 #'        script below.
 #' @param rscript.file Name of the \code{.R} file that contains the primary 
 #'        simulation to be executed by \code{Rscript}.
+#' @param param.sheet Name of a csv file to write out the list of varying 
+#'        parameters and simulation numbers set within the function. 
 #' @param simno.start Starting number for the \code{SIMNO} variable. If missing
 #'        and \code{append=TRUE}, will read the lines of \code{outfile}
 #'        and start numbering at one after the previous maximum.
