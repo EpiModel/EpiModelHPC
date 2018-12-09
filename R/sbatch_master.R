@@ -40,6 +40,7 @@
 #' @export
 #'
 #' @examples
+#' # Examples printing to console
 #' vars <- list(A = 1:5, B = seq(0.5, 1.5, 0.5))
 #' sbatch_master(vars)
 #' sbatch_master(vars, nsims = 250)
@@ -49,13 +50,11 @@
 #' sbatch_master(vars, jobname = "epiSim")
 #' 
 #' \dontrun{
-#' sbatch_master(vars, nsims = 50, simno.start = 1000, master.file = "master.sh")
-#' sbatch_master(vars, nsims = 50, append = TRUE, master.file = "master.sh")
-#' 
-#' sbatch_master(vars, simno.start = 1000, 
-#'               build.runsim = TRUE, master.file = "master.sh")
-#' sbatch_master(vars, simno.start = 2000, append = TRUE, 
-#'               master.file = "master.sh")
+#' # Full-scale example writing out files
+#' sbatch_master(vars, nsims = 50, simno.start = 1000, build.runsim = TRUE,
+#'               master.file = "master.sh", param.sheet = "params.csv")
+#' sbatch_master(vars, nsims = 50, append = TRUE, 
+#'               master.file = "master.sh", param.sheet = "params.csv")
 #' 
 #' ## Example bash environment file
 #' #!/bin/bash
@@ -72,6 +71,7 @@ sbatch_master <- function(vars,
                           build.runsim = FALSE,
                           env.file = "~/loadR.sh",
                           rscript.file = "sim.R",
+                          param.sheet,
                           simno.start,
                           nsims = 100,
                           ncores = 16,
@@ -163,6 +163,18 @@ sbatch_master <- function(vars,
     cat("#!/bin/bash\n", 
         "\nsource", env.file,
         "\nRscript", rscript.file, file = runsim.file)
+  }
+
+  # build params sheet
+  if (!missing(param.sheet)) {
+    out <- grd[, -2]
+    if (append == FALSE) {
+      write.csv(out, file = param.sheet, row.names = FALSE)
+    } else {
+      prior <- read.csv(param.sheet)
+      out <- rbind(prior, out)
+      write.csv(out, file = param.sheet, row.names = FALSE)
+    }
   }
 
 

@@ -6,10 +6,11 @@
 \usage{
 sbatch_master(vars, master.file = "", runsim.file = "runsim.sh",
   build.runsim = FALSE, env.file = "~/loadR.sh",
-  rscript.file = "sim.R", simno.start, nsims = 100, ncores = 16,
-  ckpt = FALSE, append = FALSE, mem = "55G", walltime = "1:00:00",
-  jobname, partition.main = "csde", partition.ckpt = "ckpt",
-  account.main = "csde", account.ckpt = "csde-ckpt")
+  rscript.file = "sim.R", param.sheet, simno.start, nsims = 100,
+  ncores = 16, ckpt = FALSE, append = FALSE, mem = "55G",
+  walltime = "1:00:00", jobname, partition.main = "csde",
+  partition.ckpt = "ckpt", account.main = "csde",
+  account.ckpt = "csde-ckpt")
 }
 \arguments{
 \item{vars}{A list of parameters with varying values (see examples below).}
@@ -67,6 +68,7 @@ Creates a master-level SLURM::sbatch script given a set of parameter
              combinations implied by environmental arguments used as parameters.
 }
 \examples{
+# Examples printing to console
 vars <- list(A = 1:5, B = seq(0.5, 1.5, 0.5))
 sbatch_master(vars)
 sbatch_master(vars, nsims = 250)
@@ -76,13 +78,11 @@ sbatch_master(vars, simno.start = 1000)
 sbatch_master(vars, jobname = "epiSim")
 
 \dontrun{
-sbatch_master(vars, nsims = 50, simno.start = 1000, master.file = "master.sh")
-sbatch_master(vars, nsims = 50, append = TRUE, master.file = "master.sh")
-
-sbatch_master(vars, simno.start = 1000, 
-              build.runsim = TRUE, master.file = "master.sh")
-sbatch_master(vars, simno.start = 2000, append = TRUE, 
-              master.file = "master.sh")
+# Full-scale example writing out files
+sbatch_master(vars, nsims = 50, simno.start = 1000, build.runsim = TRUE,
+              master.file = "master.sh", param.sheet = "params.csv")
+sbatch_master(vars, nsims = 50, append = TRUE, 
+              master.file = "master.sh", param.sheet = "params.csv")
 
 ## Example bash environment file
 #!/bin/bash
