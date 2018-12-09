@@ -43,7 +43,7 @@
 #' @name EpiModelHPC-package
 #' @aliases EpiModelHPC
 #' @import EpiModel doParallel foreach ergm tergm
-#' @importFrom utils read.table
+#' @importFrom utils read.table read.csv write.csv
 #' @docType package
 #' @keywords package
 #'
