@@ -92,7 +92,14 @@ sbatch_master <- function(vars,
                           ) {
 
   # build master.sh file
-  grd.temp <- do.call("expand.grid", vars)
+  if (!is.null(vars)) {
+    grd.temp <- do.call("expand.grid", vars)
+    nsets <- nrow(grd.temp)
+  } else {
+    grd.temp <- NULL
+    nsets <- 1
+  }
+  
   if (append == TRUE) {
     if (missing(simno.start)) {
       t <- read.table(master.file)
@@ -101,20 +108,25 @@ sbatch_master <- function(vars,
       vs <- as.character(t[[tpos]])
       vs1 <- strsplit(vs, ",")[[1]][2]
       sn <- as.numeric(strsplit(vs1, "=")[[1]][2])
-      SIMNO <- (sn + 1):(sn + nrow(grd.temp))
+      SIMNO <- (sn + 1):(sn + nsets)
     } else {
-      SIMNO <- simno.start:(simno.start + nrow(grd.temp) - 1)
+      SIMNO <- simno.start:(simno.start + nsets - 1)
     }
   } else {
     if (missing(simno.start)) {
       simno.start <- 1
     }
-    SIMNO <- simno.start:(simno.start + nrow(grd.temp) - 1)
+    SIMNO <- simno.start:(simno.start + nsets - 1)
   }
   narray <- ceiling(nsims/ncores)
   NJOBS <- narray
   NSIMS <- nsims
-  grd <- data.frame(SIMNO, NJOBS, NSIMS, grd.temp)
+
+  if (!is.null(grd.temp)) {
+    grd <- data.frame(SIMNO, NJOBS, NSIMS, grd.temp)
+  } else {
+    grd <- data.frame(SIMNO, NJOBS, NSIMS)
+  }
 
   pA.ckpt <- paste("-p", partition.ckpt, "-A", account.ckpt)
   pA.main <- paste("-p", partition.main, "-A", account.main)
@@ -140,13 +152,17 @@ sbatch_master <- function(vars,
     cat("#!/bin/bash\n", file = master.file)
   }
   for (i in 1:nrow(grd)) {
-    v.args <- NA
-    for (j in 1:ncol(grd)) {
-      v.args[j] <- paste0(names(grd)[j], "=", grd[i,j])
+    if (!is.null(grd.temp)) {
+      v.args <- NA
+      for (j in 1:ncol(grd)) {
+        v.args[j] <- paste0(names(grd)[j], "=", grd[i,j])
+      }
+      v.args <- paste(v.args, collapse = ",")
+      v.args <- paste(" --export=ALL", v.args, sep = ",")
+    } else {
+      v.args <- ""
     }
-    v.args <- paste(v.args, collapse = ",")
-    v.args <- paste(" --export=ALL", v.args, sep = ",")
-
+    
     node.args <- paste(" --nodes=1 --ntasks-per-node=", ncores, sep = "")
     time.arg <- paste(" --time=", walltime, sep = "")
     mem.arg <- paste(" --mem=", mem, sep = "")
