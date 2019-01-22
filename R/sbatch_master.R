@@ -152,16 +152,12 @@ sbatch_master <- function(vars,
     cat("#!/bin/bash\n", file = master.file)
   }
   for (i in 1:nrow(grd)) {
-    if (!is.null(grd.temp)) {
-      v.args <- NA
-      for (j in 1:ncol(grd)) {
-        v.args[j] <- paste0(names(grd)[j], "=", grd[i,j])
-      }
-      v.args <- paste(v.args, collapse = ",")
-      v.args <- paste(" --export=ALL", v.args, sep = ",")
-    } else {
-      v.args <- ""
+    v.args <- NA
+    for (j in 1:ncol(grd)) {
+      v.args[j] <- paste0(names(grd)[j], "=", grd[i,j])
     }
+    v.args <- paste(v.args, collapse = ",")
+    v.args <- paste(" --export=ALL", v.args, sep = ",")
     
     node.args <- paste(" --nodes=1 --ntasks-per-node=", ncores, sep = "")
     time.arg <- paste(" --time=", walltime, sep = "")
