@@ -115,16 +115,8 @@ merge_simfiles <- function(simno, ftype = "min", indir = "data/",
 #'
 process_simfiles <- function(simno = NA, indir = "data/", outdir = "data/",
                              vars = NULL, truncate.at = NULL,
-                             min.n, nsims, compress = TRUE, delete.sub,
+                             min.n, nsims, compress = TRUE, delete.sub = TRUE,
                              verbose = FALSE) {
-
-  if (missing(delete.sub))  {
-    if (!is.null(vars)) {
-      delete.sub <- FALSE
-    } else {
-      delete.sub <- TRUE
-    }
-  }
 
   if (is.na(simno)) {
     fn <- list.files(indir, pattern = "sim.*.[0-9]+.*.rda", full.names = FALSE)

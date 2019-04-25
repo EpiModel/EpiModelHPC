@@ -6,7 +6,7 @@
 \usage{
 process_simfiles(simno = NA, indir = "data/", outdir = "data/",
   vars = NULL, truncate.at = NULL, min.n, nsims, compress = TRUE,
-  delete.sub, verbose = FALSE)
+  delete.sub = TRUE, verbose = FALSE)
 }
 \arguments{
 \item{simno}{Simulation number to process.}
