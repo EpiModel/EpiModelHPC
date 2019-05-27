@@ -17,13 +17,12 @@
 #' @param save.max If \code{TRUE}, saves the full \code{netsim} object without
 #'        any deletions.
 #' @param compress Matches the \code{compress} argument for the \code{\link{save}}
-#'        function. Set to \code{FALSE} for no compression.
+#'        function.
 #'
 #' @details
 #' This function provides an automated method for saving a time-stamped Rdata
 #' file containing the simulation number of a stochastic network model run
-#' with \code{netsim}. This is used by default by the \code{\link{netsim_hpc}}
-#' function.
+#' with \code{netsim}.
 #'
 #' @export
 #'
@@ -31,7 +30,7 @@ savesim <- function(sim,
                     dataf = TRUE,
                     save.min = TRUE,
                     save.max = TRUE,
-                    compress = "xz") {
+                    compress = FALSE) {
 
   if (!is.null(sim$control$simno)) {
     no <- sim$control$simno

@@ -5,7 +5,7 @@
 \title{Process sub-job simulation files saved as a series of Rdata files.}
 \usage{
 process_simfiles(simno = NA, indir = "data/", outdir = "data/",
-  vars = NULL, truncate.at = NULL, min.n, nsims, compress = TRUE,
+  vars = NULL, truncate.at = NULL, min.n, nsims, compress = "xz",
   delete.sub = TRUE, verbose = FALSE)
 }
 \arguments{

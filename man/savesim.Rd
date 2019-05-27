@@ -5,7 +5,7 @@
 \title{Save Simulation Data from Stochastic Network Models}
 \usage{
 savesim(sim, dataf = TRUE, save.min = TRUE, save.max = TRUE,
-  compress = "xz")
+  compress = FALSE)
 }
 \arguments{
 \item{sim}{An \code{EpiModel} object of class \code{netsim} to be saved to an
@@ -25,7 +25,7 @@ name for this small file will have ".min" appended at the end.}
 any deletions.}
 
 \item{compress}{Matches the \code{compress} argument for the \code{\link{save}}
-function. Set to \code{FALSE} for no compression.}
+function.}
 }
 \description{
 Saves an Rdata file containing stochastic network model output
@@ -34,6 +34,5 @@ Saves an Rdata file containing stochastic network model output
 \details{
 This function provides an automated method for saving a time-stamped Rdata
 file containing the simulation number of a stochastic network model run
-with \code{netsim}. This is used by default by the \code{\link{netsim_hpc}}
-function.
+with \code{netsim}.
 }

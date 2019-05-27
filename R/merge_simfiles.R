@@ -115,7 +115,7 @@ merge_simfiles <- function(simno, ftype = "min", indir = "data/",
 #'
 process_simfiles <- function(simno = NA, indir = "data/", outdir = "data/",
                              vars = NULL, truncate.at = NULL,
-                             min.n, nsims, compress = TRUE, delete.sub = TRUE,
+                             min.n, nsims, compress = "xz", delete.sub = TRUE,
                              verbose = FALSE) {
 
   if (is.na(simno)) {
