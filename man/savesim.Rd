@@ -5,7 +5,7 @@
 \title{Save Simulation Data from Stochastic Network Models}
 \usage{
 savesim(sim, dataf = TRUE, save.min = TRUE, save.max = TRUE,
-  compress = FALSE)
+  time.stamp = TRUE, compress = FALSE)
 }
 \arguments{
 \item{sim}{An \code{EpiModel} object of class \code{netsim} to be saved to an
@@ -23,6 +23,9 @@ name for this small file will have ".min" appended at the end.}
 
 \item{save.max}{If \code{TRUE}, saves the full \code{netsim} object without
 any deletions.}
+
+\item{time.stamp}{If \code{TRUE}, saves the file with a time stamp in the
+file name.}
 
 \item{compress}{Matches the \code{compress} argument for the \code{\link{save}}
 function.}

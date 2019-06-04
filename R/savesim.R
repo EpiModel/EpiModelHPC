@@ -16,6 +16,8 @@
 #'        name for this small file will have ".min" appended at the end.
 #' @param save.max If \code{TRUE}, saves the full \code{netsim} object without
 #'        any deletions.
+#' @param time.stamp If \code{TRUE}, saves the file with a time stamp in the
+#'        file name.
 #' @param compress Matches the \code{compress} argument for the \code{\link{save}}
 #'        function.
 #'
@@ -30,6 +32,7 @@ savesim <- function(sim,
                     dataf = TRUE,
                     save.min = TRUE,
                     save.max = TRUE,
+                    time.stamp = TRUE,
                     compress = FALSE) {
 
   if (!is.null(sim$control$simno)) {
@@ -39,7 +42,12 @@ savesim <- function(sim,
   }
 
   ctime <- format(Sys.time(), "%Y%m%d.%H%M")
-  fn <- paste0("sim.n", no, ".", ctime, ".rda")
+  if (time.stamp == TRUE) {
+    fn <- paste0("sim.n", no, ".", ctime, ".rda")
+  } else {
+    fn <- paste0("sim.n", no, ".rda")
+  }
+
 
   if (dataf == TRUE) {
     if (file.exists("data/") == FALSE) {
@@ -64,7 +72,11 @@ savesim <- function(sim,
                          "dissolution", "coef.diss", "edapprox",
                          "constraints")] <- NULL
     }
-    fnm <- paste0("sim.n", no, ".", ctime, ".min.rda")
+    if (time.stamp == TRUE) {
+      fnm <- paste0("sim.n", no, ".", ctime, ".min.rda")
+    } else {
+      fnm <- paste0("sim.n", no, ".min.rda")
+    }
     if (dataf == TRUE) {
       fnm <- paste0("data/", fnm)
     }
