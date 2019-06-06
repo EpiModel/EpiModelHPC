@@ -5,6 +5,8 @@
 #'              combinations implied by environmental arguments used as parameters.
 #'
 #' @param vars A list of parameters with varying values (see examples below).
+#' @param expand.vars If \code{TRUE}, expand the grid on the individual vars, else
+#'        the individual vars must be vectors of equal length.
 #' @param master.file Name of the output bash shell script file to write. If 
 #'        \code{""}, then will print to console.
 #' @param runsim.file Name of the bash shell script file that contains the R batch
@@ -70,6 +72,7 @@
 #' }
 #' 
 sbatch_master <- function(vars,
+                          expand.vars = TRUE,
                           master.file = "",
                           runsim.file = "runsim.sh",
                           build.runsim = FALSE,
@@ -93,7 +96,11 @@ sbatch_master <- function(vars,
 
   # build master.sh file
   if (!is.null(vars)) {
-    grd.temp <- do.call("expand.grid", vars)
+    if (expand.vars == TRUE) {
+      grd.temp <- do.call("expand.grid", vars)
+    } else {
+      grd.temp <- data.frame(vars)
+    }
     nsets <- nrow(grd.temp)
   } else {
     grd.temp <- NULL
