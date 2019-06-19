@@ -1,6 +1,6 @@
 Package: EpiModelHPC
-Version: 2.0.1
-Date: 2019-01-21
+Version: 2.0.2
+Date: 2019-06-19
 Title: EpiModel Extensions for High-Performance Computing
 Description: Extension package to EpiModel to run large-scale stochastic network
     models on modern high-performance computing systems. Functionality provided to
