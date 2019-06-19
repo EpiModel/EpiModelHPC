@@ -10,6 +10,8 @@
 #'        numeric in the global environment.
 #' @param char.vars Vector of environmental variables to pull and assign as
 #'        character in the global environment.
+#' @param logic.vars Vector of environmental variables to pull and assign
+#'        as logical in the global environment.
 #' 
 #' @export
 #'
@@ -21,17 +23,22 @@
 #' Sys.setenv("NSIMS"=100)
 #' 
 #' pull_env_vars(standard.vars = TRUE)
+#' ls()
 #' 
 #' Sys.setenv("tprob"=0.1)
 #' Sys.setenv("rrate"=14)
 #' Sys.setenv("scenario"="base")
+#' Sys.setenv("condition"=TRUE)
 #' 
 #' pull_env_vars(num.vars = c("tprob", "rrate"),
-#'               char.vars = "scenario")
+#'               char.vars = "scenario",
+#'               logic.vars = "condition")
+#' ls()
 #' 
 pull_env_vars <- function(standard.vars = TRUE,
                           num.vars,
-                          char.vars) {
+                          char.vars,
+                          logic.vars) {
 
   if (standard.vars == TRUE) {
     simno <- as.numeric(Sys.getenv("SIMNO"))
@@ -81,6 +88,12 @@ pull_env_vars <- function(standard.vars = TRUE,
     for (i in 1:length(char.vars)) {
       var <- Sys.getenv(char.vars[i])
       assign(char.vars[i], var, pos = 1)
+    }
+  }
+  if (!missing(logic.vars)) {
+    for (i in 1:length(logic.vars)) {
+      var <- as.logical(Sys.getenv(logic.vars[i]))
+      assign(logic.vars[i], var, pos = 1)
     }
   }
 
