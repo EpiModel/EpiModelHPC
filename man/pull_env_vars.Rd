@@ -26,7 +26,7 @@ Pulls four environmental variables commonly used in Slurm jobs
 \examples{
 Sys.setenv("SIMNO"=1000)
 Sys.setenv("SLURM_ARRAY_TASK_ID"=4)
-Sys.setenv("SLURM_NTASKS_PER_NODE"=4)
+Sys.setenv("SLURM_TASKS_PER_NODE"=4)
 Sys.setenv("NJOBS"=10)
 Sys.setenv("NSIMS"=100)
 
