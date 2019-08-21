@@ -184,7 +184,8 @@ sbatch_master <- function(vars,
   
   # build runsim.sh script
   if (build.runsim == TRUE) {
-    cat("#!/bin/bash\n", 
+    cat("#!/bin/bash\n",
+        "\n#SBATCH -o ./out/%x_%a.out\n",
         "\nsource", env.file,
         "\nRscript", rscript.file, file = runsim.file)
   }
