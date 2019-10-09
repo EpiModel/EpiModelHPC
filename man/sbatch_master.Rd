@@ -6,10 +6,10 @@
 \usage{
 sbatch_master(vars, expand.vars = TRUE, working.dir = "",
   master.file = "", runsim.file = "runsim.sh", build.runsim = FALSE,
-  env.file = "~/loadR.sh", rscript.file = "sim.R", param.file,
-  param.tag, simno.start, nsims = 100, ncores = 16, ckpt = FALSE,
-  append = FALSE, mem = "55G", walltime = "1:00:00", jobname,
-  partition.main = "csde", partition.ckpt = "ckpt",
+  env.file = "~/loadR.sh", rscript.file = "sim.R", param.file = NULL,
+  param.tag = NULL, simno.start, nsims = 100, ncores = 16,
+  ckpt = FALSE, append = FALSE, mem = "55G", walltime = "1:00:00",
+  jobname, partition.main = "csde", partition.ckpt = "ckpt",
   account.main = "csde", account.ckpt = "csde-ckpt")
 }
 \arguments{
@@ -17,6 +17,9 @@ sbatch_master(vars, expand.vars = TRUE, working.dir = "",
 
 \item{expand.vars}{If \code{TRUE}, expand the grid on the individual vars, else
 the individual vars must be vectors of equal length.}
+
+\item{working.dir}{Path to write out the \code{master.file}, and if specified
+the \code{runsim.file} and \code{param.file}.}
 
 \item{master.file}{Name of the output bash shell script file to write. If 
 \code{""}, then will print to console.}

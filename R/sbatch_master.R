@@ -7,6 +7,8 @@
 #' @param vars A list of parameters with varying values (see examples below).
 #' @param expand.vars If \code{TRUE}, expand the grid on the individual vars, else
 #'        the individual vars must be vectors of equal length.
+#' @param working.dir Path to write out the \code{master.file}, and if specified
+#'        the \code{runsim.file} and \code{param.file}. 
 #' @param master.file Name of the output bash shell script file to write. If 
 #'        \code{""}, then will print to console.
 #' @param runsim.file Name of the bash shell script file that contains the R batch
@@ -79,8 +81,8 @@ sbatch_master <- function(vars,
                           build.runsim = FALSE,
                           env.file = "~/loadR.sh",
                           rscript.file = "sim.R",
-                          param.file,
-                          param.tag,
+                          param.file = NULL,
+                          param.tag = NULL,
                           simno.start,
                           nsims = 100,
                           ncores = 16,
@@ -95,6 +97,15 @@ sbatch_master <- function(vars,
                           account.ckpt = "csde-ckpt"
                           ) {
 
+  # working directory for files
+  master.file.loc <- paste0(working.dir, master.file)
+  if (build.runsim == TRUE) {
+    runsim.file.loc <- paste0(working.dir, runsim.file)
+  }
+  if (!is.null(param.file)) {
+    param.file.loc <- paste0(working.dir, param.file)
+  }
+  
   # build master.sh file
   if (!is.null(vars)) {
     if (expand.vars == TRUE) {
@@ -110,7 +121,7 @@ sbatch_master <- function(vars,
   
   if (append == TRUE) {
     if (missing(simno.start)) {
-      t <- read.table(master.file)
+      t <- read.table(master.file.loc)
       t <- as.list(t[nrow(t), ])
       tpos <- unname(which(sapply(t, function(x) grepl("SIMNO", x)) == TRUE))
       vs <- as.character(t[[tpos]])
@@ -157,7 +168,7 @@ sbatch_master <- function(vars,
   }
   
   if (append == FALSE) {
-    cat("#!/bin/bash\n", file = master.file)
+    cat("#!/bin/bash\n", file = master.file.loc)
   }
   for (i in 1:nrow(grd)) {
     v.args <- NA
@@ -179,30 +190,30 @@ sbatch_master <- function(vars,
     cat("\n", "sbatch ", ckpt.ch[i], narray.ch, 
         node.args, time.arg, mem.arg, jname.arg,
         v.args, " ", runsim.file,
-        file = master.file, append = TRUE, sep = "")
+        file = master.file.loc, append = TRUE, sep = "")
   }
-  cat("\n", file = master.file, append = TRUE)
+  cat("\n", file = master.file.loc, append = TRUE)
   
   # build runsim.sh script
   if (build.runsim == TRUE) {
     cat("#!/bin/bash\n",
         "\n#SBATCH -o ./out/%x_%a.out\n",
         "\nsource", env.file,
-        "\nRscript", rscript.file, file = runsim.file)
+        "\nRscript", rscript.file, file = runsim.file.loc)
   }
 
   # build params sheet
-  if (!missing(param.file)) {
+  if (!is.null(param.file)) {
     out <- grd[, -2]
-    if (!missing(param.tag)) {
+    if (!is.null(param.tag)) {
       out <- cbind(tag = param.tag, out)
     }
     if (append == FALSE) {
-      write.csv(out, file = param.file, row.names = FALSE)
+      write.csv(out, file = param.file.loc, row.names = FALSE)
     } else {
       prior <- read.csv(param.file)
       out <- rbind(prior, out)
-      write.csv(out, file = param.file, row.names = FALSE)
+      write.csv(out, file = param.file.loc, row.names = FALSE)
     }
   }
 
