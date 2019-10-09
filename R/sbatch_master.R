@@ -211,7 +211,7 @@ sbatch_master <- function(vars,
     if (append == FALSE) {
       write.csv(out, file = param.file.loc, row.names = FALSE)
     } else {
-      prior <- read.csv(param.file)
+      prior <- read.csv(param.file.loc)
       out <- rbind(prior, out)
       write.csv(out, file = param.file.loc, row.names = FALSE)
     }
