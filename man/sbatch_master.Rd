@@ -4,9 +4,9 @@
 \alias{sbatch_master}
 \title{Create sbatch Bash Shell Script with Parameter Combination}
 \usage{
-sbatch_master(vars, expand.vars = TRUE, master.file = "",
-  runsim.file = "runsim.sh", build.runsim = FALSE,
-  env.file = "~/loadR.sh", rscript.file = "sim.R", param.sheet,
+sbatch_master(vars, expand.vars = TRUE, working.dir = "",
+  master.file = "", runsim.file = "runsim.sh", build.runsim = FALSE,
+  env.file = "~/loadR.sh", rscript.file = "sim.R", param.file,
   param.tag, simno.start, nsims = 100, ncores = 16, ckpt = FALSE,
   append = FALSE, mem = "55G", walltime = "1:00:00", jobname,
   partition.main = "csde", partition.ckpt = "ckpt",
@@ -36,7 +36,7 @@ script below.}
 \item{rscript.file}{Name of the \code{.R} file that contains the primary 
 simulation to be executed by \code{Rscript}.}
 
-\item{param.sheet}{Name of a csv file to write out the list of varying 
+\item{param.file}{Name of a csv file to write out the list of varying 
 parameters and simulation numbers set within the function.}
 
 \item{param.tag}{Character string for current scenario batch added to 

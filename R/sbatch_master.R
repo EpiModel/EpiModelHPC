@@ -20,7 +20,7 @@
 #'        script below.
 #' @param rscript.file Name of the \code{.R} file that contains the primary 
 #'        simulation to be executed by \code{Rscript}.
-#' @param param.sheet Name of a csv file to write out the list of varying 
+#' @param param.file Name of a csv file to write out the list of varying 
 #'        parameters and simulation numbers set within the function. 
 #' @param param.tag Character string for current scenario batch added to 
 #'        param.sheet.
@@ -73,12 +73,13 @@
 #' 
 sbatch_master <- function(vars,
                           expand.vars = TRUE,
+                          working.dir = "",
                           master.file = "",
                           runsim.file = "runsim.sh",
                           build.runsim = FALSE,
                           env.file = "~/loadR.sh",
                           rscript.file = "sim.R",
-                          param.sheet,
+                          param.file,
                           param.tag,
                           simno.start,
                           nsims = 100,
@@ -87,7 +88,7 @@ sbatch_master <- function(vars,
                           append = FALSE,
                           mem = "55G",
                           walltime = "1:00:00",
-                          jobname,
+                          jobname, 
                           partition.main = "csde",
                           partition.ckpt = "ckpt",
                           account.main = "csde",
@@ -191,17 +192,17 @@ sbatch_master <- function(vars,
   }
 
   # build params sheet
-  if (!missing(param.sheet)) {
+  if (!missing(param.file)) {
     out <- grd[, -2]
     if (!missing(param.tag)) {
       out <- cbind(tag = param.tag, out)
     }
     if (append == FALSE) {
-      write.csv(out, file = param.sheet, row.names = FALSE)
+      write.csv(out, file = param.file, row.names = FALSE)
     } else {
-      prior <- read.csv(param.sheet)
+      prior <- read.csv(param.file)
       out <- rbind(prior, out)
-      write.csv(out, file = param.sheet, row.names = FALSE)
+      write.csv(out, file = param.file, row.names = FALSE)
     }
   }
 
