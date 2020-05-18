@@ -4,9 +4,18 @@
 \alias{netest_par}
 \title{Dynamic Network Model Estimation in Parallel}
 \usage{
-netest_par(nw, formation, target.stats, coef.diss, constraints,
-  coef.form = NULL, edapprox = TRUE, set.control.ergm,
-  set.control.stergm, ncores)
+netest_par(
+  nw,
+  formation,
+  target.stats,
+  coef.diss,
+  constraints,
+  coef.form = NULL,
+  edapprox = TRUE,
+  set.control.ergm,
+  set.control.stergm,
+  ncores
+)
 }
 \arguments{
 \item{nw}{An object of class \code{network}.}
@@ -18,7 +27,7 @@ netest_par(nw, formation, target.stats, coef.diss, constraints,
 one number for each network statistic in the model.}
 
 \item{coef.diss}{An object of class \code{disscoef} output from the
-\code{\link{dissolution_coefs}} function.}
+\code{\link[EpiModel]{dissolution_coefs}} function.}
 
 \item{constraints}{Right-hand sided formula specifying constraints for the
 modeled network, in the form \code{~...}, where \code{...} are constraint

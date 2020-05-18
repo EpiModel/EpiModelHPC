@@ -4,8 +4,14 @@
 \alias{savesim}
 \title{Save Simulation Data from Stochastic Network Models}
 \usage{
-savesim(sim, dataf = TRUE, save.min = TRUE, save.max = TRUE,
-  time.stamp = TRUE, compress = FALSE)
+savesim(
+  sim,
+  dataf = TRUE,
+  save.min = TRUE,
+  save.max = TRUE,
+  time.stamp = TRUE,
+  compress = FALSE
+)
 }
 \arguments{
 \item{sim}{An \code{EpiModel} object of class \code{netsim} to be saved to an

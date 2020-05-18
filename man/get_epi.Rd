@@ -4,8 +4,14 @@
 \alias{get_epi}
 \title{Extract Epidemiological Output from Saved Simulation Files and Resave.}
 \usage{
-get_epi(simno = NA, indir = "data/", outdir = "data/", vars = NULL,
-  suffix = "lim", compress = "xz")
+get_epi(
+  simno = NA,
+  indir = "data/",
+  outdir = "data/",
+  vars = NULL,
+  suffix = "lim",
+  compress = "xz"
+)
 }
 \arguments{
 \item{simno}{Simulation number to process.}

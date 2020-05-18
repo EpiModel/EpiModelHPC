@@ -4,9 +4,16 @@
 \alias{qsub_master}
 \title{Create qsub Bash Shell Script Parameter Combination}
 \usage{
-qsub_master(outfile = "master.sh", runsimfile = "runsim.sh",
-  simno.start = 1, nsubjobs = 4, backfill = TRUE, email = FALSE,
-  append = FALSE, vars)
+qsub_master(
+  outfile = "master.sh",
+  runsimfile = "runsim.sh",
+  simno.start = 1,
+  nsubjobs = 4,
+  backfill = TRUE,
+  email = FALSE,
+  append = FALSE,
+  vars
+)
 }
 \arguments{
 \item{outfile}{Name of the output bash shell script file. If \code{""}, then

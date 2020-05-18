@@ -4,8 +4,14 @@
 \alias{merge_simfiles}
 \title{Save Simulation Data from Stochastic Network Models}
 \usage{
-merge_simfiles(simno, ftype = "min", indir = "data/", vars = NULL,
-  truncate.at = NULL, verbose = TRUE)
+merge_simfiles(
+  simno,
+  ftype = "min",
+  indir = "data/",
+  vars = NULL,
+  truncate.at = NULL,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{simno}{First components of the simulation number in the standard format

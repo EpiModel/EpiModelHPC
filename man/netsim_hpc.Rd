@@ -4,9 +4,17 @@
 \alias{netsim_hpc}
 \title{Stochastic Network Models on High-Performance Computing Systems}
 \usage{
-netsim_hpc(x, param, init, control, cp.save.int = NULL,
-  save.min = TRUE, save.max = FALSE, compress = TRUE,
-  verbose = TRUE)
+netsim_hpc(
+  x,
+  param,
+  init,
+  control,
+  cp.save.int = NULL,
+  save.min = TRUE,
+  save.max = FALSE,
+  compress = TRUE,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{x}{Character vector containing the file path of an Rdata
