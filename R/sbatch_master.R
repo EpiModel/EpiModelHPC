@@ -31,6 +31,8 @@
 #'        and start numbering at one after the previous maximum.
 #' @param nsims Total number of simulations across all array jobs.
 #' @param ncores Number of cores per node to use within each Slurm job. 
+#' @param narray Number of array batches within each Slurm job. If `NULL`, then
+#'        will use `nsims/ncores` array batches.
 #' @param ckpt If \code{TRUE}, use the checkpoint queue to submit jobs. If
 #'        numeric, will specify the first X jobs on the grid as non-backfill.
 #' @param append If \code{TRUE}, will append lines to a previously created shell
@@ -86,6 +88,7 @@ sbatch_master <- function(vars,
                           simno.start,
                           nsims = 100,
                           ncores = 16,
+                          narray = NULL,
                           ckpt = FALSE,
                           append = FALSE,
                           mem = "55G",
@@ -137,7 +140,9 @@ sbatch_master <- function(vars,
     }
     SIMNO <- simno.start:(simno.start + nsets - 1)
   }
-  narray <- ceiling(nsims/ncores)
+  if (is.null(narray)) {
+    narray <- ceiling(nsims/ncores)
+  }
   NJOBS <- narray
   NSIMS <- nsims
 

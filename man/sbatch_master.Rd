@@ -4,13 +4,31 @@
 \alias{sbatch_master}
 \title{Create sbatch Bash Shell Script with Parameter Combination}
 \usage{
-sbatch_master(vars, expand.vars = TRUE, working.dir = "",
-  master.file = "", runsim.file = "runsim.sh", build.runsim = FALSE,
-  env.file = "~/loadR.sh", rscript.file = "sim.R", param.file = NULL,
-  param.tag = NULL, simno.start, nsims = 100, ncores = 16,
-  ckpt = FALSE, append = FALSE, mem = "55G", walltime = "1:00:00",
-  jobname, partition.main = "csde", partition.ckpt = "ckpt",
-  account.main = "csde", account.ckpt = "csde-ckpt")
+sbatch_master(
+  vars,
+  expand.vars = TRUE,
+  working.dir = "",
+  master.file = "",
+  runsim.file = "runsim.sh",
+  build.runsim = FALSE,
+  env.file = "~/loadR.sh",
+  rscript.file = "sim.R",
+  param.file = NULL,
+  param.tag = NULL,
+  simno.start,
+  nsims = 100,
+  ncores = 16,
+  narray = NULL,
+  ckpt = FALSE,
+  append = FALSE,
+  mem = "55G",
+  walltime = "1:00:00",
+  jobname,
+  partition.main = "csde",
+  partition.ckpt = "ckpt",
+  account.main = "csde",
+  account.ckpt = "csde-ckpt"
+)
 }
 \arguments{
 \item{vars}{A list of parameters with varying values (see examples below).}
@@ -52,6 +70,9 @@ and start numbering at one after the previous maximum.}
 \item{nsims}{Total number of simulations across all array jobs.}
 
 \item{ncores}{Number of cores per node to use within each Slurm job.}
+
+\item{narray}{Number of array batches within each Slurm job. If `NULL`, then
+will use `nsims/ncores` array batches.}
 
 \item{ckpt}{If \code{TRUE}, use the checkpoint queue to submit jobs. If
 numeric, will specify the first X jobs on the grid as non-backfill.}
