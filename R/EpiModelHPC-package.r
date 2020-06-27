@@ -32,6 +32,7 @@
 #' @aliases EpiModelHPC
 #' @import EpiModel doParallel foreach ergm tergm
 #' @importFrom utils read.table read.csv write.csv
+#' @importFrom stringr str_pad
 #' @docType package
 #' @keywords package
 #'

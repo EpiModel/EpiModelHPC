@@ -24,7 +24,7 @@ Pulls four environmental variables commonly used in Slurm jobs
              directly into the Global Environment of an R Script.
 }
 \examples{
-Sys.setenv("SIMNO"=1000)
+Sys.setenv("SIMNO"=23)
 Sys.setenv("SLURM_ARRAY_TASK_ID"=4)
 Sys.setenv("SLURM_TASKS_PER_NODE"=4)
 Sys.setenv("NJOBS"=10)

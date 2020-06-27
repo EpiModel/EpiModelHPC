@@ -21,7 +21,8 @@ Imports:
     doParallel,
     foreach,
     ergm,
-    tergm
+    tergm,
+    stringr
 Suggests:
     rmarkdown,
     testthat,

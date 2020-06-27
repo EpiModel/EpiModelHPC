@@ -16,7 +16,7 @@
 #' @export
 #'
 #' @examples
-#' Sys.setenv("SIMNO"=1000)
+#' Sys.setenv("SIMNO"=23)
 #' Sys.setenv("SLURM_ARRAY_TASK_ID"=4)
 #' Sys.setenv("SLURM_TASKS_PER_NODE"=4)
 #' Sys.setenv("NJOBS"=10)
@@ -54,6 +54,7 @@ pull_env_vars <- function(standard.vars = TRUE,
       assign("jobno", 1L, pos = 1)
     }
     if (!is.na(simno) & !is.na(jobno)) {
+      simno <- stringr::str_pad(simno, 4, "left", "0")
       fsimno <- paste(simno, jobno, sep = ".")
       assign("fsimno", fsimno, pos = 1)
     } else {
