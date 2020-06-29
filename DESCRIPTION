@@ -16,7 +16,7 @@ URL: http://epimodel.org/
 BugReports: https://github.com/statnet/EpiModelHPC/issues
 Depends:
     R (>= 3.5),
-    EpiModel (>= 1.8.0)
+    EpiModel (>= 1.7.0)
 Imports:
     doParallel,
     foreach,
