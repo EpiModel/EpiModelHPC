@@ -42,6 +42,7 @@ pull_env_vars <- function(standard.vars = TRUE,
 
   if (standard.vars == TRUE) {
     simno <- as.numeric(Sys.getenv("SIMNO"))
+    simno <- stringr::str_pad(simno, 4, "left", "0")
     if (!is.na(simno)) {
       assign("simno", simno, pos = 1)
     } else {
@@ -54,7 +55,6 @@ pull_env_vars <- function(standard.vars = TRUE,
       assign("jobno", 1L, pos = 1)
     }
     if (!is.na(simno) & !is.na(jobno)) {
-      simno <- stringr::str_pad(simno, 4, "left", "0")
       fsimno <- paste(simno, jobno, sep = ".")
       assign("fsimno", fsimno, pos = 1)
     } else {
