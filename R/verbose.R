@@ -47,7 +47,8 @@ verbose.hpc.net <- function(x, type, s = 1, at = 2) {
       }
     }
   } else {
-    if ((at %% x$control$verbose.int == 0) & dir.exists("out/") & !is.null(x$control$simno))  {
+    if (type == "progress" && (at %% x$control$verbose.int == 0) && 
+        dir.exists("out/") && !is.null(x$control$simno))  {
       fn <- paste0("out/sim", x$control$simno, ".txt")
       cat("\nSim: ", x$control$simno, " | Time step: ", at, "/", x$control$nsteps, " | Time: ", as.character(Sys.time()), 
           sep = "", file = fn, append = TRUE) 
