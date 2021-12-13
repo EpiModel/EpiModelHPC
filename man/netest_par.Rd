@@ -21,7 +21,8 @@ netest_par(
 \item{nw}{An object of class \code{network}.}
 
 \item{formation}{Right-hand sided STERGM formation formula in the form
-\code{~edges + ...}, where \code{...} are additional network statistics.}
+\code{~edges + ...}, where \code{...} are additional network
+statistics.}
 
 \item{target.stats}{Vector of target statistics for the formation model, with
 one number for each network statistic in the model.}
@@ -30,21 +31,21 @@ one number for each network statistic in the model.}
 \code{\link[EpiModel]{dissolution_coefs}} function.}
 
 \item{constraints}{Right-hand sided formula specifying constraints for the
-modeled network, in the form \code{~...}, where \code{...} are constraint
-terms. By default, no constraints are set.}
+modeled network, in the form \code{~...}, where \code{...} are
+constraint terms. By default, no constraints are set.}
 
 \item{coef.form}{Vector of coefficients for the offset terms in the formation
 formula.}
 
-\item{edapprox}{If \code{TRUE}, use the indirect edges dissolution approximation
-method for the dynamic model fit, otherwise use the more time-intensive
-full STERGM estimation (see details).}
+\item{edapprox}{If \code{TRUE}, use the indirect edges dissolution
+approximation  method for the dynamic model fit, otherwise use the
+more time-intensive full STERGM estimation (see details).}
 
 \item{set.control.ergm}{Control arguments passed to \code{simulate.ergm} (see
 details).}
 
-\item{set.control.stergm}{Control arguments passed to \code{simulate.stergm} (see
-details).}
+\item{set.control.stergm}{Control arguments passed to \code{simulate.stergm}
+(see details).}
 
 \item{ncores}{Number of processor cores to run multiple simulations
 on, using the \code{foreach} and \code{doParallel} implementations.}
