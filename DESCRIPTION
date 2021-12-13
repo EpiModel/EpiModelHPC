@@ -13,7 +13,7 @@ Authors@R: c(person("Samuel", "Jenness",
     role=c("cre","aut"), email="samuel.m.jenness@emory.edu"))
 License: GPL-3
 URL: http://epimodel.org/
-BugReports: https://github.com/statnet/EpiModelHPC/issues
+BugReports: https://github.com/EpiModel/EpiModelHPC/issues
 Depends:
     R (>= 3.5),
     EpiModel (>= 1.7.0)

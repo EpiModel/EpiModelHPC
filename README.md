@@ -1,6 +1,8 @@
 EpiModelHPC
 ================
-<a href='https://travis-ci.org/statnet/EpiModelHPC' target="_blank"><img src='https://travis-ci.org/statnet/EpiModelHPC.svg?branch=master' alt='Build Status' /></a>
+  <!-- badges: start -->
+  [![R-CMD-check](https://github.com/EpiModel/EpiModelHPC/workflows/R-CMD-check/badge.svg)](https://github.com/EpiModel/EpiModelHPC/actions)
+  <!-- badges: end -->
 
 EpiModelHPC is an R package that provides extensions for simulating stochastic network models in EpiModel on high-performance computing (HPC) systems. Functionality provided to simulate models in parallel, with checkpointing functions to save and restore simulation work.
 
