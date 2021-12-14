@@ -6,9 +6,7 @@
 #'
 #' @param sim An \code{EpiModel} object of class \code{netsim} to be saved to an
 #'        Rdata file.
-#' @param dataf If \code{TRUE}, saves data file within a subfolder called "data"
-#'        relative to the current working directory, otherwise saves file to
-#'        current working directory. A data folder will be created if one does
+#' @param data.dir Path to save data files. Directory will be created if it does
 #'        not already exist.
 #' @param save.min If \code{TRUE}, saves a small version of the \code{netsim}
 #'        object in which large elements of the data structure like the network
@@ -29,7 +27,7 @@
 #' @export
 #'
 savesim <- function(sim,
-                    dataf = TRUE,
+                    data.dir = "data/",
                     save.min = TRUE,
                     save.max = TRUE,
                     time.stamp = TRUE,
@@ -49,12 +47,11 @@ savesim <- function(sim,
   }
 
 
-  if (dataf == TRUE) {
-    if (file.exists("data/") == FALSE) {
-      dir.create("data/")
-    }
-    fn <- paste0("data/", fn)
+  if (!dir.exists(data.dir)) {
+    dir.create(data.dir)
   }
+  fn <- paste0(data.dir, fn)
+  
   if (save.max == TRUE) {
     save(sim, file = fn, compress = compress)
   }

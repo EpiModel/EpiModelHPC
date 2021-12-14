@@ -6,7 +6,7 @@
 \usage{
 savesim(
   sim,
-  dataf = TRUE,
+  data.dir = "data/",
   save.min = TRUE,
   save.max = TRUE,
   time.stamp = TRUE,
@@ -17,9 +17,7 @@ savesim(
 \item{sim}{An \code{EpiModel} object of class \code{netsim} to be saved to an
 Rdata file.}
 
-\item{dataf}{If \code{TRUE}, saves data file within a subfolder called "data"
-relative to the current working directory, otherwise saves file to
-current working directory. A data folder will be created if one does
+\item{data.dir}{Path to save data files. Directory will be created if it does
 not already exist.}
 
 \item{save.min}{If \code{TRUE}, saves a small version of the \code{netsim}
