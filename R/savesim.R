@@ -56,18 +56,9 @@ savesim <- function(sim,
   }
 
   if (save.min == TRUE) {
-    sim[["network"]] <- NULL
-    sim$stats[["transmat"]] <- NULL
-    sim[["attr"]] <- NULL
-    sim[["el"]] <- NULL
-    sim[["p"]] <- NULL
-    sim[["temp"]] <- NULL
-    environment(sim$control$nwstats.formula) <- NULL
-    for (i in seq_along(sim$nwparam)) {
-      sim$nwparam[[i]][c("formation", "coef.form", "coef.form.crude",
-                         "dissolution", "coef.diss", "edapprox",
-                         "constraints")] <- NULL
-    }
+    keep <- c("param", "epi", "control")
+    sim <- sim[keep]
+    sim$param$netstats <- NULL
     if (time.stamp == TRUE) {
       fnm <- paste0("sim.n", no, ".", ctime, ".min.rda")
     } else {
