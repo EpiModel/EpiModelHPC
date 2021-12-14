@@ -40,19 +40,18 @@ savesim <- function(sim,
   }
 
   ctime <- format(Sys.time(), "%Y%m%d.%H%M")
-  if (time.stamp == TRUE) {
-    fn <- paste0("sim.n", no, ".", ctime, ".rda")
-  } else {
-    fn <- paste0("sim.n", no, ".rda")
-  }
-
 
   if (!dir.exists(data.dir)) {
     dir.create(data.dir)
   }
-  fn <- paste0(data.dir, fn)
-  
+
   if (save.max == TRUE) {
+    if (time.stamp == TRUE) {
+      fn <- paste0("sim.n", no, ".", ctime, ".rda")
+    } else {
+      fn <- paste0("sim.n", no, ".rda")
+    }
+    fn <- paste0(data.dir, fn)
     save(sim, file = fn, compress = compress)
   }
 
@@ -74,9 +73,7 @@ savesim <- function(sim,
     } else {
       fnm <- paste0("sim.n", no, ".min.rda")
     }
-    if (dataf == TRUE) {
-      fnm <- paste0("data/", fnm)
-    }
+    fnm <- paste0(data.dir, fnm)
     save(sim, file = fnm, compress = compress)
   }
 
