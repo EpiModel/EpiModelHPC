@@ -59,6 +59,9 @@ savesim <- function(sim,
     keep <- c("param", "epi", "control")
     sim <- sim[keep]
     sim$param$netstats <- NULL
+    if (class(sim) == "list") {
+      class(sim) <- "netsim"
+    }
     if (time.stamp == TRUE) {
       fnm <- paste0("sim.n", no, ".", ctime, ".min.rda")
     } else {
