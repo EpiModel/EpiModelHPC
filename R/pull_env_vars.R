@@ -18,7 +18,7 @@
 #' @examples
 #' Sys.setenv("SIMNO"=23)
 #' Sys.setenv("SLURM_ARRAY_TASK_ID"=4)
-#' Sys.setenv("SLURM_TASKS_PER_NODE"=4)
+#' Sys.setenv("SLURM_CPUS_PER_TASK"=4)
 #' Sys.setenv("NJOBS"=10)
 #' Sys.setenv("NSIMS"=100)
 #' 
@@ -60,7 +60,7 @@ pull_env_vars <- function(standard.vars = TRUE,
     } else {
       assign("fsimno", 1L, pos = 1)
     }
-    ncores <- as.numeric(Sys.getenv("SLURM_TASKS_PER_NODE"))
+    ncores <- as.numeric(Sys.getenv("SLURM_CPUS_PER_TASK"))
     if (!is.na(ncores)) {
       assign("ncores", ncores, pos = 1)
     } else {
