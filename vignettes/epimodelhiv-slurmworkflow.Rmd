@@ -1,0 +1,507 @@
+---
+title: "Using `slurmworkflow` with EpiModelHIV"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{epimodelhiv-slurmworkflow}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Introduction
+
+`slurmworkflow` is a package to construct *workflows* on a
+[SLURM](https://slurm.schedmd.com/overview.html) equipped High Performance
+Computer (HPC).
+
+In this vignette, a *workflow* refers to a set of tasks to be executed on the
+HPC, one after the other.
+
+We will describe how to construct and use 2 *workflows* using the
+[EpiModel/BigNets](https://github.com/EpiModel/BigNets/tree/swf_example)
+project (branch *swf_example*).
+
+This project uses [renv](https://rstudio.github.io/renv/index.html) and require
+an access to the [EpiModelHIV-p](https://github.com/EpiModelHIV-p) private
+repository.
+
+This vignette assumes that your project is hosted on a git repository checked
+out on your local computer and on the HPC.
+
+This vignette will use the MOX cluster of [the HYAK
+ecosystem](https://hyak.uw.edu/) as an example but any SLURM equipped HPC
+should work similarly.
+
+# Structure of the BigNets Project
+
+The R scripts are all located in the "R" subdirectory and are named either like
+"01-snake_case_name.R" for scripts that represents steps that occur in a given
+order or "utils-snake_case_name.R" for elements to be used by multiple steps.
+
+All data used and produced by the project will be stored in either the
+"data/input/" or "data/output/" directories.
+
+# Network Estimation and Diagnostics
+
+## Overview
+
+This project simulates HIV dynamics on a population of 10 000 individuals. The
+first step is to estimate 3 networks of 10 000 nodes representing respectively
+*main*, *casual* and *one off* partnerships. This step will happen in the
+script "R/01-estimation.R". Afterwards we will want to diagnose this estimation
+using the script "R/02-diagnostics.R" and finally explore these diagnostics
+interactively in the script "R/03-diagnostics_explore.R".
+
+The first two steps will be run on the HPC, then we will download the data
+produced to perform the third one.
+
+## Defining the "estimation" *workflow*
+
+The script "R/00-estimation_worklow.R" is responsible to the creation of the
+first *workflow*. We will walk through it block by block to understand the
+basics of `slurmworkflow`.
+
+### Setup
+
+```{r wf_1_setup, eval = FALSE}
+library(slurmworkflow)
+
+# Delete the workflow directory if it exists
+if (fs::dir_exists("workflows/estimation"))
+  fs::dir_delete("workflows/estimation")
+
+# setup_script contains the bash script used to load the R module on the HPC
+setup_script <- "sh/loadR_mox.sh"
+max_cores <- 28
+```
+
+A *workflow* exists on your computer as a subdirectory of the
+"workflows/" directory of your project. We start by removing a previous version
+of the workflow of it exists.
+
+We then populate the `setup_script` variable with the path to the following
+script:
+
+```
+#!/bin/bash
+
+. /gscratch/csde/spack/spack/share/spack/setup-env.sh
+module load r-4.0.0-gcc-9.2.0-p7wezul
+```
+
+This code loads the R module on the HPC. We also set `max_cores` to 28 which is
+the number of CPU per node on the HPC we are using.
+
+### Creating a *workflow*
+
+The `slurmworkflow::create_workflow` function takes 2 mandatory arguments:
+1. `wf_name`: the name of the new workflow
+1. `default_sbatch_opts`: a list of default options for the
+   [`sbatch`](https://slurm.schedmd.com/sbatch.html) command. They will be
+   shared among all steps.
+
+```{r wf_1_creation, eval = FALSE}
+wf <- create_workflow(
+  wf_name = "estimation",
+  default_sbatch_opts = list(
+    "account" = "csde",
+    "partition" = "csde",
+    "mail-type" = "FAIL"
+  )
+)
+```
+
+Here we create a *workflow* called "estimation". We specify that we want to use
+the "csde" account and partitions and that an e-mail should be sent if a task
+fails.
+
+With this we have created the directory "workflows/estimation" and stored a
+summary of it in the `wf` variable. For now our workflow has no steps.
+
+
+notes:
+- SLURM configuration can vary. On MOX there is an accounting module thus
+  we have to specify the "account" options.)
+- `default_sbatch_opts` and `sbatch_opts` parameters accept all the options for
+  `sbatch` starting with "--". (e.g. "account" is valid but "A" is not, as it
+  corresopond to the "-A" shorthand)
+
+### Addition of a `renv::restore` Step
+
+Before running the actual calculation, we want to make sure that the project on
+the HPC is up to date with the right package version. It translates to running
+`git pull` on the HPC and `renv::restore()` from the project.
+
+The `slurmworkflow::add_workflow_step` take 2 mandatory arguments:
+1. `wf_summary`: a summary of the workflow to edit (the `wf` variable)
+2. `step_tmpl`: a *step template*. These are made by a special kind of functions
+   from `slurmworkflow`.
+
+Here we will also use the optional `sbatch_opts` arguments to override some
+of the default options defined above.
+
+```{r wf_1_renv, eval = FALSE}
+wf <- add_workflow_step(
+  wf_summary = wf,
+  step_tmpl = step_tmpl_renv_restore(setup_script = setup_script),
+  sbatch_opts = list(
+    "partition" = "build",
+    "mem" = "16G",
+    "cpus-per-task" = 4,
+    "time" = 120
+  )
+)
+```
+
+The *step template* here is from the function `slurmworkflow::step_tmpl_renv_restore`
+it takes a single argument `setup_script` (see above) and internally sets up an
+`sbatch` task that will run `git pull` and `renv::restore()`.
+
+For this specific task we want to change some of the `sbatch` options:
+- we change the "partition" to "build" as on MOX the "csde" partition does not have
+  internet access
+- we ask for 16G of RAM, 4 cpus and tell SLURM that the job should take less
+  than 120 minutes.
+
+At the end we save back the updated workflow summary into `wf`.
+
+### Addition of the *estimation* Step
+
+Now that we know that the project is up to date on the HPC, we want to run the
+"R/01-estimation.R" script there.
+
+To do this we add another step with `slurmworkflow::add_workflow_step` but with
+a different *step template*.
+
+```{r wf_1_est, eval = FALSE}
+wf <- add_workflow_step(
+  wf_summary = wf,
+  step_tmpl = step_tmpl_do_call_script(
+    r_script = "R/01-estimation.R",
+    args = list(ncores = max_cores),
+    setup_script = setup_script
+  ),
+  sbatch_opts = list(
+    "cpus-per-task" = max_cores,
+    "time" = "24:00:00",
+    "mem" = "0" # special: all mem on node
+  )
+)
+```
+
+`slurmworkflow::step_tmpl_do_call_script` template sets up a step to run the
+script located **on the HPC** under the path `r_script`, here
+"R/01-estimation.R", with some variables pre-defined. Here we set the variable
+`ncores` to be equal to `max_cores` that we defined at the beginning.
+
+If you take a look at the "R/01-estimation.R" script, you will see that a variable
+`ncores` is used but never defined in the script. Thanks to our *step template*
+it will be defined when the script run as part of the workflow.
+
+The syntax of `step_tmpl_do_call_script` to pass arguments to a script is
+similar to the one of `base::do.call`.
+
+**Important note**: Some users like to clear their R environment by placing
+`rm(list = ls())` at the start of their scripts. In addition to [it being
+discouraged generally](https://rstats.wtf/save-source.html#rm-list-ls), it will
+actually prevent a script to work with `step_tmpl_do_call_script` as it will
+delete the variable at the start of the script. Restarting the R session or
+using the [`callr` package](https://callr.r-lib.org/index.html) are better
+alternatives.
+
+Finally, we also provide the `setup_script` as before and some new
+`sbatch_opts`. As no "account" or "partition" are provided, they will default
+to "csde".
+
+This step will write 3 files on the HPC:
+1. "data/input/epistats.rds"
+2. "data/input/netstats.rds"
+3. "data/input/netest.rds"
+
+### Addition of the *diagnostics* Step
+
+Finally we want to generate diagnostics for these networks with "R/02-diagnostics.R".
+
+```{r wf_1_diag, eval = FALSE}
+wf <- add_workflow_step(
+  wf_summary = wf,
+  step_tmpl = step_tmpl_do_call_script(
+    r_script = "R/02-diagnostics.R",
+    args = list(
+      ncores = 15,
+      nsims = 30,
+      nsteps = 1e3
+    ),
+    setup_script = setup_script
+  ),
+  sbatch_opts = list(
+    "cpus-per-task" = max_cores,
+    "time" = "04:00:00",
+    "mem-per-cpu" = "4G",
+    "mail-type" = "END" # to get a mail upon completion
+  )
+)
+```
+
+This step uses the same template as before, with 3 variables passed to the
+script: `ncores`, `nsims` and `nsteps`.
+
+As it is the last step of this *workflow* we override the "mail-type" `sbatch`
+option to reveive a mail upon when the step ends.
+
+This step writes the file "data/input/netdx.rds" onto the HPC.
+
+## Using the "estimation" *workflow* on the MOX HPC
+
+Now that our *estimation workflow* is set up, we need to send it to the HPC, run
+it and download the results.
+
+We assume that the "workflows/" and "data/" directories are not tracked by git
+(using ".gitignore" for example) and that the user has an SSH access to the HPC.
+
+We will use `scp` to copy the folder over to the HPC as it is available on
+Windows, MacOS and GNU/Linux.
+
+In this example, the "BigNets" repository is located at "~/gscratch/BigNets" on
+the HPC.
+
+### Sending the *workflow* to the HPC
+
+On our local computer:
+
+First we ensure that the "workflows" folder is present on the HPC by running
+
+`$ ssh <user>@hyak.mox.uw.edu "mkdir -p ~/gscratch/BigNets/workflows"`
+
+Then we copy the "estimation" directory
+
+`$ scp -r workflows/estimation <user>@mox.hyak.uw.edu:gscratch/BigNets/workflows/`
+
+### Running the *workflow* from the HPC
+
+For this step, you are at the command line on the HPC with your working
+directory being the root of the project (where the ".git" folder is as well as
+the "renv.lock" file". (For me "~/gscratch/BigNets"). The following steps will
+not work if you are not at the root of your project.
+
+Running the *workflow* is done by **executing** the file
+"workflows/estimation/start_workflow.sh"
+
+`$ workflows/estimation/start_workflow.sh`
+
+This file is created automatically by `slurmworkflow` and should be executable
+(even when created on Windows). If it is not, run
+
+`$ chmod +x workflows/estimation/start_workflow.sh`
+
+The workflow will not work if you *source* the file (with `source script` or `.
+script`)
+
+### Downloading the Results for Analysis
+
+Granting that the workflow worked correctly, you should receive a mail telling
+you that the last step ended with exit code 0 (success).
+
+We want to download the "data/input" directory back to our local machine:
+
+`$ scp -r <user>@mox.hyak.uw.edu:gscratch/BigNets/data/input data/`
+
+We can now run the R script "03-diagnostics_explore.R" to see if everything is
+correct.
+
+# Calibration of the Model
+
+## Overview
+
+Now that we have our networks correctly estimated and diagnosed, we want to run
+the epidemic models with different parameter values and pick the closest to our
+targets.
+
+To do so the script "R/11-calibration_sim.R" will run a set of `ncores`
+simulation of a given `scenario`. `slurmworkflow` will allow us to do so for a
+set of as many scenarios as we want replicated as necessary. Afterwards, the
+script "R/12-calibration_process.R" will calculate the outcomes of interest
+over all the scenarios and save a small summary. Then we will locally evaluate
+what was the best set of parameters.
+
+
+## Defining the "calibration" *workflow*
+
+The script "R/10-calibration_worklow.R" is responsible to the creation of the
+second *workflow*.
+
+### Setup, Creation and `renv::restore`
+
+```{r wf_2_setup, eval = FALSE}
+library(slurmworkflow)
+
+if (fs::dir_exists("workflows/calibration"))
+  fs::dir_delete("workflows/calibration")
+
+setup_script <- "sh/loadR_mox.sh"
+max_cores <- 28
+
+# Workflow creation ------------------------------------------------------------
+wf <- create_workflow(
+  wf_name = "calibration",
+  default_sbatch_opts = list(
+    "account" = "csde-ckpt",
+    "partition" = "ckpt",
+    "mail-type" = "FAIL"
+  )
+)
+
+# Update RENV on the HPC -------------------------------------------------------
+wf <- add_workflow_step(
+  wf_summary = wf,
+  step_tmpl = step_tmpl_renv_restore(setup_script = setup_script),
+  sbatch_opts = list(
+    "partition" = "build",
+    "mem" = "16G",
+    "cpus-per-task" = 4,
+    "time" = 120
+  )
+)
+```
+
+We go quickly on these three steps as they are similar to the previous
+workflow. The main difference is that we are going to use the *checkpoint*
+partition "ckpt" with the account "csde-ckpt".
+
+### Addition of the *simulation* Step
+
+In this step we load a `data.frame` of scenarios found in
+"data/input/calib_scenarios.csv" and transform it into a list of parameters to
+be changed. We then replicate this list 10 time (`n_replications`).
+As we have 4 scenarios, we will need to run the script 40 times with different
+values.
+And in the end each scenario is ran `ncores * n_replications` times, or 280 times.
+
+As before we use `add_workflow_step` to create the step. This time we use the
+*step template* `slurmworkflow::step_tmpl_map_script` that behaves in a similar
+fashion as the `base::Map` function:
+
+```{r wf_2_sim, eval = FALSE}
+n_replications <- 10
+scenarios.df <- read.csv("data/input/calib_scenarios.csv")
+scenarios.list <- EpiModel:::make_scenarios_list(scenarios.df)
+scenarios.list <- rep(scenarios.list, n_replications)
+
+# for this template, the syntax is similar to `base::Map` and `mapply`
+# in this case, each instance will have a different value of
+# - scenario, scenario_name and batch_num
+# but they all share the same value for `ncores`
+
+wf <- add_workflow_step(
+  wf_summary = wf,
+  step_tmpl = step_tmpl_map_script(
+    r_script = "R/11-calibration_sim.R",
+    scenario = scenarios.list,
+    scenario_name = names(scenarios.list),
+    batch_num = seq_along(scenarios.list),
+    MoreArgs = list(
+      ncores = max_cores
+    ),
+    max_array_size = 999,
+    setup_script = setup_script
+  ),
+  sbatch_opts = list(
+    "cpus-per-task" = max_cores,
+    "time" = "24:00:00",
+    "mem" = "0" # special: all mem on node
+  )
+)
+```
+
+as with `step_tmpl_do_call_script`, we pass the function an argument `r_script`
+which is the script to be run, and `setup_script` as before.
+
+Then we pass named arguments through the ellipsis (`...`). Each of them must
+be an iterable of the same size. (see `base::Map`)
+- `scenario`: the scenario to be run
+- `scenario_name`: the name scenario to be run
+- `batch_num`: the number of the batch (`0:length(scenario)` here)
+
+The argument `MoreArgs` contains the arguments that are to be shared by all
+the replications.
+
+To summarize, each of the 40 replication will run with an individual values for
+`scenario`, `scenario_name` and `batch_num`. But they will all share the same
+`ncores` value. Here, `batch_num` gives us a unique value for each run.
+
+Finally, the `max_array_size` argument allow us to constrain how many runs
+could be submitted as once. On MOX one is limited to around 1000 job submission
+at a time. Trying to submit more will result on SLURM rejecting all the jobs.
+To prevent this, `step_tmpl_map_script` will split the job into parts that will
+be submitted one after the other. If the length of `scenarios.list` was 3 000,
+`max_array_size = 999` would split it in 4 parts were each part would not be
+submitted before the previous one is over.
+
+The "R/11-calibration_sim.R" script will save each simulation using the
+following pattern:
+
+`paste0("data/output/calib/simcalib__", scenario_name, "__", batch_num, ".rds")`
+
+
+### Addition of the *processing* Step
+
+Now that all the scenarios have been run we will process each of them and create
+an easy to evaluate summary.
+
+We return to `step_tmpl_do_call_script` as this steps needs not to be replicated.
+
+```{r wf_2_process, eval = FALSE}
+wf <- add_workflow_step(
+  wf_summary = wf,
+  step_tmpl = step_tmpl_do_call_script(
+    r_script = "R/12-calibration_process.R",
+    args = list(
+      ncores = 15,
+      nsteps = 52
+    ),
+    setup_script = setup_script
+  ),
+  sbatch_opts = list(
+    "cpus-per-task" = max_cores,
+    "time" = "04:00:00",
+    "mem-per-cpu" = "4G",
+    "mail-type" = "END"
+  )
+)
+```
+
+The arguments we pass to the script are `ncores`, how many cores to use as this
+step will process the files in parallel using the [`future.apply`
+package](https://future.apply.futureverse.org/), and `nsteps`, over how many
+steps should the outcome be calculated. Here 52 means that we calculate the
+outcomes over the last 52 weeks of each simulation.
+
+This script will save a single file: "data/output/calib/assessments.rds"
+
+## Using the "calibration" *workflow* on the MOX HPC
+
+We send the *workflow* as before with:
+
+`$ scp -r workflows/calibration <user>@mox.hyak.uw.edu:gscratch/BigNets/workflows/`
+
+run it from our project directory on the HPC with:
+
+`$ workflows/calibration/start_workflow.sh`
+
+and finally we download the results for evaluation:
+
+`$ scp <user>@mox.hyak.uw.edu:gscratch/BigNets/data/output/calib/assessments data/output/calib/`
+
+We can now run the R script "13-calibration_eval.R" to find the best set of
+parameters.
+
+
+
+
+
