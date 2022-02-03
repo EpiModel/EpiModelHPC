@@ -19,10 +19,10 @@
 #' @export
 swf_configs_hyak <- function(hpc = "klone", partition = "csde") {
   if (!hpc %in% c("klone", "mox"))
-    error("On HYAK, `hpc` must be one of \"mox\" or \"klone\"")
+    stop("On HYAK, `hpc` must be one of \"mox\" or \"klone\"")
 
-  if (!partition %in% c("csde", "csde-ckpt"))
-    error("On ", hpc, ", partition must be one of \"csde\" or \"ckpt\"")
+  if (!partition %in% c("csde", "ckpt"))
+    stop("On ", hpc, ", partition must be one of \"csde\" or \"ckpt\"")
 
   hpc_configs <- list()
   hpc_configs[["default_sbatch_opts"]] <-  list(
@@ -60,7 +60,7 @@ swf_configs_hyak <- function(hpc = "klone", partition = "csde") {
 #' @export
 swf_configs_rsph <- function(partition = "compute") {
   if (!partition %in% c("compute", "epimodel"))
-    error("On RSPH, partition must be one of \"compute\" or \"epimodel\"")
+    stop("On RSPH, partition must be one of \"compute\" or \"epimodel\"")
 
   hpc_configs <- list()
   hpc_configs[["default_sbatch_opts"]] <-  list(
