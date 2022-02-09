@@ -58,9 +58,9 @@ swf_configs_hyak <- function(hpc = "klone", partition = "csde") {
 #' @inheritSection swf_configs_hyak hpc_configs
 #'
 #' @export
-swf_configs_rsph <- function(partition = "compute") {
-  if (!partition %in% c("compute", "epimodel"))
-    stop("On RSPH, partition must be one of \"compute\" or \"epimodel\"")
+swf_configs_rsph <- function(partition = "preemptable") {
+  if (!partition %in% c("preemptable", "epimodel"))
+    stop("On RSPH, partition must be one of \"preemptable\" or \"epimodel\"")
 
   hpc_configs <- list()
   hpc_configs[["default_sbatch_opts"]] <-  list(
