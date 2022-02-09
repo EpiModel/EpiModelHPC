@@ -4,7 +4,7 @@
 \alias{swf_configs_rsph}
 \title{Preset of Configuration for the RSPH Cluster}
 \usage{
-swf_configs_rsph(partition = "compute")
+swf_configs_rsph(partition = "preemptable")
 }
 \arguments{
 \item{partition}{Which partition to use on RSPH (either "compute" or
