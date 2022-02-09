@@ -68,7 +68,7 @@ swf_configs_rsph <- function(partition = "preemptable") {
     "mail-type" = "FAIL"
   )
 
-  hpc_configs[["renv_sbatch_opts"]] <- wf_renv_sbatch_opts()
+  hpc_configs[["renv_sbatch_opts"]] <- swf_renv_sbatch_opts()
 
   hpc_configs[["r_loader"]] <- c(
     ". /gscratch/csde/spack/spack/share/spack/setup-env.sh",
