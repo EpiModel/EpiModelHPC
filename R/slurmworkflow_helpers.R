@@ -71,7 +71,7 @@ swf_configs_rsph <- function(partition = "preemptable") {
   hpc_configs[["renv_sbatch_opts"]] <- swf_renv_sbatch_opts()
 
   hpc_configs[["r_loader"]] <- c(
-    ". /gscratch/csde/spack/spack/share/spack/setup-env.sh",
+    ". /projects/epimodel/spack/share/spack/setup-env.sh",
     "spack load r@4.1.2"
   )
 
