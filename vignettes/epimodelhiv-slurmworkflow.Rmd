@@ -18,24 +18,20 @@ knitr::opts_chunk$set(
 
 `slurmworkflow` is a package to construct *workflows* on a
 [SLURM](https://slurm.schedmd.com/overview.html) equipped High Performance
-Computer (HPC).
-
-In this vignette, a *workflow* refers to a set of tasks to be executed on the
-HPC, one after the other.
+Computer (HPC). In this vignette, a *workflow* refers to a set of tasks to be 
+executed on the HPC, one after the other.
 
 We will describe how to construct and use 2 *workflows* using the
 [EpiModel/BigNets](https://github.com/EpiModel/BigNets/tree/swf_example)
 project (branch *swf_example*).
 
-This project uses [renv](https://rstudio.github.io/renv/index.html) and require
-an access to the [EpiModelHIV-p](https://github.com/EpiModelHIV-p) private
-repository.
+This project uses [renv](https://rstudio.github.io/renv/index.html) and requires
+access to the [EpiModelHIV-p](https://github.com/EpiModelHIV-p) private
+repository. This vignette assumes that your project is hosted on a git 
+repository checked out on your local computer and on the HPC.
 
-This vignette assumes that your project is hosted on a git repository checked
-out on your local computer and on the HPC.
-
-This vignette will use the MOX cluster of [the HYAK
-ecosystem](https://hyak.uw.edu/) as an example but any SLURM equipped HPC
+This vignette will use the MOX cluster of [the HYAK 
+ecosystem](https://hyak.uw.edu/) as an example but any SLURM-equipped HPC
 should work similarly.
 
 # Structure of the BigNets Project
@@ -51,8 +47,8 @@ All data used and produced by the project will be stored in either the
 
 ## Overview
 
-This project simulates HIV dynamics on a population of 10 000 individuals. The
-first step is to estimate 3 networks of 10 000 nodes representing respectively
+This project simulates HIV dynamics on a population of 10000 individuals. The
+first step is to estimate 3 networks of 10000 nodes representing respectively
 *main*, *casual* and *one off* partnerships. This step will happen in the
 script "R/01-estimation.R". Afterwards we will want to diagnose this estimation
 using the script "R/02-diagnostics.R" and finally explore these diagnostics
@@ -63,7 +59,7 @@ produced to perform the third one.
 
 ## Defining the "estimation" *workflow*
 
-The script "R/00-estimation_worklow.R" is responsible to the creation of the
+The script "R/00-estimation_workflow.R" is responsible to the creation of the
 first *workflow*. We will walk through it block by block to understand the
 basics of `slurmworkflow`.
 
@@ -73,7 +69,7 @@ A *workflow* exists on your computer as a subdirectory of the
 "workflows/" directory of your project.
 
 Before creating it, we set a few variable to make the process easily
-transposable to another cluster.
+transportable to another cluster.
 
 ```{r wf_1_setup, eval = FALSE}
 library(slurmworkflow)
@@ -93,7 +89,7 @@ are using.
 
 The `slurmworkflow::create_workflow` function takes 2 mandatory arguments:
 1. `wf_name`: the name of the new workflow
-1. `default_sbatch_opts`: a list of default options for the
+2. `default_sbatch_opts`: a list of default options for the
    [`sbatch`](https://slurm.schedmd.com/sbatch.html) command. They will be
    shared among all steps.
 
