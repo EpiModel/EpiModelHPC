@@ -1,3 +1,9 @@
+library/
+local/
+cellar/
+lock/
+python/
+staging/
 # History files
 .Rhistory
 
@@ -11,3 +17,6 @@
 .Rproj.user/
 .Rproj.user
 *.Rproj
+inst/doc
+/doc/
+/Meta/
