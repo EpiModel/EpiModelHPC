@@ -12,5 +12,5 @@ While there are many potential HPCs systems, this software is developed with the
 This software is currently hosted on Github only. Install it using the `remotes` package:
 ```r
 if (!require("remotes")) install.packages("remotes")
-remotes::install_github("statnet/EpiModelHPC")
+remotes::install_github("EpiModel/EpiModelHPC")
 ```
