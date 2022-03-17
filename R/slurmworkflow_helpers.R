@@ -72,7 +72,8 @@ swf_configs_rsph <- function(partition = "preemptable") {
 
   hpc_configs[["r_loader"]] <- c(
     ". /projects/epimodel/spack/share/spack/setup-env.sh",
-    "spack load r@4.1.2"
+    "spack load r@4.1.2",
+    "spack load git"
   )
 
   return(hpc_configs)
