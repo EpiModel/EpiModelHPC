@@ -3,19 +3,19 @@
 #' @param hpc Which HPC to use on HYAK (either "klone" or "mox")
 #' @param partition Which partition to use on HYAK (either "csde" or "ckpt")
 #'
-#' @return a list containing code{default_sbatch_opts}, code{renv_sbatch_opts}
-#'   and code{r_loader} (see the "hpc_configs" section)
+#' @return a list containing \code{default_sbatch_opts}, \code{renv_sbatch_opts}
+#'   and \code{r_loader} (see the "hpc_configs" section)
 #'
 #' @section hpc_configs:
 #' \begin{itemize}
-#' \item code{default_sbatch_opts} is a list of sbatch options to be passed to
-#' code{slurmworkflow::create_workflow}.
-#' \item code{renv_sbatch_opts} is a list of sbatch options to be passed to
-#' code{slurmworkflow::step_tmpl_renv_restore}. It provides sane defaults for
-#' building the dependencies of an R project using code{renv}
-#' \item code{r_loader} is a set of bash lines to make the R software available.
-#' This is passed to the code{setup_lines} arguments of the
-#' code{slurmworkflow::step_tmpl_} functions that requires it.
+#' \item \code{default_sbatch_opts} is a list of sbatch options to be passed to
+#' \code{slurmworkflow::create_workflow}.
+#' \item \code{renv_sbatch_opts} is a list of sbatch options to be passed to
+#' \code{slurmworkflow::step_tmpl_renv_restore}. It provides sane defaults for
+#' building the dependencies of an R project using \code{renv}
+#' \item \code{r_loader} is a set of bash lines to make the R software available.
+#' This is passed to the \code{setup_lines} arguments of the
+#' \code{slurmworkflow::step_tmpl_} functions that requires it.
 #' \end{itemize}
 #'
 #' @export
@@ -93,9 +93,9 @@ swf_renv_sbatch_opts <- function() {
   )
 }
 
-#' Step template to update a project code{renv}
+#' Step template to update a project \code{renv}
 #'
-#' This template makes the step run `git pull` and code{renv::restore()}. This
+#' This template makes the step run `git pull` and \code{renv::restore()}. This
 #' could help ensure that the project is up to date when running the rest of the
 #' workflow.
 #' See \code{slurmworkflow::step_tmpl_bash_lines} for details on step templates
@@ -105,7 +105,7 @@ swf_renv_sbatch_opts <- function() {
 #' @param setup_lines (optional) a vector of bash lines to be run first.
 #'   This can be used to load the required modules (like R, python, etc).
 #'
-#' @return a template function to be used by code{add_workflow_step}
+#' @return a template function to be used by \code{add_workflow_step}
 #'
 #' @export
 step_tmpl_renv_restore <- function(git_branch, setup_lines = NULL) {
