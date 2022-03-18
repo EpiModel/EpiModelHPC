@@ -22,13 +22,15 @@ Preset of Configuration for the HYAK Cluster
 }
 \section{hpc_configs}{
 
-\item \code{default_sbatch_opts} is a list of sbatch options to be passed to
-\code{slurmworkflow::create_workflow}.
-\item \code{renv_sbatch_opts} is a list of sbatch options to be passed to
-\code{slurmworkflow::step_tmpl_renv_restore}. It provides sane defaults for
-building the dependencies of an R project using \code{renv}
-\item \code{r_loader} is a set of bash lines to make the R software available.
-This is passed to the \code{setup_lines} arguments of the
-\code{slurmworkflow::step_tmpl_} functions that requires it.
+\enumerate{
+  \item \code{default_sbatch_opts} is a list of sbatch options to be passed to
+  \code{slurmworkflow::create_workflow}.
+  \item \code{renv_sbatch_opts} is a list of sbatch options to be passed to
+  \code{slurmworkflow::step_tmpl_renv_restore}. It provides sane defaults for
+  building the dependencies of an R project using \code{renv}
+  \item \code{r_loader} is a set of bash lines to make the R software available.
+  This is passed to the \code{setup_lines} arguments of the
+  \code{slurmworkflow::step_tmpl_} functions that requires it.
+}
 }
 

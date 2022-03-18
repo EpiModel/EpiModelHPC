@@ -8,14 +8,16 @@
 #'   and \code{r_loader} (see the "hpc_configs" section)
 #'
 #' @section hpc_configs:
-#' \item \code{default_sbatch_opts} is a list of sbatch options to be passed to
-#' \code{slurmworkflow::create_workflow}.
-#' \item \code{renv_sbatch_opts} is a list of sbatch options to be passed to
-#' \code{slurmworkflow::step_tmpl_renv_restore}. It provides sane defaults for
-#' building the dependencies of an R project using \code{renv}
-#' \item \code{r_loader} is a set of bash lines to make the R software available.
-#' This is passed to the \code{setup_lines} arguments of the
-#' \code{slurmworkflow::step_tmpl_} functions that requires it.
+#' \enumerate{
+#'   \item \code{default_sbatch_opts} is a list of sbatch options to be passed to
+#'   \code{slurmworkflow::create_workflow}.
+#'   \item \code{renv_sbatch_opts} is a list of sbatch options to be passed to
+#'   \code{slurmworkflow::step_tmpl_renv_restore}. It provides sane defaults for
+#'   building the dependencies of an R project using \code{renv}
+#'   \item \code{r_loader} is a set of bash lines to make the R software available.
+#'   This is passed to the \code{setup_lines} arguments of the
+#'   \code{slurmworkflow::step_tmpl_} functions that requires it.
+#' }
 #'
 #' @export
 swf_configs_hyak <- function(hpc = "klone", partition = "csde",
@@ -119,7 +121,7 @@ step_tmpl_renv_restore <- function(git_branch, setup_lines = NULL) {
     "git pull",
     "Rscript -e \"renv::restore()\""
   )
-  instructions <- slurmworkflow:::helper_use_setup_lines(instructions, setup_lines)
+  instructions <- slurmworkflow::helper_use_setup_lines(instructions, setup_lines)
 
   slurmworkflow::step_tmpl_bash_lines(instructions)
 }
