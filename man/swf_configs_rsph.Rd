@@ -9,6 +9,8 @@ swf_configs_rsph(partition = "preemptable", r_version = "4.1.2")
 \arguments{
 \item{partition}{Which partition to use on RSPH (either "compute" or
 "epimodel")}
+
+\item{r_version}{Which version of R to load (default="4.1.2")}
 }
 \value{
 a list containing \code{default_sbatch_opts}, \code{renv_sbatch_opts}
@@ -19,7 +21,6 @@ Preset of Configuration for the RSPH Cluster
 }
 \section{hpc_configs}{
 
-\begin{itemize}
 \item \code{default_sbatch_opts} is a list of sbatch options to be passed to
 \code{slurmworkflow::create_workflow}.
 \item \code{renv_sbatch_opts} is a list of sbatch options to be passed to
@@ -28,6 +29,5 @@ building the dependencies of an R project using \code{renv}
 \item \code{r_loader} is a set of bash lines to make the R software available.
 This is passed to the \code{setup_lines} arguments of the
 \code{slurmworkflow::step_tmpl_} functions that requires it.
-\end{itemize}
 }
 

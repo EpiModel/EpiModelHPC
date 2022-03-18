@@ -2,12 +2,12 @@
 #'
 #' @param hpc Which HPC to use on HYAK (either "klone" or "mox")
 #' @param partition Which partition to use on HYAK (either "csde" or "ckpt")
+#' @param r_version Which version of R to load (default="4.1.2")
 #'
 #' @return a list containing \code{default_sbatch_opts}, \code{renv_sbatch_opts}
 #'   and \code{r_loader} (see the "hpc_configs" section)
 #'
 #' @section hpc_configs:
-#' \begin{itemize}
 #' \item \code{default_sbatch_opts} is a list of sbatch options to be passed to
 #' \code{slurmworkflow::create_workflow}.
 #' \item \code{renv_sbatch_opts} is a list of sbatch options to be passed to
@@ -16,7 +16,6 @@
 #' \item \code{r_loader} is a set of bash lines to make the R software available.
 #' This is passed to the \code{setup_lines} arguments of the
 #' \code{slurmworkflow::step_tmpl_} functions that requires it.
-#' \end{itemize}
 #'
 #' @export
 swf_configs_hyak <- function(hpc = "klone", partition = "csde",
@@ -60,6 +59,7 @@ swf_configs_hyak <- function(hpc = "klone", partition = "csde",
 #'  "epimodel")
 #'
 #' @inherit swf_configs_hyak return
+#' @inheritParams swf_configs_hyak
 #' @inheritSection swf_configs_hyak hpc_configs
 #'
 #' @export
