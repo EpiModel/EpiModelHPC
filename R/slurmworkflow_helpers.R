@@ -112,7 +112,8 @@ step_tmpl_renv_restore <- function(git_branch, setup_lines = NULL) {
   instructions <- c(
     "CUR_BRANCH=$(git rev-parse --abbrev-ref HEAD)",
     paste0("if [[ \"$CUR_BRANCH\" != \"", git_branch, "\" ]]; then"),
-    paste0("echo 'The git branch is not `", git_branch, "`. Exiting' 1>&2"),
+    paste0("echo 'The git branch is not `", git_branch, "`.)"),
+    paste0("Exiting' 1>&2"),
     "exit 1",
     "fi",
     "git pull",
