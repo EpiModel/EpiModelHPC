@@ -72,6 +72,7 @@ transportable to another cluster.
 
 ```{r wf_1_setup, eval = FALSE}
 library(slurmworkflow)
+library(EpiModelHPC)
 
 hpc_configs <- EpiModelHPC::swf_configs_rsph(partition = "epimodel")
 max_cores <- 28
@@ -143,15 +144,22 @@ of the default options defined above.
 ```{r wf_1_renv, eval = FALSE}
 wf <- add_workflow_step(
   wf_summary = wf,
-  step_tmpl = step_tmpl_renv_restore(setup_lines = hpc_configs$r_loader),
+  step_tmpl = step_tmpl_renv_restore(
+    git_branch = "main",
+    setup_lines = hpc_configs$r_loader
+  ),
   sbatch_opts = hpc_configs$renv_sbatch_opts
 )
 ```
 
 The *step template* here is from the function
-`slurmworkflow::step_tmpl_renv_restore` it takes a single argument
-`setup_lines` (see above) and internally sets up an `sbatch` task that will run
-`git pull` and `renv::restore()`.
+`EpiModelHPC::step_tmpl_renv_restore` it takes two arguments:
+  1. `git_branch`: the branch that the repository must follow. If the branch
+     followed (on the HPC) is not the right one, the step will stop there to
+     avoid potential data loss and undefined behaviors. Here we use the `main`
+     branch of the `BigNets` project.
+  2. `setup_lines` (see above) and internally sets up an `sbatch` task that
+     will run `git pull` and `renv::restore()`.
 
 For this specific task we need to change some of the `sbatch` options using
 `hpc_configs$renv_sbatch_opts`.
@@ -345,8 +353,9 @@ second *workflow*.
 
 ```{r wf_2_setup, eval = FALSE}
 library(slurmworkflow)
+library(EpiModelHPC)
 
-hpc_configs <- EpiModelHPC::swf_configs_rsph(partition = "preemptable")
+hpc_configs <- swf_configs_rsph(partition = "preemptable")
 max_cores <- 28
 
 ## Workflow creation ------------------------------------------------------------
@@ -358,7 +367,10 @@ wf <- create_workflow(
 ## Update RENV on the HPC -------------------------------------------------------
 wf <- add_workflow_step(
   wf_summary = wf,
-  step_tmpl = step_tmpl_renv_restore(setup_lines = hpc_configs$r_loader),
+  step_tmpl = step_tmpl_renv_restore(
+    git_branch = "main",
+    setup_lines = hpc_configs$r_loader
+  ),
   sbatch_opts = hpc_configs$renv_sbatch_opts
 )
 ```

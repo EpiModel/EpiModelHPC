@@ -4,9 +4,9 @@ Date: 2021-12-13
 Title: EpiModel Extensions for High-Performance Computing
 Description: Extension package to EpiModel to run large-scale stochastic network
     models on modern high-performance computing systems. Functionality provided to
-    simulate models in parallel using single-node, multiple-core setups. Check-pointing 
-    functions that automatically save and restore simulation work, which may be 
-    useful on HPC systems with Portable Batch System (PBS) job scheduling software 
+    simulate models in parallel using single-node, multiple-core setups. Check-pointing
+    functions that automatically save and restore simulation work, which may be
+    useful on HPC systems with Portable Batch System (PBS) job scheduling software
     like OpenPBS, are also included.
 Maintainer: Samuel Jenness <samuel.m.jenness@emory.edu>
 Authors@R: c(person("Samuel", "Jenness",
@@ -21,13 +21,17 @@ Imports:
     doParallel,
     foreach,
     ergm,
+    remotes,
     tergm,
-    stringr
+    stringr,
+    slurmworkflow
 Suggests:
     rmarkdown,
     testthat,
     network,
     knitr
+Remotes:
+  EpiModel/slurmworkflow
 VignetteBuilder: knitr
 RoxygenNote: 7.1.2
 Encoding: UTF-8

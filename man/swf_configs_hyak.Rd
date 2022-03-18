@@ -4,29 +4,33 @@
 \alias{swf_configs_hyak}
 \title{Preset of Configuration for the HYAK Cluster}
 \usage{
-swf_configs_hyak(hpc = "klone", partition = "csde")
+swf_configs_hyak(hpc = "klone", partition = "csde", r_version = "4.1.2")
 }
 \arguments{
 \item{hpc}{Which HPC to use on HYAK (either "klone" or "mox")}
 
 \item{partition}{Which partition to use on HYAK (either "csde" or "ckpt")}
+
+\item{r_version}{Which version of R to load (default="4.1.2")}
 }
 \value{
-a list containing `default_sbatch_opts`, `renv_sbatch_opts` and
-   `r_loader` (see the "hpc_configs" section)
+a list containing \code{default_sbatch_opts}, \code{renv_sbatch_opts}
+  and \code{r_loader} (see the "hpc_configs" section)
 }
 \description{
 Preset of Configuration for the HYAK Cluster
 }
 \section{hpc_configs}{
 
-- `default_sbatch_opts` is a list of sbatch options to be passed to
-`slurmworkflow::create_workflow`.
-- `renv_sbatch_opts` is a list of sbatch options to be passed to
-`slurmworkflow::step_tmpl_renv_restore`. It provides sane defaults for
-building the dependencies of an R project using `renv`
-- `r_loader` is a set of bash lines to make the R software available. This is
-passed to the `setup_lines` arguments of the `slurmworkflow::step_tmpl_`
-functions that requires it.
+\enumerate{
+  \item \code{default_sbatch_opts} is a list of sbatch options to be passed to
+  \code{slurmworkflow::create_workflow}.
+  \item \code{renv_sbatch_opts} is a list of sbatch options to be passed to
+  \code{slurmworkflow::step_tmpl_renv_restore}. It provides sane defaults for
+  building the dependencies of an R project using \code{renv}
+  \item \code{r_loader} is a set of bash lines to make the R software available.
+  This is passed to the \code{setup_lines} arguments of the
+  \code{slurmworkflow::step_tmpl_} functions that requires it.
+}
 }
 
