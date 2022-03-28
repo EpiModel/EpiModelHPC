@@ -25,16 +25,16 @@ Computer (HPC). In this vignette, a *workflow* refers to a set of tasks to be
 executed on the HPC, one after the other.
 
 We will describe how to construct and use 2 *workflows* using the
-[EpiModel/BigNets](https://github.com/EpiModel/BigNets/tree/swf_example)
-project (branch *swf_example*).
+[EpiModel/BigNets](https://github.com/EpiModel/BigNets)
+project.
 
 This project uses [renv](https://rstudio.github.io/renv/index.html) and requires
 access to the [EpiModelHIV-p](https://github.com/EpiModelHIV-p) private
 repository. This vignette assumes that your project is hosted on a git
 repository checked out on your local computer and on the HPC.
 
-This vignette will use the MOX cluster of [the HYAK
-ecosystem](https://hyak.uw.edu/) as an example.
+This vignette will use the Rollins School of Public Health cluster from [Emory
+University](https://www.sph.emory.edu/) as an example.
 
 ## Structure of the BigNets Project
 
@@ -78,19 +78,20 @@ library(slurmworkflow)
 library(EpiModelHPC)
 
 hpc_configs <- EpiModelHPC::swf_configs_rsph(partition = "epimodel")
-max_cores <- 28
+max_cores <- 32
 ```
 
 Here we use the `EpiModelHPC::swf_configs_rsph` helper function to create the
 `hpc_configs` objects that will holds some pre-defined configurations. We
 specify that we want to work on the "epimodel" partition.
 
-We also set `max_cores` to 28 which is the number of CPU per node on the HPC we
+We also set `max_cores` to 32 which is the number of CPU per node on the HPC we
 are using.
 
 #### Creating a *workflow*
 
 The `slurmworkflow::create_workflow` function takes 2 mandatory arguments:
+
 1. `wf_name`: the name of the new workflow
 2. `default_sbatch_opts`: a list of default options for the
    [`sbatch`](https://slurm.schedmd.com/sbatch.html) command. They will be
@@ -121,7 +122,9 @@ With this we have created the directory "workflows/estimation" and stored a
 summary of it in the `wf` variable. For now our workflow has no steps.
 
 notes:
-- SLURM configuration can vary, on [HYAK](https://hyak.uw.edu/) for instance there is  an accounting module and we would have to specify the "account" option). An equivalent
+- SLURM configuration can vary, on [HYAK](https://hyak.uw.edu/) for instance
+  there is  an accounting module and we would have to specify the "account"
+  option). An equivalent
   `swf_configs_hyak` function exists for the HYAK ecosystem.
 - `default_sbatch_opts` and `sbatch_opts` parameters accept all the options for
   `sbatch` starting with "--". (e.g. "account" is valid but "A" is not, as it
@@ -137,6 +140,7 @@ the HPC is up to date with the right package version. It translates to running
 `git pull` on the HPC and `renv::restore()` from the project.
 
 The `slurmworkflow::add_workflow_step` take 2 mandatory arguments:
+
 1. `wf_summary`: a summary of the workflow to edit (the `wf` variable)
 2. `step_tmpl`: a *step template*. These are made by a special kind of functions
    from `slurmworkflow`.
@@ -157,12 +161,13 @@ wf <- add_workflow_step(
 
 The *step template* here is from the function
 `EpiModelHPC::step_tmpl_renv_restore` it takes two arguments:
-  1. `git_branch`: the branch that the repository must follow. If the branch
-     followed (on the HPC) is not the right one, the step will stop there to
-     avoid potential data loss and undefined behaviors. Here we use the `main`
-     branch of the `BigNets` project.
-  2. `setup_lines` (see above) and internally sets up an `sbatch` task that
-     will run `git pull` and `renv::restore()`.
+
+1. `git_branch`: the branch that the repository must follow. If the branch
+    followed (on the HPC) is not the right one, the step will stop there to
+    avoid potential data loss and undefined behaviors. Here we use the `main`
+    branch of the `BigNets` project.
+2. `setup_lines` (see above) and internally sets up an `sbatch` task that
+    will run `git pull` and `renv::restore()`.
 
 For this specific task we need to change some of the `sbatch` options using
 `hpc_configs$renv_sbatch_opts`.
@@ -236,6 +241,7 @@ Finally, we also provide the `setup_lines` as before and some new
 to "epimodel" (using the values set in `create_workflow` at the beginning.
 
 This step will write 3 files on the HPC:
+
 1. "data/input/epistats.rds"
 2. "data/input/netstats.rds"
 3. "data/input/netest.rds"
@@ -359,7 +365,7 @@ library(slurmworkflow)
 library(EpiModelHPC)
 
 hpc_configs <- swf_configs_rsph(partition = "preemptable")
-max_cores <- 28
+max_cores <- 32
 
 ## Workflow creation ------------------------------------------------------------
 wf <- create_workflow(
@@ -401,7 +407,7 @@ Terminology:
 In this step we load a `data.frame` of 4 scenarios found in
 "data/input/calib_scenarios.csv" and transform it into a scenario list.
 
-We want each scenario to be run 280 times or 10 batch of 28 (our `max_core`
+We want each scenario to be run 320 times or 10 batch of 32 (our `max_core`
 value). To do so, we replicate the scenario list 10 time (`n_batches`).
 
 We now have a scenario list of size 40 (4 scenarios, 10 times each).
@@ -458,7 +464,7 @@ To summarize, each of the 40 batch will run with individual values for
 `ncores` value. Here, `batch_num` gives us a unique value for each run.
 
 Finally, the `max_array_size` argument allow us to constrain how many runs
-could be submitted as once. On MOX one is limited to around 1000 job submission
+could be submitted as once. On RSPH one is limited to around 1000 job submission
 at a time. Trying to submit more will result on SLURM rejecting all the jobs.
 To prevent this, `step_tmpl_map_script` will split the job into parts that will
 be submitted one after the other. If the length of `scenarios.list` was 3 000,
@@ -485,7 +491,7 @@ wf <- add_workflow_step(
   step_tmpl = step_tmpl_do_call_script(
     r_script = "R/12-calibration_process.R",
     args = list(
-      ncores = 15,
+      ncores = 16,
       nsteps = 52
     ),
     setup_lines = hpc_configs$r_loader
