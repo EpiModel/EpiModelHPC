@@ -1,11 +1,14 @@
 ---
-title: "Using `slurmworkflow` with EpiModelHIV"
-output: rmarkdown::html_vignette
+title: "Using `slurmworkflow` with EpiModel"
+date: "`r Sys.Date()`"
 vignette: >
-  %\VignetteIndexEntry{epimodelhiv-slurmworkflow}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteIndexEntry{Using slurmworkflow with EpiModel}
   %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options:
+  chunk_output_type: console
 ---
+
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
