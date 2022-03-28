@@ -20,3 +20,6 @@ staging/
 inst/doc
 /doc/
 /Meta/
+
+vignettes/*.html
+vignettes/*.R
