@@ -59,13 +59,16 @@ swf_configs_hyak <- function(hpc = "klone", partition = "csde",
 #'
 #' @param partition Which partition to use on RSPH (either "compute" or
 #'  "epimodel")
+#' @param git_version Which version of Git to load (default="2.31.1")
 #'
 #' @inherit swf_configs_hyak return
 #' @inheritParams swf_configs_hyak
 #' @inheritSection swf_configs_hyak hpc_configs
 #'
 #' @export
-swf_configs_rsph <- function(partition = "preemptable", r_version = "4.1.2") {
+swf_configs_rsph <- function(partition = "preemptable",
+                             r_version = "4.1.2",
+                             git_version = "2.31.1") {
   if (!partition %in% c("preemptable", "epimodel"))
     stop("On RSPH, partition must be one of \"preemptable\" or \"epimodel\"")
 
@@ -80,7 +83,7 @@ swf_configs_rsph <- function(partition = "preemptable", r_version = "4.1.2") {
   hpc_configs[["r_loader"]] <- c(
     ". /projects/epimodel/spack/share/spack/setup-env.sh",
     paste0("spack load r@", r_version),
-    "spack load git"
+    paste0("spack load git@", git_version)
   )
 
   return(hpc_configs)
