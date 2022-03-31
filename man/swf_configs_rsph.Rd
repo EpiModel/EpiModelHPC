@@ -4,13 +4,19 @@
 \alias{swf_configs_rsph}
 \title{Preset of Configuration for the RSPH Cluster}
 \usage{
-swf_configs_rsph(partition = "preemptable", r_version = "4.1.2")
+swf_configs_rsph(
+  partition = "preemptable",
+  r_version = "4.1.2",
+  git_version = "2.31.1"
+)
 }
 \arguments{
 \item{partition}{Which partition to use on RSPH (either "compute" or
 "epimodel")}
 
 \item{r_version}{Which version of R to load (default="4.1.2")}
+
+\item{git_version}{Which version of Git to load (default="2.31.1")}
 }
 \value{
 a list containing \code{default_sbatch_opts}, \code{renv_sbatch_opts}
