@@ -144,8 +144,8 @@ step_tmpl_netsim_scenarios <- function(est, param, init, control,
   inner_fun <- function(scenario, batch_num) {
     lapply(libraries, function(l) library(l, character.only = TRUE))
 
-    if (!fs::dir.exists(output_dir))
-      fs::dir.create(output_dir, recursive = TRUE)
+    if (!fs::dir_exists(output_dir))
+      fs::dir_create(output_dir, recursive = TRUE)
 
     # On last batch, adjust the number of simulation to be run
     if (batch_num == n_batch)
