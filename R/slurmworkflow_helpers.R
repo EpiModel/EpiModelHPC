@@ -136,25 +136,13 @@ step_tmpl_netsim_scenarios <- function(est, param, init, control,
                                        libraries = NULL,
                                        setup_lines = NULL,
                                        max_array_size = NULL) {
-
   libraries <- c("slurmworkflow", "EpiModelHPC", libraries)
   n_batch <- ceiling(n_rep / n_cores)
 
-  inner_fun <- function(scenario, batch_num) {
-
-    print(1)
-    print(libraries)
-    print(2)
-    print(n_batch)
-    print(3)
-    print(n_rep)
-    print(4)
-    print(n_cores)
-    print(5)
-    print(output_dir)
-    print(6)
-    print(est)
-
+  inner_fun <- function(scenario, batch_num,
+                        est, param, init, control,
+                        libraries, output_dir,
+                        n_batch, n_rep, n_cores) {
     lapply(libraries, function(l) library(l, character.only = TRUE))
 
     if (!fs::dir_exists(output_dir))
@@ -183,6 +171,15 @@ step_tmpl_netsim_scenarios <- function(est, param, init, control,
     FUN = inner_fun,
     scenario = rep(scenarios_list, n_batch),
     batch_num = rep(seq_along(scenarios_list), each = n_batch),
+    MoreArgs = list(
+      est = est,
+      param = param,
+      init = init,
+      control = control,
+      libraries = libraries,
+      output_dir = output_dir,
+      n_batch = n_batch, n_rep = n_rep, n_cores = n_cores
+    ),
     max_array_size = max_array_size,
     setup_lines = hpc_configs$r_loader
   )
