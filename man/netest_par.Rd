@@ -44,8 +44,7 @@ more time-intensive full STERGM estimation (see details).}
 \item{set.control.ergm}{Control arguments passed to \code{simulate.ergm} (see
 details).}
 
-\item{set.control.stergm}{Control arguments passed to \code{simulate.stergm}
-(see details).}
+\item{set.control.stergm}{Deprecated; use \code{set.control.tergm} instead.}
 
 \item{ncores}{Number of processor cores to run multiple simulations
 on, using the \code{foreach} and \code{doParallel} implementations.}

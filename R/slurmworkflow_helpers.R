@@ -128,3 +128,50 @@ step_tmpl_renv_restore <- function(git_branch, setup_lines = NULL) {
 
   slurmworkflow::step_tmpl_bash_lines(instructions)
 }
+
+#' @export
+step_tmpl_netsim_scenarios <- function(est, param, init, control,
+                                       scenarios_list, n_rep, n_cores,
+                                       output_dir,
+                                       libraries = NULL,
+                                       setup_lines = NULL,
+                                       max_array_size = NULL) {
+
+  libraries <- c("slurmworkflow", "EpiModelHPC", libraries)
+
+  n_batch <- ceiling(n_rep / n_cores)
+  scenarios_list <- rep(scenarios_list, n_batch)
+
+  inner_fun <- function(scenario, batch_num) {
+    lapply(libraries, library)
+
+    if (!fs::dir.exists(output_dir))
+      fs::dir.create(output_dir, recursive = TRUE)
+
+    # On last batch, adjust the number of simulation to be run
+    if (batch_num == n_batch)
+      n_cores <- n_rep - n_cores * (n_batch - 1)
+
+    param_sc <- EpiModel::use_scenario(param, scenario)
+    control$nsims <- n_cores
+    control$ncores <- n_cores
+
+    print(paste0("Starting simulation for scenario: ", scenario[["id"]]))
+    print(paste0("Batch number: ", batch_num, " / ", n_batch))
+    sim <- EpiModel::netsim(est, param_sc, init, control)
+
+    print(paste0("Saving simulation in file: ", file_name))
+    file_name <- paste0("sim__", scenario[["id"]], "__", batch_num, ".rds")
+    saveRDS(sim, fs::path(output_dir, file_name))
+
+    print("Done!")
+  }
+
+  step_tmpl_map(
+    FUN = inner_fun,
+    scenario = scenarios_list,
+    batch_num = rep(seq_along(scenarios_list), each = n_batch),
+    max_array_size = max_array_size,
+    setup_lines = hpc_configs$r_loader
+  )
+}
