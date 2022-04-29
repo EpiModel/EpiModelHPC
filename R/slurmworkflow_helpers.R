@@ -148,9 +148,12 @@ step_tmpl_netsim_scenarios <- function(est, param, init, control,
     print(n_batch)
     print(3)
     print(n_rep)
-    print(6)
+    print(4)
     print(n_cores)
-    print(7)
+    print(5)
+    print(output_dir)
+    print(6)
+    print(est)
 
     lapply(libraries, function(l) library(l, character.only = TRUE))
 
