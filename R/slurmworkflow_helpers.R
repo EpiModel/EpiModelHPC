@@ -143,14 +143,10 @@ step_tmpl_netsim_scenarios <- function(est, param, init, control,
   inner_fun <- function(scenario, batch_num) {
 
     print(1)
-    print(est)
+    print(libraries)
     print(2)
-    print(param)
+    print(n_batch)
     print(3)
-    print(init)
-    print(4)
-    print(control)
-    print(5)
     print(n_rep)
     print(6)
     print(n_cores)
