@@ -142,7 +142,7 @@ step_tmpl_netsim_scenarios <- function(est, param, init, control,
   n_batch <- ceiling(n_rep / n_cores)
 
   inner_fun <- function(scenario, batch_num) {
-    lapply(libraries, library)
+    lapply(as.list(libraries), library)
 
     if (!fs::dir.exists(output_dir))
       fs::dir.create(output_dir, recursive = TRUE)
