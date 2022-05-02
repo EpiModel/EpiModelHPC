@@ -138,7 +138,8 @@ step_tmpl_netsim_scenarios <- function(est, param, init, control,
                                        max_array_size = NULL) {
   libraries <- c("slurmworkflow", "EpiModelHPC", libraries)
   n_batch <- ceiling(n_rep / n_cores)
-  scenarios_list <- rep(scenarios_list, n_batch)
+  batchs_list <- rep(seq_along(scenarios_list), n_batch)
+  scenarios_list <- rep(scenarios_list, each = n_batch)
 
   inner_fun <- function(scenario, batch_num,
                         est, param, init, control,
@@ -171,7 +172,7 @@ step_tmpl_netsim_scenarios <- function(est, param, init, control,
   step_tmpl_map(
     FUN = inner_fun,
     scenario = scenarios_list,
-    batch_num = seq_along(scenarios_list),
+    batch_num = batchs_list,
     MoreArgs = list(
       est = est,
       param = param,
