@@ -160,8 +160,8 @@ step_tmpl_netsim_scenarios <- function(est, param, init, control,
     print(paste0("Batch number: ", batch_num, " / ", n_batch))
     sim <- EpiModel::netsim(est, param_sc, init, control)
 
-    print(paste0("Saving simulation in file: ", file_name))
     file_name <- paste0("sim__", scenario[["id"]], "__", batch_num, ".rds")
+    print(paste0("Saving simulation in file: ", file_name))
     saveRDS(sim, fs::path(output_dir, file_name))
 
     print("Done!")
