@@ -143,7 +143,7 @@ step_tmpl_netsim_scenarios <- function(est, param, init, control,
     scenarios_list <- EpiModel::create_scenario_list(scenarios_list)
   }
 
-  batchs_list <- rep(seq_along(scenarios_list), n_batch)
+  batchs_list <- rep(seq_len(n_batch), length(scenarios_list))
   scenarios_list <- rep(scenarios_list, each = n_batch)
 
   inner_fun <- function(scenario, batch_num,
