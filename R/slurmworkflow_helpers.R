@@ -138,6 +138,11 @@ step_tmpl_netsim_scenarios <- function(est, param, init, control,
                                        max_array_size = NULL) {
   libraries <- c("slurmworkflow", "EpiModelHPC", libraries)
   n_batch <- ceiling(n_rep / n_cores)
+  if (is.null(scenarios_list)) {
+    scenarios_list <- data.frame(.at = 0, .scenario.id = "empty_scenario")
+    scenarios_list <- EpiModel::create_scenario_list(scenarios_list)
+  }
+
   batchs_list <- rep(seq_along(scenarios_list), n_batch)
   scenarios_list <- rep(scenarios_list, each = n_batch)
 
