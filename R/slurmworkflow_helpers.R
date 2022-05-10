@@ -156,7 +156,7 @@ step_tmpl_renv_restore <- function(git_branch, setup_lines = NULL) {
 #' @inheritSection slurmworkflow::step_tmpl_bash_lines Step Template
 #'
 #' @export
-step_tmpl_netsim_scenarios <- function(est, param, init, control,
+step_tmpl_netsim_scenarios <- function(x, param, init, control,
                                        scenarios_list, n_rep, n_cores,
                                        output_dir,
                                        libraries = NULL,
@@ -205,7 +205,7 @@ step_tmpl_netsim_scenarios <- function(est, param, init, control,
     scenario = scenarios_list,
     batch_num = batchs_list,
     MoreArgs = list(
-      est = est,
+      est = x,
       param = param,
       init = init,
       control = control,

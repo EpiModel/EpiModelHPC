@@ -5,7 +5,7 @@
 \title{Step template to run EpiModel network simulations with scenarios}
 \usage{
 step_tmpl_netsim_scenarios(
-  est,
+  x,
   param,
   init,
   control,
@@ -19,6 +19,10 @@ step_tmpl_netsim_scenarios(
 )
 }
 \arguments{
+\item{x}{Fitted network model object, as an object of class \code{netest}.
+Alternatively, if restarting a previous simulation, may be an object
+of class \code{netsim}.}
+
 \item{param}{Model parameters, as an object of class \code{param.net}.}
 
 \item{init}{Initial conditions, as an object of class \code{init.net}.}
