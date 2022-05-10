@@ -31,8 +31,8 @@ Suggests:
     network,
     knitr
 Remotes:
- github:EpiModel/slurmworkflow,
- github:EpiModel/EpiModel
+ github::EpiModel/EpiModel,
+ github::EpiModel/slurmworkflow
 VignetteBuilder: knitr
 RoxygenNote: 7.1.2
 Encoding: UTF-8
