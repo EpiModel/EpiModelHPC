@@ -21,6 +21,7 @@ Imports:
     doParallel,
     foreach,
     ergm,
+    fs,
     remotes,
     tergm,
     stringr,
