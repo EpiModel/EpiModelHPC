@@ -128,3 +128,92 @@ step_tmpl_renv_restore <- function(git_branch, setup_lines = NULL) {
 
   slurmworkflow::step_tmpl_bash_lines(instructions)
 }
+
+#' Step template to run EpiModel network simulations with scenarios
+#'
+#' This step template will run \code{n_rep} replications of each scenarios in
+#' the \code{scenarios_list}. It runs them as multiple batches of up to
+#' \code{n_cores} simulations at a time. The simfiles are then stored in the
+#' \code{output_dir} folder and are named using the following pattern:
+#' "sim__name_of_scenario__2.Rds". Where the last number is the batch number
+#' for this particular scenario. Each scenario is therefore run over
+#' \code{ceiling(n_rep / n_cores)} batches.
+#'
+#' @param scenarios_list A list of scenarios to be run. Produced by the
+#'   \code{EpiModel::create_scenario_list} function
+#' @param n_rep The number of replication to be run for each scenario.
+#' @param n_cores The number of CPUs on which the simulations will be run for
+#'   each node on the HPC
+#' @param output_dir The folder where the simulation files are to be stored on
+#'   the HPC
+#' @param libraries A character vector containing the name of the libraries
+#'   required for the model to run. (e.g. EpiModelHIV or EpiModelCOVID)
+#'
+#' @inheritParams EpiModel::netsim
+#' @inheritParams slurmworkflow::step_tmpl_map
+#'
+#' @inherit slurmworkflow::step_tmpl_rscript return
+#' @inheritSection slurmworkflow::step_tmpl_bash_lines Step Template
+#'
+#' @export
+step_tmpl_netsim_scenarios <- function(x, param, init, control,
+                                       scenarios_list, n_rep, n_cores,
+                                       output_dir,
+                                       libraries = NULL,
+                                       setup_lines = NULL,
+                                       max_array_size = NULL) {
+  libraries <- c("slurmworkflow", "EpiModelHPC", libraries)
+  if (is.null(scenarios_list)) {
+    scenarios_list <- data.frame(.at = 0, .scenario.id = "empty_scenario")
+    scenarios_list <- EpiModel::create_scenario_list(scenarios_list)
+  }
+
+  n_batch <- ceiling(n_rep / n_cores)
+  batchs_list <- rep(seq_len(n_batch), length(scenarios_list))
+  scenarios_list <- rep(scenarios_list, each = n_batch)
+
+  inner_fun <- function(scenario, batch_num,
+                        est, param, init, control,
+                        libraries, output_dir,
+                        n_batch, n_rep, n_cores) {
+    lapply(libraries, function(l) library(l, character.only = TRUE))
+
+    if (!fs::dir_exists(output_dir))
+      fs::dir_create(output_dir, recursive = TRUE)
+
+    # On last batch, adjust the number of simulation to be run
+    if (batch_num == n_batch)
+      n_cores <- n_rep - n_cores * (n_batch - 1)
+
+    param_sc <- EpiModel::use_scenario(param, scenario)
+    control$nsims <- n_cores
+    control$ncores <- n_cores
+
+    print(paste0("Starting simulation for scenario: ", scenario[["id"]]))
+    print(paste0("Batch number: ", batch_num, " / ", n_batch))
+    sim <- EpiModel::netsim(est, param_sc, init, control)
+
+    file_name <- paste0("sim__", scenario[["id"]], "__", batch_num, ".rds")
+    print(paste0("Saving simulation in file: ", file_name))
+    saveRDS(sim, fs::path(output_dir, file_name))
+
+    print("Done!")
+  }
+
+  slurmworkflow::step_tmpl_map(
+    FUN = inner_fun,
+    scenario = scenarios_list,
+    batch_num = batchs_list,
+    MoreArgs = list(
+      est = x,
+      param = param,
+      init = init,
+      control = control,
+      libraries = libraries,
+      output_dir = output_dir,
+      n_batch = n_batch, n_rep = n_rep, n_cores = n_cores
+    ),
+    max_array_size = max_array_size,
+    setup_lines = setup_lines
+  )
+}
