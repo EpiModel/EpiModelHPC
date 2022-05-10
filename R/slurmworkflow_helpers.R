@@ -129,6 +129,32 @@ step_tmpl_renv_restore <- function(git_branch, setup_lines = NULL) {
   slurmworkflow::step_tmpl_bash_lines(instructions)
 }
 
+#' Step template to run EpiModel network simulations with scenarios
+#'
+#' This step template will run \code{n_rep} replications of each scenarios in
+#' the \code{scenarios_list}. It runs them as multiple batches of up to
+#' \code{n_cores} simulations at a time. The simfiles are then stored in the
+#' \code{output_dir} folder and are named using the following pattern:
+#' "sim__name_of_scenario__2.Rds". Where the last number is the batch number
+#' for this particular scenario. Each scenario is therefore run over
+#' \code{ceiling(n_rep / n_cores)} batches.
+#'
+#' @param scenarios_list A list of scenarios to be run. Produced by the
+#'   \code{EpiModel::create_scenario_list} function
+#' @param n_rep The number of replication to be run for each scenario.
+#' @param n_cores The number of CPUs on which the simulations will be run for
+#'   each node on the HPC
+#' @param output_dir The folder where the simulation files are to be stored on
+#'   the HPC
+#' @param libraries A character vector containing the name of the libraries
+#'   required for the model to run. (e.g. EpiModelHIV or EpiModelCOVID)
+#'
+#' @inheritParams EpiModel::netsim
+#' @inheritParams slurmworkflow::step_tmpl_map
+#'
+#' @inherit slurmworkflow::step_tmpl_rscript return
+#' @inheritSection slurmworkflow::step_tmpl_bash_lines Step Template
+#'
 #' @export
 step_tmpl_netsim_scenarios <- function(est, param, init, control,
                                        scenarios_list, n_rep, n_cores,
