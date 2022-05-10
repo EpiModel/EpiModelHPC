@@ -200,7 +200,7 @@ step_tmpl_netsim_scenarios <- function(x, param, init, control,
     print("Done!")
   }
 
-  step_tmpl_map(
+  slurmworkflow::step_tmpl_map(
     FUN = inner_fun,
     scenario = scenarios_list,
     batch_num = batchs_list,
@@ -214,6 +214,6 @@ step_tmpl_netsim_scenarios <- function(x, param, init, control,
       n_batch = n_batch, n_rep = n_rep, n_cores = n_cores
     ),
     max_array_size = max_array_size,
-    setup_lines = hpc_configs$r_loader
+    setup_lines = setup_lines
   )
 }

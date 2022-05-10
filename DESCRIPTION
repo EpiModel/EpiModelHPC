@@ -22,7 +22,6 @@ Imports:
     foreach,
     ergm,
     fs,
-    remotes,
     tergm,
     stringr,
     slurmworkflow
@@ -32,7 +31,7 @@ Suggests:
     network,
     knitr
 Remotes:
-  EpiModel/slurmworkflow
+ github:EpiModel/slurmworkflow
 VignetteBuilder: knitr
 RoxygenNote: 7.1.2
 Encoding: UTF-8
