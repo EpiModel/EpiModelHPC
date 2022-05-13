@@ -3,6 +3,8 @@
 #' @param hpc Which HPC to use on HYAK (either "klone" or "mox")
 #' @param partition Which partition to use on HYAK (either "csde" or "ckpt")
 #' @param r_version Which version of R to load (default="4.1.2")
+#' @param mail_user The mail address to send the messages to, default is NULL
+#'   (see 'sbatch --mail-type' argument)
 #'
 #' @return a list containing \code{default_sbatch_opts}, \code{renv_sbatch_opts}
 #'   and \code{r_loader} (see the "hpc_configs" section)
@@ -21,7 +23,7 @@
 #'
 #' @export
 swf_configs_hyak <- function(hpc = "klone", partition = "csde",
-                             r_version = "4.1.2") {
+                             r_version = "4.1.2", mail_user = NULL) {
   if (!hpc %in% c("klone", "mox"))
     stop("On HYAK, `hpc` must be one of \"mox\" or \"klone\"")
 
@@ -34,6 +36,10 @@ swf_configs_hyak <- function(hpc = "klone", partition = "csde",
     "partition" = partition,
     "mail-type" = "FAIL"
   )
+
+  if (!is.null(mail_user))
+    hpc_configs[["default_sbatch_opts"]][["mail-user"]] <- mail_user
+
 
   hpc_configs[["renv_sbatch_opts"]] <- swf_renv_sbatch_opts()
 
@@ -60,8 +66,6 @@ swf_configs_hyak <- function(hpc = "klone", partition = "csde",
 #' @param partition Which partition to use on RSPH (either "compute" or
 #'  "epimodel")
 #' @param git_version Which version of Git to load (default="2.31.1")
-#' @param mail_user The mail address to send the messages to (see 'sbatch
-#' --mail-type' argument)
 #'
 #' @inherit swf_configs_hyak return
 #' @inheritParams swf_configs_hyak
