@@ -19,8 +19,8 @@ swf_configs_rsph(
 
 \item{git_version}{Which version of Git to load (default="2.31.1")}
 
-\item{mail_user}{The mail address to send the messages to (see 'sbatch
---mail-type' argument)}
+\item{mail_user}{The mail address to send the messages to, default is NULL
+(see 'sbatch --mail-type' argument)}
 }
 \value{
 a list containing \code{default_sbatch_opts}, \code{renv_sbatch_opts}

@@ -4,7 +4,12 @@
 \alias{swf_configs_hyak}
 \title{Preset of Configuration for the HYAK Cluster}
 \usage{
-swf_configs_hyak(hpc = "klone", partition = "csde", r_version = "4.1.2")
+swf_configs_hyak(
+  hpc = "klone",
+  partition = "csde",
+  r_version = "4.1.2",
+  mail_user = NULL
+)
 }
 \arguments{
 \item{hpc}{Which HPC to use on HYAK (either "klone" or "mox")}
@@ -12,6 +17,9 @@ swf_configs_hyak(hpc = "klone", partition = "csde", r_version = "4.1.2")
 \item{partition}{Which partition to use on HYAK (either "csde" or "ckpt")}
 
 \item{r_version}{Which version of R to load (default="4.1.2")}
+
+\item{mail_user}{The mail address to send the messages to, default is NULL
+(see 'sbatch --mail-type' argument)}
 }
 \value{
 a list containing \code{default_sbatch_opts}, \code{renv_sbatch_opts}
