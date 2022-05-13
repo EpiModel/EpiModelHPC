@@ -25,8 +25,7 @@ Computer (HPC). In this vignette, a *workflow* refers to a set of tasks to be
 executed on the HPC, one after the other.
 
 We will describe how to construct and use 2 *workflows* using the
-[EpiModel/BigNets](https://github.com/EpiModel/BigNets)
-project.
+[EpiModel/BigNets](https://github.com/EpiModel/BigNets) project.
 
 This project uses [renv](https://rstudio.github.io/renv/index.html) and requires
 access to the [EpiModelHIV-p](https://github.com/EpiModelHIV-p) private
@@ -49,8 +48,8 @@ All data used and produced by the project will be stored in either the
 
 ### Overview
 
-This project simulates HIV dynamics on a population of 10000 individuals. The
-first step is to estimate 3 networks of 10000 nodes representing respectively
+This project simulates HIV dynamics on a population of 10 000 individuals. The
+first step is to estimate 3 networks of 10 000 nodes representing respectively
 *main*, *casual* and *one off* partnerships. This step will happen in the
 script "R/01-estimation.R". Afterwards we will want to diagnose this estimation
 using the script "R/02-diagnostics.R" and finally explore these diagnostics
@@ -78,15 +77,15 @@ library(slurmworkflow)
 library(EpiModelHPC)
 
 hpc_configs <- EpiModelHPC::swf_configs_rsph(partition = "epimodel")
-max_cores <- 32
+max_cores <- 10
 ```
 
 Here we use the `EpiModelHPC::swf_configs_rsph` helper function to create the
 `hpc_configs` objects that will holds some pre-defined configurations. We
 specify that we want to work on the "epimodel" partition.
 
-We also set `max_cores` to 32 which is the number of CPU per node on the HPC we
-are using.
+We also set `max_cores` to 10 as trying to use more (up to 32 on RSPH) will
+massively slow down the estimation process.
 
 #### Creating a *workflow*
 
@@ -316,10 +315,10 @@ not work if you are not at the root of your project.
 Running the *workflow* is done by **executing** the file
 "workflows/estimation/start_workflow.sh"
 
-`$ workflows/estimation/start_workflow.sh`
+`$ ./workflows/estimation/start_workflow.sh`
 
 This file is created automatically by `slurmworkflow` and should be executable
-(even when created on Windows). If it is not, run
+(even when created on Windows). If it is not, run:
 
 `$ chmod +x workflows/estimation/start_workflow.sh`
 
@@ -521,7 +520,7 @@ We send the *workflow* as before with:
 
 run it from our project directory on the HPC with:
 
-`$ workflows/calibration/start_workflow.sh`
+`$ ./workflows/calibration/start_workflow.sh`
 
 and finally we download the results for evaluation:
 

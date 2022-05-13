@@ -60,6 +60,8 @@ swf_configs_hyak <- function(hpc = "klone", partition = "csde",
 #' @param partition Which partition to use on RSPH (either "compute" or
 #'  "epimodel")
 #' @param git_version Which version of Git to load (default="2.31.1")
+#' @param mail_user The mail address to send the messages to (see 'sbatch
+#' --mail-type' argument)
 #'
 #' @inherit swf_configs_hyak return
 #' @inheritParams swf_configs_hyak
@@ -68,7 +70,8 @@ swf_configs_hyak <- function(hpc = "klone", partition = "csde",
 #' @export
 swf_configs_rsph <- function(partition = "preemptable",
                              r_version = "4.1.2",
-                             git_version = "2.31.1") {
+                             git_version = "2.31.1",
+                             mail_user = NULL) {
   if (!partition %in% c("preemptable", "epimodel"))
     stop("On RSPH, partition must be one of \"preemptable\" or \"epimodel\"")
 
@@ -77,6 +80,9 @@ swf_configs_rsph <- function(partition = "preemptable",
     "partition" = partition,
     "mail-type" = "FAIL"
   )
+
+  if (!is.null(mail_user))
+    hpc_configs[["default_sbatch_opts"]][["mail-user"]] <- mail_user
 
   hpc_configs[["renv_sbatch_opts"]] <- swf_renv_sbatch_opts()
 
