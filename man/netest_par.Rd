@@ -44,7 +44,7 @@ more time-intensive full STERGM estimation (see details).}
 \item{set.control.ergm}{Control arguments passed to \code{ergm} (see
 details).}
 
-\item{set.control.stergm}{Deprecated control argument of class 
+\item{set.control.stergm}{Deprecated control argument of class
 \code{control.stergm}; use \code{set.control.tergm} instead.}
 
 \item{ncores}{Number of processor cores to run multiple simulations

@@ -7,7 +7,8 @@
 swf_configs_rsph(
   partition = "preemptable",
   r_version = "4.1.2",
-  git_version = "2.31.1"
+  git_version = "2.31.1",
+  mail_user = NULL
 )
 }
 \arguments{
@@ -17,6 +18,9 @@ swf_configs_rsph(
 \item{r_version}{Which version of R to load (default="4.1.2")}
 
 \item{git_version}{Which version of Git to load (default="2.31.1")}
+
+\item{mail_user}{The mail address to send the messages to, default is NULL
+(see 'sbatch --mail-type' argument)}
 }
 \value{
 a list containing \code{default_sbatch_opts}, \code{renv_sbatch_opts}
