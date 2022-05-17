@@ -468,7 +468,7 @@ As before we use `add_workflow_step` to create the step. This time we use the
 - `max_array_size` is detailed below but a value of 500 is usually fine.
 - `setup_lines`: same as before.
 
-```{r wf_2_sim2, eval = FALSE}
+```{r wf_2_sim3, eval = FALSE}
 wf <- add_workflow_step(
   wf_summary = wf,
   step_tmpl = step_tmpl_netsim_scenarios(
