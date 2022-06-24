@@ -199,6 +199,13 @@ step_tmpl_netsim_scenarios <- function(x, param, init, control,
     control$nsims <- n_cores
     control$ncores <- n_cores
 
+    if (!is.null(control[[".checkpoint.dir"]])) {
+      batch_num <- Sys.getenv("SLURM_ARRAY_TASK_ID")
+      control[[".checkpoint.dir"]] <- paste0(
+        control[[".checkpoint.dir"]], "/batch_", batch_num, ""
+      )
+    }
+
     print(paste0("Starting simulation for scenario: ", scenario[["id"]]))
     print(paste0("Batch number: ", batch_num, " / ", n_batch))
     sim <- EpiModel::netsim(est, param_sc, init, control)
