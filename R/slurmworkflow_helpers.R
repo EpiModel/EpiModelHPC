@@ -23,12 +23,16 @@
 #'
 #' @export
 swf_configs_hyak <- function(hpc = "klone", partition = "csde",
-                             r_version = "4.1.2", mail_user = NULL) {
-  if (!hpc %in% c("klone", "mox"))
+                             r_version = "4.1.0", mail_user = NULL) {
+  if (hpc == "klone") {
+    if (!partition %in% c("ckpt", "compute"))
+      stop("On ", hpc, ", partition must be one of \"compute\" or \"ckpt\"")
+  } else if (hpc == "mox") {
+    if (!partition %in% c("csde", "ckpt"))
+      stop("On ", hpc, ", partition must be one of \"csde\" or \"ckpt\"")
+  } else {
     stop("On HYAK, `hpc` must be one of \"mox\" or \"klone\"")
-
-  if (!partition %in% c("csde", "ckpt"))
-    stop("On ", hpc, ", partition must be one of \"csde\" or \"ckpt\"")
+  }
 
   hpc_configs <- list()
   hpc_configs[["default_sbatch_opts"]] <-  list(
