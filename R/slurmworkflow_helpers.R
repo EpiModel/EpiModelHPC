@@ -190,6 +190,7 @@ step_tmpl_netsim_scenarios <- function(x, param, init, control,
                         est, param, init, control,
                         libraries, output_dir,
                         n_batch, n_rep, n_cores) {
+    start_time <- Sys.time()
     lapply(libraries, function(l) library(l, character.only = TRUE))
 
     if (!fs::dir_exists(output_dir))
@@ -218,7 +219,8 @@ step_tmpl_netsim_scenarios <- function(x, param, init, control,
     print(paste0("Saving simulation in file: ", file_name))
     saveRDS(sim, fs::path(output_dir, file_name))
 
-    print("Done!")
+    print("Done in: ")
+    print(Sys.time() - start_time)
   }
 
   slurmworkflow::step_tmpl_map(
