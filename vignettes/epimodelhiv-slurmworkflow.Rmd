@@ -440,7 +440,7 @@ control <- control_msm(
   cumulative.edgelist = TRUE,
   truncate.el.cuml = 0,
   verbose = FALSE,
-  tracker.list = calibration_trackers # created in R/utils-targets.R
+  .tracker.list = calibration_trackers # created in R/utils-targets.R
 )
 ```
 We then load a `data.frame` of 4 scenarios found in
