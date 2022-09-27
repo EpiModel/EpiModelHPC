@@ -51,12 +51,14 @@ swf_configs_hyak <- function(hpc = "klone", partition = "csde",
     hpc_configs[["renv_sbatch_opts"]][["partition"]] <- "build"
     hpc_configs[["r_loader"]] <- c(
       ". /gscratch/csde/spack/spack/share/spack/setup-env.sh",
+      "spack unload -a",
       paste0("spack load r@", r_version),
       "spack load git"
     )
   } else if (hpc == "klone") {
     hpc_configs[["r_loader"]] <- c(
       ". /gscratch/csde/spack/spack/share/spack/setup-env.sh",
+      "spack unload -a",
       paste0("spack load r@", r_version),
       "spack load git"
     )
@@ -96,6 +98,7 @@ swf_configs_rsph <- function(partition = "preemptable",
 
   hpc_configs[["r_loader"]] <- c(
     ". /projects/epimodel/spack/share/spack/setup-env.sh",
+    "spack unload -a",
     paste0("spack load r@", r_version),
     paste0("spack load git@", git_version)
   )
