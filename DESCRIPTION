@@ -34,5 +34,5 @@ Remotes:
  github::EpiModel/EpiModel,
  github::EpiModel/slurmworkflow
 VignetteBuilder: knitr
-RoxygenNote: 7.2.0
+RoxygenNote: 7.2.1
 Encoding: UTF-8
