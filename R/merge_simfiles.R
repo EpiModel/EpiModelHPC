@@ -80,7 +80,7 @@ merge_simfiles <- function(simno, ftype = "min", indir = "data/",
     if (i == 1) {
       out <- sim
     } else {
-      out <- merge(out, sim, param.error = FALSE)
+      out <- merge(out, sim, param.error = FALSE, save.other = FALSE)
     }
     if (verbose == TRUE) {
       cat("File ", i, "/", length(fn), " Loaded ... \n", sep = "")
