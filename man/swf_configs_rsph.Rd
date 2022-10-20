@@ -6,8 +6,8 @@
 \usage{
 swf_configs_rsph(
   partition = "preemptable",
-  r_version = "4.1.2",
-  git_version = "2.31.1",
+  r_version = "4.2.1",
+  git_version = "2.35.1",
   mail_user = NULL
 )
 }
@@ -15,9 +15,9 @@ swf_configs_rsph(
 \item{partition}{Which partition to use on RSPH (either "compute" or
 "epimodel")}
 
-\item{r_version}{Which version of R to load (default="4.1.2")}
+\item{r_version}{Which version of R to load}
 
-\item{git_version}{Which version of Git to load (default="2.31.1")}
+\item{git_version}{Which version of Git to load}
 
 \item{mail_user}{The mail address to send the messages to, default is NULL
 (see 'sbatch --mail-type' argument)}

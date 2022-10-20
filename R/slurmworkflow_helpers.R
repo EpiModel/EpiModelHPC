@@ -2,7 +2,7 @@
 #'
 #' @param hpc Which HPC to use on HYAK (either "klone" or "mox")
 #' @param partition Which partition to use on HYAK (either "csde" or "ckpt")
-#' @param r_version Which version of R to load (default="4.1.2")
+#' @param r_version Which version of R to load
 #' @param mail_user The mail address to send the messages to, default is NULL
 #'   (see 'sbatch --mail-type' argument)
 #'
@@ -71,7 +71,7 @@ swf_configs_hyak <- function(hpc = "klone", partition = "csde",
 #'
 #' @param partition Which partition to use on RSPH (either "compute" or
 #'  "epimodel")
-#' @param git_version Which version of Git to load (default="2.31.1")
+#' @param git_version Which version of Git to load
 #'
 #' @inherit swf_configs_hyak return
 #' @inheritParams swf_configs_hyak
@@ -79,9 +79,10 @@ swf_configs_hyak <- function(hpc = "klone", partition = "csde",
 #'
 #' @export
 swf_configs_rsph <- function(partition = "preemptable",
-                             r_version = "4.1.2",
-                             git_version = "2.31.1",
+                             r_version = "4.2.1",
+                             git_version = "2.35.1",
                              mail_user = NULL) {
+
   if (!partition %in% c("preemptable", "epimodel"))
     stop("On RSPH, partition must be one of \"preemptable\" or \"epimodel\"")
 

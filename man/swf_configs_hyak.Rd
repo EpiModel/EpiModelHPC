@@ -16,7 +16,7 @@ swf_configs_hyak(
 
 \item{partition}{Which partition to use on HYAK (either "csde" or "ckpt")}
 
-\item{r_version}{Which version of R to load (default="4.1.2")}
+\item{r_version}{Which version of R to load}
 
 \item{mail_user}{The mail address to send the messages to, default is NULL
 (see 'sbatch --mail-type' argument)}
