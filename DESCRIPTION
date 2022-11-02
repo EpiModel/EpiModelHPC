@@ -24,7 +24,8 @@ Imports:
     fs,
     tergm,
     stringr,
-    slurmworkflow
+    slurmworkflow,
+    callr
 Suggests:
     rmarkdown,
     testthat,

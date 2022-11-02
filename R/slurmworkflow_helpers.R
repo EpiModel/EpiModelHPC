@@ -180,66 +180,17 @@ step_tmpl_netsim_scenarios <- function(x, param, init, control,
                                        libraries = NULL,
                                        setup_lines = NULL,
                                        max_array_size = NULL) {
-  libraries <- c("slurmworkflow", "EpiModelHPC", libraries)
-  if (is.null(scenarios_list)) {
-    scenarios_list <- data.frame(.at = 0, .scenario.id = "empty_scenario")
-    scenarios_list <- EpiModel::create_scenario_list(scenarios_list)
-  }
 
-  n_batch <- ceiling(n_rep / n_cores)
-  batchs_list <- rep(seq_len(n_batch), length(scenarios_list))
-  scenarios_list <- rep(scenarios_list, each = n_batch)
-
-  inner_fun <- function(scenario, batch_num,
-                        est, param, init, control,
-                        libraries, output_dir,
-                        n_batch, n_rep, n_cores) {
-    start_time <- Sys.time()
-    lapply(libraries, function(l) library(l, character.only = TRUE))
-
-    if (!fs::dir_exists(output_dir))
-      fs::dir_create(output_dir, recurse = TRUE)
-
-    # On last batch, adjust the number of simulation to be run
-    if (batch_num == n_batch)
-      n_cores <- n_rep - n_cores * (n_batch - 1)
-
-    param_sc <- EpiModel::use_scenario(param, scenario)
-    control$nsims <- n_cores
-    control$ncores <- n_cores
-
-    if (!is.null(control[[".checkpoint.dir"]])) {
-      batch_num <- Sys.getenv("SLURM_ARRAY_TASK_ID")
-      control[[".checkpoint.dir"]] <- paste0(
-        control[[".checkpoint.dir"]], "/batch_", batch_num, ""
-      )
-    }
-
-    print(paste0("Starting simulation for scenario: ", scenario[["id"]]))
-    print(paste0("Batch number: ", batch_num, " / ", n_batch))
-    sim <- EpiModel::netsim(est, param_sc, init, control)
-
-    file_name <- paste0("sim__", scenario[["id"]], "__", batch_num, ".rds")
-    print(paste0("Saving simulation in file: ", file_name))
-    saveRDS(sim, fs::path(output_dir, file_name))
-
-    print("Done in: ")
-    print(Sys.time() - start_time)
-  }
+  p_list <- netsim_scenarios_setup(x, param, init, control,
+                                   scenarios_list, n_rep, n_cores,
+                                   output_dir, libraries)
 
   slurmworkflow::step_tmpl_map(
-    FUN = inner_fun,
-    scenario = scenarios_list,
-    batch_num = batchs_list,
-    MoreArgs = list(
-      est = x,
-      param = param,
-      init = init,
-      control = control,
-      libraries = libraries,
-      output_dir = output_dir,
-      n_batch = n_batch, n_rep = n_rep, n_cores = n_cores
-    ),
+    FUN = netsim_run_one_scenario,
+    scenario = p_list$scenarios_list,
+    batch_num = p_list$batchs_list,
+    MoreArgs = p_list$MoreArgs,
+
     max_array_size = max_array_size,
     setup_lines = setup_lines
   )
