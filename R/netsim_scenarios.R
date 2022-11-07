@@ -137,7 +137,7 @@ netsim_run_one_scenario <- function(scenario, batch_num,
       "Triming simulation in file to keep only: ", save_elements,
       collapse = ", "
     ))
-    remove_elts <- intersect(names(sim), save_elements)
+    remove_elts <- setdiff(names(sim), save_elements)
     sim[remove_elts] <- NULL
   }
 
