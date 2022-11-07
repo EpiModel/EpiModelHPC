@@ -133,7 +133,10 @@ netsim_run_one_scenario <- function(scenario, batch_num,
   sim <- EpiModel::netsim(est, param_sc, init, control)
 
   if (!save_all) {
-    print(paste0("Triming simulation in file to keep only: ", save_elements))
+    print(paste0(
+      "Triming simulation in file to keep only: ", save_elements,
+      collapse = ", "
+    ))
     remove_elts <- intersect(names(sim), save_elements)
     sim[remove_elts] <- NULL
   }
