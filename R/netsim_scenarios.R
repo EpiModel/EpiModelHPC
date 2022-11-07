@@ -21,17 +21,23 @@
 #'   the HPC
 #' @param libraries A character vector containing the name of the libraries
 #'   required for the model to run. (e.g. EpiModelHIV or EpiModelCOVID)
+#' @param save_pattern A character vector of what should be kept in the final
+#'   \code{sim} objects. It can contain the names of the elements as well as:
+#'   "simple" (defautlt) to only "epi", "param" and "control"; "restart" to get
+#'   the elements required to restart from such file; "all" to not trim the
+#'   object at all. `c("simple", "el.cuml")` is an example of a valid pattern to
+#'   save "epi", "param", "control" and "el.cuml".
 #'
 #' @inheritParams EpiModel::netsim
 #'
 #' @export
 netsim_scenarios <- function(x, param, init, control,
                              scenarios_list, n_rep, n_cores,
-                             output_dir,
-                             libraries = NULL) {
+                             output_dir, libraries = NULL,
+                             save_pattern = "simple") {
   p_list <- netsim_scenarios_setup(x, param, init, control,
                                    scenarios_list, n_rep, n_cores,
-                                   output_dir, libraries)
+                                   output_dir, libraries, save_pattern)
   for (i in seq_along(p_list$scenarios_list)) {
     args <- list(p_list$scenarios_list[[i]], p_list$batchs_list[[i]])
     args <- c(args, p_list$MoreArgs)
@@ -42,7 +48,7 @@ netsim_scenarios <- function(x, param, init, control,
 #' Helper function to configure `netsim_run_one_scenario`
 netsim_scenarios_setup <- function(est, param, init, control,
                                    scenarios_list, n_rep, n_cores,
-                                   output_dir, libraries) {
+                                   output_dir, libraries, save_pattern) {
   libraries <- c("slurmworkflow", "EpiModelHPC", libraries)
   if (is.null(scenarios_list)) {
     scenarios_list <- data.frame(.at = 0, .scenario.id = "empty_scenario")
@@ -52,6 +58,11 @@ netsim_scenarios_setup <- function(est, param, init, control,
   n_batch <- ceiling(n_rep / n_cores)
   batchs_list <- rep(seq_len(n_batch), length(scenarios_list))
   scenarios_list <- rep(scenarios_list, each = n_batch)
+
+  save_elements <- character(0)
+  save_all <- "all" %in% save_pattern
+  if (!save_all)
+    save_elements <- make_save_elements(save_pattern)
 
   list(
     scenarios_list = scenarios_list,
@@ -65,16 +76,38 @@ netsim_scenarios_setup <- function(est, param, init, control,
       output_dir = output_dir,
       n_batch = n_batch,
       n_rep = n_rep,
-      n_cores = n_cores
+      n_cores = n_cores,
+      save_all = save_all,
+      save_elements = save_elements
     )
   )
+}
+
+#' Create the `save_elements` character vector according to the `save_pattern`
+make_save_elements <- function(save_pattern) {
+  save_elements <- save_pattern
+  if ("simple" %in% save_pattern) {
+    save_elements <- union(save_elements, c("param", "epi", "control"))
+    save_elements <- setdiff(save_elements, "simple")
+  }
+  if ("restart" %in% save_pattern) {
+    need_restart <- c(
+      "param", "control", "nwparam",
+      "epi", "attr", "temp",
+      "el", "el.cuml"
+    )
+    save_elements <- union(save_elements, need_restart)
+    save_elements <- setdiff(save_elements, "restart")
+  }
+  return(save_elements)
 }
 
 #' Inner function called by `netsim_scenarios` and `step_tmpl_netsim_scenarios`
 netsim_run_one_scenario <- function(scenario, batch_num,
                                     est, param, init, control,
                                     libraries, output_dir,
-                                    n_batch, n_rep, n_cores) {
+                                    n_batch, n_rep, n_cores,
+                                    save_all, save_elements) {
   start_time <- Sys.time()
   lapply(libraries, function(l) library(l, character.only = TRUE))
 
@@ -98,6 +131,12 @@ netsim_run_one_scenario <- function(scenario, batch_num,
   print(paste0("Starting simulation for scenario: ", scenario[["id"]]))
   print(paste0("Batch number: ", batch_num, " / ", n_batch))
   sim <- EpiModel::netsim(est, param_sc, init, control)
+
+  if (!save_all) {
+    print(paste0("Triming simulation in file to keep only: ", save_elements))
+    remove_elts <- intersect(names(sim), save_elements)
+    sim[remove_elts] <- NULL
+  }
 
   file_name <- paste0("sim__", scenario[["id"]], "__", batch_num, ".rds")
   print(paste0("Saving simulation in file: ", file_name))
