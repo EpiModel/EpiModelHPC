@@ -134,8 +134,9 @@ netsim_run_one_scenario <- function(scenario, batch_num,
 
   if (!save_all) {
     print(paste0(
-      "Triming simulation in file to keep only: ", save_elements,
-      collapse = ", "
+      "Triming simulation in file to keep only: `",
+      paste0(save_elements, collapse = "`, `"),
+      "`"
     ))
     remove_elts <- setdiff(names(sim), save_elements)
     sim[remove_elts] <- NULL
