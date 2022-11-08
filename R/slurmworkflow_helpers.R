@@ -140,6 +140,7 @@ step_tmpl_renv_restore <- function(git_branch, setup_lines = NULL) {
     "exit 1",
     "fi",
     "git pull",
+    "Rscript -e \"renv::init(bare = TRUE)\"",
     "Rscript -e \"renv::restore()\""
   )
   instructions <- slurmworkflow::helper_use_setup_lines(instructions, setup_lines)
