@@ -42,6 +42,8 @@ required for the model to run. (e.g. EpiModelHIV or EpiModelCOVID)}
 
 \item{output_dir}{The folder where the simulation files are to be stored.}
 
+\item{n_batch}{The number of batches to be run `ceiling(n_rep / n_cores)`.}
+
 \item{n_rep}{The number of replication to be run for each scenario.}
 
 \item{n_cores}{The number of CPUs on which the simulations will be run.}

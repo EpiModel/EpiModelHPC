@@ -151,6 +151,7 @@ make_save_elements <- function(save_pattern) {
 #' @param scenario A single "`EpiModel` scenario" to be used in the simulation
 #' @param batch_num The batch number, calculated from the number of replications
 #'   and CPUs required.
+#' @param n_batch The number of batches to be run `ceiling(n_rep / n_cores)`.
 #' @param n_rep The number of replication to be run for each scenario.
 #' @param n_cores The number of CPUs on which the simulations will be run.
 #' @param output_dir The folder where the simulation files are to be stored.
