@@ -61,3 +61,10 @@ This function is meant to mimic the behavior of
 in a similar fashion an reciprocally, if it runs correctly locally, moving
 to an HPC should not produce any issue.
 }
+\section{Checkpointing}{
+
+This function takes care of editing `.checkpoint.dir` to create unique sub
+directories for each scenario. The `EpiModel::control.net` way of setting up
+checkpoints can be used transparently.
+}
+

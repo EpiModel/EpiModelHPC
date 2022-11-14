@@ -65,6 +65,13 @@ This step template is similar to `netsim_scenarios` but for the HPC. It uses
 `slurmworkflow::step_tmpl_map` internally and should be used as any
 `slurmworkflow` step. For details, see `netsim_scenarios` documentation.
 }
+\section{Checkpointing}{
+
+This function takes care of editing `.checkpoint.dir` to create unique sub
+directories for each scenario. The `EpiModel::control.net` way of setting up
+checkpoints can be used transparently.
+}
+
 \section{Step Template}{
 
 

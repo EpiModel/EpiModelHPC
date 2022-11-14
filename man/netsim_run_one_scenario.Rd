@@ -58,3 +58,10 @@ required for the model to run. (e.g. EpiModelHIV or EpiModelCOVID)}
 This inner function is called by `netsim_scenarios` and
 `step_tmpl_netsim_scenarios`.
 }
+\section{Checkpointing}{
+
+This function takes care of editing `.checkpoint.dir` to create unique sub
+directories for each scenario. The `EpiModel::control.net` way of setting up
+checkpoints can be used transparently.
+}
+

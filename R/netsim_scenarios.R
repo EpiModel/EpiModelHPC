@@ -7,6 +7,7 @@
 #' @inheritParams slurmworkflow::step_tmpl_map
 #' @inheritParams netsim_scenarios
 #'
+#' @inheritSection netsim_run_one_scenario Checkpointing
 #' @inherit slurmworkflow::step_tmpl_rscript return
 #' @inheritSection slurmworkflow::step_tmpl_bash_lines Step Template
 #'
@@ -53,6 +54,7 @@ step_tmpl_netsim_scenarios <- function(x, param, init, control,
 #'
 #' @inheritParams netsim_run_one_scenario
 #' @inheritParams make_save_elements
+#' @inheritSection netsim_run_one_scenario Checkpointing
 #'
 #' @export
 netsim_scenarios <- function(x, param, init, control,
@@ -162,6 +164,11 @@ make_save_elements <- function(save_pattern) {
 #' @param save_elements A character vector of elements to keep from the
 #'   `netsim` object if `save_all` is `FALSE`
 #' @inheritParams EpiModel::netsim
+#'
+#' @section Checkpointing:
+#' This function takes care of editing `.checkpoint.dir` to create unique sub
+#' directories for each scenario. The `EpiModel::control.net` way of setting up
+#' checkpoints can be used transparently.
 netsim_run_one_scenario <- function(scenario, batch_num,
                                     x, param, init, control,
                                     libraries, output_dir,
@@ -184,7 +191,7 @@ netsim_run_one_scenario <- function(scenario, batch_num,
 
   if (!is.null(control[[".checkpoint.dir"]])) {
     control[[".checkpoint.dir"]] <- paste0(
-      control[[".checkpoint.dir"]], "/batch_", batch_num, ""
+      control[[".checkpoint.dir"]], "/sim__", scenario[["id"]], "__", batch_num
     )
   }
 
