@@ -2,12 +2,12 @@
 % Please edit documentation in R/netsim_scenarios.R
 \name{netsim_run_one_scenario}
 \alias{netsim_run_one_scenario}
-\title{Inner function called by `netsim_scenarios` and `step_tmpl_netsim_scenarios`}
+\title{Run one `netsim` call with a scenario and saves the results deterministically}
 \usage{
 netsim_run_one_scenario(
   scenario,
   batch_num,
-  est,
+  x,
   param,
   init,
   control,
@@ -15,9 +15,44 @@ netsim_run_one_scenario(
   output_dir,
   n_batch,
   n_rep,
-  n_cores
+  n_cores,
+  save_all,
+  save_elements
 )
 }
+\arguments{
+\item{scenario}{A single "`EpiModel` scenario" to be used in the simulation}
+
+\item{batch_num}{The batch number, calculated from the number of replications
+and CPUs required.}
+
+\item{x}{Fitted network model object, as an object of class \code{netest}.
+Alternatively, if restarting a previous simulation, may be an object
+of class \code{netsim}.}
+
+\item{param}{Model parameters, as an object of class \code{param.net}.}
+
+\item{init}{Initial conditions, as an object of class \code{init.net}.}
+
+\item{control}{Control settings, as an object of class
+\code{control.net}.}
+
+\item{libraries}{A character vector containing the name of the libraries
+required for the model to run. (e.g. EpiModelHIV or EpiModelCOVID)}
+
+\item{output_dir}{The folder where the simulation files are to be stored.}
+
+\item{n_rep}{The number of replication to be run for each scenario.}
+
+\item{n_cores}{The number of CPUs on which the simulations will be run.}
+
+\item{save_all}{A flag instructing to save the result of the
+`EpiModel::netsim` call as is if TRUE.}
+
+\item{save_elements}{A character vector of elements to keep from the
+`netsim` object if `save_all` is `FALSE`}
+}
 \description{
-Inner function called by `netsim_scenarios` and `step_tmpl_netsim_scenarios`
+This inner function is called by `netsim_scenarios` and
+`step_tmpl_netsim_scenarios`.
 }

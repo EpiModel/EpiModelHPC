@@ -2,10 +2,10 @@
 % Please edit documentation in R/netsim_scenarios.R
 \name{netsim_scenarios_setup}
 \alias{netsim_scenarios_setup}
-\title{Helper function to configure `netsim_run_one_scenario`}
+\title{Helper function to  create the parameters for `netsim_run_one_scenario`}
 \usage{
 netsim_scenarios_setup(
-  est,
+  x,
   param,
   init,
   control,
@@ -13,9 +13,44 @@ netsim_scenarios_setup(
   n_rep,
   n_cores,
   output_dir,
-  libraries
+  libraries,
+  save_pattern
 )
 }
+\arguments{
+\item{x}{Fitted network model object, as an object of class \code{netest}.
+Alternatively, if restarting a previous simulation, may be an object
+of class \code{netsim}.}
+
+\item{param}{Model parameters, as an object of class \code{param.net}.}
+
+\item{init}{Initial conditions, as an object of class \code{init.net}.}
+
+\item{control}{Control settings, as an object of class
+\code{control.net}.}
+
+\item{scenarios_list}{A list of scenarios to be run. Produced by the
+\code{EpiModel::create_scenario_list} function}
+
+\item{n_rep}{The number of replication to be run for each scenario.}
+
+\item{n_cores}{The number of CPUs on which the simulations will be run.}
+
+\item{output_dir}{The folder where the simulation files are to be stored.}
+
+\item{libraries}{A character vector containing the name of the libraries
+required for the model to run. (e.g. EpiModelHIV or EpiModelCOVID)}
+
+\item{save_pattern}{A character vector of what should be kept in the final
+`netsim` objects. It can contain the names of the elements as well as:
+"simple" (defautlt) to only keep "epi", "param" and "control"; "restart" to
+get the elements required to restart from such file; "all" to not trim the
+object at all. `c("simple", "el.cuml")` is an example of a valid pattern to
+save "epi", "param", "control" and "el.cuml".}
+}
+\value{
+a list of arguments for `netsim_run_one_scenario`
+}
 \description{
-Helper function to configure `netsim_run_one_scenario`
+Helper function to  create the parameters for `netsim_run_one_scenario`
 }

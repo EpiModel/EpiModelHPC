@@ -1,43 +1,70 @@
+#' Step template to run EpiModel network simulations with scenarios
+#'
+#' This step template is similar to `netsim_scenarios` but for the HPC. It uses
+#' `slurmworkflow::step_tmpl_map` internally and should be used as any
+#' `slurmworkflow` step. For details, see `netsim_scenarios` documentation.
+#'
+#' @inheritParams slurmworkflow::step_tmpl_map
+#' @inheritParams netsim_scenarios
+#'
+#' @inherit slurmworkflow::step_tmpl_rscript return
+#' @inheritSection slurmworkflow::step_tmpl_bash_lines Step Template
+#'
+#' @export
+step_tmpl_netsim_scenarios <- function(x, param, init, control,
+                                       scenarios_list, n_rep, n_cores,
+                                       output_dir, libraries = NULL,
+                                       save_pattern = "simple",
+                                       setup_lines = NULL,
+                                       max_array_size = NULL) {
+  p_list <- netsim_scenarios_setup(
+    x, param, init, control,
+    scenarios_list, n_rep, n_cores,
+    output_dir, libraries, save_pattern
+  )
+
+  slurmworkflow::step_tmpl_map(
+    FUN = netsim_run_one_scenario,
+    scenario = p_list$scenarios_list,
+    batch_num = p_list$batchs_list,
+    MoreArgs = p_list$MoreArgs,
+
+    max_array_size = max_array_size,
+    setup_lines = setup_lines
+  )
+}
+
 #' Function to run EpiModel network simulations with scenarios
 #'
-#' This function will run \code{n_rep} replications of each scenarios in
-#' the \code{scenarios_list}. It runs them as multiple batches of up to
-#' \code{n_cores} simulations at a time. The simfiles are then stored in the
-#' \code{output_dir} folder and are named using the following pattern:
-#' "sim__name_of_scenario__2.Rds". Where the last number is the batch number
+#' This function will run `n_rep` replications of each scenarios in
+#' the `scenarios_list`. It runs them as multiple batches of up to
+#' `n_cores` simulations at a time. The simfiles are then stored in the
+#' `output_dir` folder and are named using the following pattern:
+#' "sim__name_of_scenario__2.rds". Where the last number is the batch number
 #' for this particular scenario. Each scenario is therefore run over
-#' \code{ceiling(n_rep / n_cores)} batches.
+#' `ceiling(n_rep / n_cores)` batches.
 #' This function is meant to mimic the behavior of
-#' \code{step_tmpl_netsim_scenarios} in your local machine. It should fail
+#' `step_tmpl_netsim_scenarios` in your local machine. It should fail
 #' in a similar fashion an reciprocally, if it runs correctly locally, moving
-#' to HPC should not produce an issue.
+#' to an HPC should not produce any issue.
 #'
 #' @param scenarios_list A list of scenarios to be run. Produced by the
 #'   \code{EpiModel::create_scenario_list} function
-#' @param n_rep The number of replication to be run for each scenario.
-#' @param n_cores The number of CPUs on which the simulations will be run for
-#'   each node on the HPC
-#' @param output_dir The folder where the simulation files are to be stored on
-#'   the HPC
-#' @param libraries A character vector containing the name of the libraries
-#'   required for the model to run. (e.g. EpiModelHIV or EpiModelCOVID)
-#' @param save_pattern A character vector of what should be kept in the final
-#'   \code{sim} objects. It can contain the names of the elements as well as:
-#'   "simple" (defautlt) to only "epi", "param" and "control"; "restart" to get
-#'   the elements required to restart from such file; "all" to not trim the
-#'   object at all. `c("simple", "el.cuml")` is an example of a valid pattern to
-#'   save "epi", "param", "control" and "el.cuml".
 #'
-#' @inheritParams EpiModel::netsim
+#' @inheritParams netsim_run_one_scenario
+#' @inheritParams make_save_elements
 #'
 #' @export
 netsim_scenarios <- function(x, param, init, control,
                              scenarios_list, n_rep, n_cores,
                              output_dir, libraries = NULL,
                              save_pattern = "simple") {
-  p_list <- netsim_scenarios_setup(x, param, init, control,
-                                   scenarios_list, n_rep, n_cores,
-                                   output_dir, libraries, save_pattern)
+  p_list <- netsim_scenarios_setup(
+    x, param, init, control,
+    scenarios_list, n_rep, n_cores,
+    output_dir, libraries, save_pattern
+  )
+
   for (i in seq_along(p_list$scenarios_list)) {
     args <- list(p_list$scenarios_list[[i]], p_list$batchs_list[[i]])
     args <- c(args, p_list$MoreArgs)
@@ -45,8 +72,12 @@ netsim_scenarios <- function(x, param, init, control,
   }
 }
 
-#' Helper function to configure `netsim_run_one_scenario`
-netsim_scenarios_setup <- function(est, param, init, control,
+#' Helper function to  create the parameters for `netsim_run_one_scenario`
+#'
+#' @inheritParams netsim_scenarios
+#'
+#' @return a list of arguments for `netsim_run_one_scenario`
+netsim_scenarios_setup <- function(x, param, init, control,
                                    scenarios_list, n_rep, n_cores,
                                    output_dir, libraries, save_pattern) {
   libraries <- c("slurmworkflow", "EpiModelHPC", libraries)
@@ -68,7 +99,7 @@ netsim_scenarios_setup <- function(est, param, init, control,
     scenarios_list = scenarios_list,
     batchs_list = batchs_list,
     MoreArgs = list(
-      est = est,
+      x = x,
       param = param,
       init = init,
       control = control,
@@ -83,7 +114,17 @@ netsim_scenarios_setup <- function(est, param, init, control,
   )
 }
 
-#' Create the `save_elements` character vector according to the `save_pattern`
+#' Create the `save_elements` vector for `netsim_run_one_scenario`
+#'
+#' Helper function to create the `save_elements` character vector according to
+#' the `save_pattern`.
+#'
+#' @param save_pattern A character vector of what should be kept in the final
+#'   `netsim` objects. It can contain the names of the elements as well as:
+#'   "simple" (defautlt) to only keep "epi", "param" and "control"; "restart" to
+#'   get the elements required to restart from such file; "all" to not trim the
+#'   object at all. `c("simple", "el.cuml")` is an example of a valid pattern to
+#'   save "epi", "param", "control" and "el.cuml".
 make_save_elements <- function(save_pattern) {
   save_elements <- save_pattern
   if ("simple" %in% save_pattern) {
@@ -92,8 +133,8 @@ make_save_elements <- function(save_pattern) {
   }
   if ("restart" %in% save_pattern) {
     need_restart <- c(
-      "param", "control", "nwparam",
-      "epi", "attr", "temp",
+      "param", "control", "epi",
+      "nwparam", "attr", "temp",
       "el", "el.cuml"
     )
     save_elements <- union(save_elements, need_restart)
@@ -102,12 +143,30 @@ make_save_elements <- function(save_pattern) {
   return(save_elements)
 }
 
-#' Inner function called by `netsim_scenarios` and `step_tmpl_netsim_scenarios`
+#' Run one `netsim` call with a scenario and saves the results deterministically
+#'
+#' This inner function is called by `netsim_scenarios` and
+#' `step_tmpl_netsim_scenarios`.
+#'
+#' @param scenario A single "`EpiModel` scenario" to be used in the simulation
+#' @param batch_num The batch number, calculated from the number of replications
+#'   and CPUs required.
+#' @param n_rep The number of replication to be run for each scenario.
+#' @param n_cores The number of CPUs on which the simulations will be run.
+#' @param output_dir The folder where the simulation files are to be stored.
+#' @param libraries A character vector containing the name of the libraries
+#'   required for the model to run. (e.g. EpiModelHIV or EpiModelCOVID)
+#' @param save_all A flag instructing to save the result of the
+#'   `EpiModel::netsim` call as is if TRUE.
+#' @param save_elements A character vector of elements to keep from the
+#'   `netsim` object if `save_all` is `FALSE`
+#' @inheritParams EpiModel::netsim
 netsim_run_one_scenario <- function(scenario, batch_num,
-                                    est, param, init, control,
+                                    x, param, init, control,
                                     libraries, output_dir,
                                     n_batch, n_rep, n_cores,
                                     save_all, save_elements) {
+  est <- x
   start_time <- Sys.time()
   lapply(libraries, function(l) library(l, character.only = TRUE))
 

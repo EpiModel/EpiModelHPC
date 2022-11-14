@@ -13,7 +13,8 @@ netsim_scenarios(
   n_rep,
   n_cores,
   output_dir,
-  libraries = NULL
+  libraries = NULL,
+  save_pattern = "simple"
 )
 }
 \arguments{
@@ -33,25 +34,30 @@ of class \code{netsim}.}
 
 \item{n_rep}{The number of replication to be run for each scenario.}
 
-\item{n_cores}{The number of CPUs on which the simulations will be run for
-each node on the HPC}
+\item{n_cores}{The number of CPUs on which the simulations will be run.}
 
-\item{output_dir}{The folder where the simulation files are to be stored on
-the HPC}
+\item{output_dir}{The folder where the simulation files are to be stored.}
 
 \item{libraries}{A character vector containing the name of the libraries
 required for the model to run. (e.g. EpiModelHIV or EpiModelCOVID)}
+
+\item{save_pattern}{A character vector of what should be kept in the final
+`netsim` objects. It can contain the names of the elements as well as:
+"simple" (defautlt) to only keep "epi", "param" and "control"; "restart" to
+get the elements required to restart from such file; "all" to not trim the
+object at all. `c("simple", "el.cuml")` is an example of a valid pattern to
+save "epi", "param", "control" and "el.cuml".}
 }
 \description{
-This function will run \code{n_rep} replications of each scenarios in
-the \code{scenarios_list}. It runs them as multiple batches of up to
-\code{n_cores} simulations at a time. The simfiles are then stored in the
-\code{output_dir} folder and are named using the following pattern:
-"sim__name_of_scenario__2.Rds". Where the last number is the batch number
+This function will run `n_rep` replications of each scenarios in
+the `scenarios_list`. It runs them as multiple batches of up to
+`n_cores` simulations at a time. The simfiles are then stored in the
+`output_dir` folder and are named using the following pattern:
+"sim__name_of_scenario__2.rds". Where the last number is the batch number
 for this particular scenario. Each scenario is therefore run over
-\code{ceiling(n_rep / n_cores)} batches.
+`ceiling(n_rep / n_cores)` batches.
 This function is meant to mimic the behavior of
-\code{step_tmpl_netsim_scenarios} in your local machine. It should fail
+`step_tmpl_netsim_scenarios` in your local machine. It should fail
 in a similar fashion an reciprocally, if it runs correctly locally, moving
-to HPC should not produce an issue.
+to an HPC should not produce any issue.
 }
