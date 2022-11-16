@@ -18,6 +18,7 @@ Depends:
     R (>= 4.0),
     EpiModel (>= 2.2)
 Imports:
+    dplyr,
     doParallel,
     foreach,
     ergm,

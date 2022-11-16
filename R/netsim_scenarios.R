@@ -137,7 +137,7 @@ make_save_elements <- function(save_pattern) {
     need_restart <- c(
       "param", "control", "epi",
       "nwparam", "attr", "temp",
-      "el", "el.cuml"
+      "el", "el.cuml", "_last_unique_id"
     )
     save_elements <- union(save_elements, need_restart)
     save_elements <- setdiff(save_elements, "restart")
