@@ -93,7 +93,7 @@ netsim_scenarios_setup <- function(x, param, init, control,
   scenarios_list <- rep(scenarios_list, each = n_batch)
 
   save_elements <- character(0)
-  save_all <- "all" %in% save_pattern
+  save_all <- ("all" %in% save_pattern || control[["raw.output"]])
   if (!save_all)
     save_elements <- make_save_elements(save_pattern)
 
@@ -126,7 +126,8 @@ netsim_scenarios_setup <- function(x, param, init, control,
 #'   "simple" (defautlt) to only keep "epi", "param" and "control"; "restart" to
 #'   get the elements required to restart from such file; "all" to not trim the
 #'   object at all. `c("simple", "el.cuml")` is an example of a valid pattern to
-#'   save "epi", "param", "control" and "el.cuml".
+#'   save "epi", "param", "control" and "el.cuml". If `control$raw.output` is
+#'   `TRUE`, this parameter has no effect and the full result is saved.
 make_save_elements <- function(save_pattern) {
   save_elements <- save_pattern
   if ("simple" %in% save_pattern) {
