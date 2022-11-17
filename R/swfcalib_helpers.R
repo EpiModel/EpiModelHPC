@@ -1,6 +1,6 @@
 #' Run one `netsim` call with the result of an `swfcalib` calibration
 #'
-#' @inheritParams swfcalib:::get_default_proposal
+#' @inheritParams swfcalib::calibration_step1
 #' @inheritParams netsim_run_one_scenario
 netsim_run_swfcalib_scenario <- function(calib_object, batch_num,
                                          x, param, init, control,
@@ -16,7 +16,7 @@ netsim_run_swfcalib_scenario <- function(calib_object, batch_num,
 
 #' Make an EpiModel scenario using the result of an `swfcalib` calibration
 #'
-#' @inheritParams swfcalib:::get_default_proposal
+#' @inheritParams swfcalib::calibration_step1
 make_calibrated_scenario <- function(calib_object) {
   calib_object <- swfcalib:::load_calib_object(calib_object)
   calibrated_scenario <- swfcalib:::get_default_proposal(calib_object)
@@ -28,7 +28,7 @@ make_calibrated_scenario <- function(calib_object) {
 
 #' Helper function to  create the parameters for `netsim_run_swfcalib_scenario`
 #'
-#' @inheritParams swfcalib:::get_default_proposal
+#' @inheritParams swfcalib::calibration_step1
 #' @inheritParams netsim_scenarios_setup
 netsim_swfcalib_output_setup <- function(x, param, init, control,
                                          calib_object, n_rep, n_cores,
@@ -47,7 +47,7 @@ netsim_swfcalib_output_setup <- function(x, param, init, control,
 #' Step template to run sims with the result of an `swfcalib` calibration
 #'
 #' @inheritParams step_tmpl_netsim_scenarios
-#' @inheritParams swfcalib:::get_default_proposal
+#' @inheritParams swfcalib::calibration_step1
 #'
 #' @inheritSection netsim_run_one_scenario Checkpointing
 #' @inherit slurmworkflow::step_tmpl_rscript return
@@ -78,7 +78,7 @@ step_tmpl_netsim_swfcalib_output <- function(x, param, init, control,
 #' Function to run an EpiModel sim with the result of an `swfcalib` calibration
 #'
 #' @inheritParams netsim_scenarios
-#' @inheritParams swfcalib:::get_default_proposal
+#' @inheritParams swfcalib::calibration_step1
 #'
 #' @inheritSection netsim_run_one_scenario Checkpointing
 #' @inherit slurmworkflow::step_tmpl_rscript return
