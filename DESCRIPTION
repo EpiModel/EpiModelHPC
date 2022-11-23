@@ -19,6 +19,7 @@ Depends:
     EpiModel (>= 2.2)
 Imports:
     dplyr,
+    tidyr,
     doParallel,
     foreach,
     ergm,

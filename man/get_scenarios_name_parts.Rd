@@ -11,10 +11,9 @@ get_scenarios_name_parts(scenario_dir)
 simulations.}
 }
 \value{
-a `list` with three elements: `file_name_list`, a character vector of
-the full paths of the simulation files; `scenario_name_list`, a character
-vector of the associated scenario name; `batch_number_list`, a character
-vector of the associated batch number.
+a `tibble` with three columns: `file_name` - the full paths of
+the simulation file, `scenario_name` the associated scenario name,
+`batch_number` the associated batch number.
 }
 \description{
 This function returns the list of simulation files and the corresponding

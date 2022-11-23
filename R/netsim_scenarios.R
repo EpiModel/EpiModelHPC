@@ -227,10 +227,9 @@ netsim_run_one_scenario <- function(scenario, batch_num,
 #' @param scenario_dir the directory where `netsim_scenarios` saved it's
 #' simulations.
 #'
-#' @return a `list` with three elements: `file_name_list`, a character vector of
-#' the full paths of the simulation files; `scenario_name_list`, a character
-#' vector of the associated scenario name; `batch_number_list`, a character
-#' vector of the associated batch number.
+#' @return a `tibble` with three columns: `file_name` - the full paths of
+#' the simulation file, `scenario_name` the associated scenario name,
+#' `batch_number` the associated batch number.
 #'
 #' @export
 get_scenarios_name_parts <- function(scenario_dir) {
@@ -240,12 +239,13 @@ get_scenarios_name_parts <- function(scenario_dir) {
     type = "file"
   )
 
-  name_elts <- fs::path_file(file_name_list)
-  name_elts <- fs::path_ext_remove(name_elts)
-  name_elts <- strsplit(name_elts, split = "__")
+  parts <- dplyr::tibble(
+    file_name = file_name_list,
+    simple_name = fs::path_ext_remove(file_name)
+  )
 
-  scenario_name_list <- vapply(name_elts, function(x) x[2], "")
-  batch_number_list  <- vapply(name_elts, function(x) x[3], "")
-
-  list(file_name_list, scenario_name_list, batch_number_list)
+  tidyr::separate(
+    parts, simple_name, sep = "__", remove = TRUE,
+    into = c(NA, "scenario_name", "batch_number")
+  )
 }
