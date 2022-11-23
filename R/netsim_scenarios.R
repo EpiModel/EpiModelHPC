@@ -232,7 +232,7 @@ netsim_run_one_scenario <- function(scenario, batch_num,
 #' `batch_number` the associated batch number.
 #'
 #' @export
-get_scenarios_name_parts <- function(scenario_dir) {
+get_scenarios_batches_infos <- function(scenario_dir) {
   file_name_list <- fs::dir_ls(
     scenario_dir,
     regexp = "/sim__.*rds$",
