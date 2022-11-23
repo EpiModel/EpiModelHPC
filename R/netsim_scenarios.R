@@ -92,10 +92,9 @@ netsim_scenarios_setup <- function(x, param, init, control,
   batchs_list <- rep(seq_len(n_batch), length(scenarios_list))
   scenarios_list <- rep(scenarios_list, each = n_batch)
 
-  save_elements <- character(0)
-  save_all <- ("all" %in% save_pattern || control[["raw.output"]])
-  if (!save_all)
-    save_elements <- make_save_elements(save_pattern)
+  raw_output <- !is.null(control[["raw.output"]]) && control[["raw.output"]]
+  save_all <- "all" %in% save_pattern || raw_output
+  save_elts <- if (save_all) character(0) else make_save_elements(save_pattern)
 
   list(
     scenarios_list = scenarios_list,
@@ -111,7 +110,7 @@ netsim_scenarios_setup <- function(x, param, init, control,
       n_rep = n_rep,
       n_cores = n_cores,
       save_all = save_all,
-      save_elements = save_elements
+      save_elements = save_elts
     )
   )
 }
