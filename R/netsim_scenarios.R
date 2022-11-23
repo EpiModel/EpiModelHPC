@@ -94,7 +94,7 @@ netsim_scenarios_setup <- function(x, param, init, control,
 
   raw_output <- !is.null(control[["raw.output"]]) && control[["raw.output"]]
   save_all <- "all" %in% save_pattern || raw_output
-  save_elts <- if (save_all) character(0) else make_save_elements(save_pattern)
+  save_elts <- if (save_all) character() else make_save_elements(save_pattern)
 
   list(
     scenarios_list = scenarios_list,
@@ -142,7 +142,8 @@ make_save_elements <- function(save_pattern) {
     save_elements <- union(save_elements, need_restart)
     save_elements <- setdiff(save_elements, "restart")
   }
-  return(save_elements)
+
+  save_elements
 }
 
 #' Run one `netsim` call with a scenario and saves the results deterministically
@@ -215,4 +216,36 @@ netsim_run_one_scenario <- function(scenario, batch_num,
 
   print("Done in: ")
   print(Sys.time() - start_time)
+}
+
+#' Helper function to access the file name elements of scenarios
+#'
+#' This function returns the list of simulation files and the corresponding
+#' scenario name and batch number present in a given directory. It is meant to
+#' be used after `netsim_scenarios` or `step_tmpl_netsim_scenarios`.
+#'
+#' @param scenario_dir the directory where `netsim_scenarios` saved it's
+#' simulations.
+#'
+#' @return a `list` with three elements: `file_name_list`, a character vector of
+#' the full paths of the simulation files; `scenario_name_list`, a character
+#' vector of the associated scenario name; `batch_number_list`, a character
+#' vector of the associated batch number.
+#'
+#' @export
+get_scenarios_name_parts <- function(scenario_dir) {
+  file_name_list <- fs::dir_ls(
+    scenario_dir,
+    regexp = "/sim__.*rds$",
+    type = "file"
+  )
+
+  name_elts <- fs::path_file(file_name_list)
+  name_elts <- fs::path_ext_remove(name_elts)
+  name_elts <- strsplit(name_elts, split = "__")
+
+  scenario_name_list <- vapply(name_elts, function(x) x[2], "")
+  batch_number_list  <- vapply(name_elts, function(x) x[3], "")
+
+  list(file_name_list, scenario_name_list, batch_number_list)
 }
