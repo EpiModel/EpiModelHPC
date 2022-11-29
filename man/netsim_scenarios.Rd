@@ -5,7 +5,7 @@
 \title{Function to run EpiModel network simulations with scenarios}
 \usage{
 netsim_scenarios(
-  x,
+  path_to_x,
   param,
   init,
   control,
@@ -18,9 +18,8 @@ netsim_scenarios(
 )
 }
 \arguments{
-\item{x}{Fitted network model object, as an object of class \code{netest}.
-Alternatively, if restarting a previous simulation, may be an object
-of class \code{netsim}.}
+\item{path_to_x}{Path to a Fitted network model object saved with `saveRDS`.
+(See the `x` argument to the `EpiModel::netsim` function)}
 
 \item{param}{Model parameters, as an object of class \code{param.net}.}
 

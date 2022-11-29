@@ -12,14 +12,14 @@
 #' @inheritSection slurmworkflow::step_tmpl_bash_lines Step Template
 #'
 #' @export
-step_tmpl_netsim_scenarios <- function(x, param, init, control,
+step_tmpl_netsim_scenarios <- function(path_to_x, param, init, control,
                                        scenarios_list, n_rep, n_cores,
                                        output_dir, libraries = NULL,
                                        save_pattern = "simple",
                                        setup_lines = NULL,
                                        max_array_size = NULL) {
   p_list <- netsim_scenarios_setup(
-    x, param, init, control,
+    path_to_x, param, init, control,
     scenarios_list, n_rep, n_cores,
     output_dir, libraries, save_pattern
   )
@@ -57,12 +57,12 @@ step_tmpl_netsim_scenarios <- function(x, param, init, control,
 #' @inheritSection netsim_run_one_scenario Checkpointing
 #'
 #' @export
-netsim_scenarios <- function(x, param, init, control,
+netsim_scenarios <- function(path_to_x, param, init, control,
                              scenarios_list, n_rep, n_cores,
                              output_dir, libraries = NULL,
                              save_pattern = "simple") {
   p_list <- netsim_scenarios_setup(
-    x, param, init, control,
+    path_to_x, param, init, control,
     scenarios_list, n_rep, n_cores,
     output_dir, libraries, save_pattern
   )
@@ -79,7 +79,7 @@ netsim_scenarios <- function(x, param, init, control,
 #' @inheritParams netsim_scenarios
 #'
 #' @return a list of arguments for `netsim_run_one_scenario`
-netsim_scenarios_setup <- function(x, param, init, control,
+netsim_scenarios_setup <- function(path_to_x, param, init, control,
                                    scenarios_list, n_rep, n_cores,
                                    output_dir, libraries, save_pattern) {
   libraries <- c("slurmworkflow", "EpiModelHPC", libraries)
@@ -100,7 +100,7 @@ netsim_scenarios_setup <- function(x, param, init, control,
     scenarios_list = scenarios_list,
     batchs_list = batchs_list,
     MoreArgs = list(
-      x = x,
+      path_to_x = path_to_x,
       param = param,
       init = init,
       control = control,
@@ -151,6 +151,8 @@ make_save_elements <- function(save_pattern) {
 #' This inner function is called by `netsim_scenarios` and
 #' `step_tmpl_netsim_scenarios`.
 #'
+#' @param path_to_x Path to a Fitted network model object saved with `saveRDS`.
+#'   (See the `x` argument to the `EpiModel::netsim` function)
 #' @param scenario A single "`EpiModel` scenario" to be used in the simulation
 #' @param batch_num The batch number, calculated from the number of replications
 #'   and CPUs required.
@@ -171,11 +173,11 @@ make_save_elements <- function(save_pattern) {
 #' directories for each scenario. The `EpiModel::control.net` way of setting up
 #' checkpoints can be used transparently.
 netsim_run_one_scenario <- function(scenario, batch_num,
-                                    x, param, init, control,
+                                    path_to_x, param, init, control,
                                     libraries, output_dir,
                                     n_batch, n_rep, n_cores,
                                     save_all, save_elements) {
-  est <- x
+  est <- readRDS(path_to_x)
   start_time <- Sys.time()
   lapply(libraries, function(l) library(l, character.only = TRUE))
 

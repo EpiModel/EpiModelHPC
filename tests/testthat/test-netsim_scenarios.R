@@ -14,6 +14,9 @@ test_that("SIS with scenarios", {
   control <- control.net(type = "SIS", nsims = 1, nsteps = 2, verbose = FALSE)
   init <- init.net(i.num = 10)
 
+  output_dir <- "testscen_dir"
+  saveRDS(est, paste0(output_dir, "/est.rds"))
+
   scenarios.df <- dplyr::tribble(
     ~.scenario.id, ~.at, ~inf.prob, ~rec.rate,
     "base", 0, 0.9, 0.01,
@@ -24,12 +27,11 @@ test_that("SIS with scenarios", {
 
   scenarios.list <- create_scenario_list(scenarios.df)
 
-  output_dir <- "testscen_dir"
   n_rep <- 3
   n_cores <- 2
   n_scen <- length(scenarios.list)
   netsim_scenarios(
-    x = est,
+    path_to_x = paste0(output_dir, "/est.rds"),
     param, init, control,
     scenarios_list = scenarios.list,
     n_rep = n_rep, n_cores = n_cores,
@@ -46,7 +48,7 @@ test_that("SIS with scenarios", {
 
   testthat::expect_length(
     list.files(output_dir),
-    n_scen * ceiling(n_rep / n_cores)
+    n_scen * ceiling(n_rep / n_cores) + 1 # +1 for est file
   )
   unlink(output_dir)
 })
