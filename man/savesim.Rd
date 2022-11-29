@@ -36,7 +36,7 @@ function.}
 }
 \description{
 Saves an Rdata file containing stochastic network model output
-             from \code{netsim} function calls with time-stamped file names.
+from \code{netsim} function calls with time-stamped file names.
 }
 \details{
 This function provides an automated method for saving a time-stamped Rdata

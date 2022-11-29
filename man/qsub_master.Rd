@@ -40,7 +40,7 @@ script.}
 }
 \description{
 Creates a master-level qsub script given a set of parameter
-             combinations implied by one or more parameters passed in.
+combinations implied by one or more parameters passed in.
 }
 \examples{
 vars <- list(A = 1:10, B = seq(0.5, 1.5, 0.5))

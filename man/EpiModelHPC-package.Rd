@@ -7,12 +7,12 @@
 \title{EpiModel Extensions for High-Performance Computing}
 \description{
 \tabular{ll}{
-   Package: \tab EpiModelHPC\cr
-   Type: \tab Package\cr
-   Version: \tab 2.1.2\cr
-   Date: \tab 2021-12-13\cr
-   License: \tab GPL-3\cr
-   LazyLoad: \tab yes\cr
+Package: \tab EpiModelHPC\cr
+Type: \tab Package\cr
+Version: \tab 2.2.0\cr
+Date: \tab 2022-11-29\cr
+License: \tab GPL-3\cr
+LazyLoad: \tab yes\cr
 }
 }
 \details{
@@ -30,8 +30,8 @@ framework for extending EpiModel to run on modern high-performance computing
 }
 \references{
 The main website for EpiModel is at \url{http://epimodel.org/}.
-            The source code for this extension package is hosted on Github
-            at \url{http://github.com/statnet/EpiModelHPC}. Bug reports and
-            feature requests may be filed there.
+The source code for this extension package is hosted on Github
+at \url{http://github.com/statnet/EpiModelHPC}. Bug reports and
+feature requests may be filed there.
 }
 \keyword{package}
