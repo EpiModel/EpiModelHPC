@@ -182,8 +182,8 @@ sbatch_master <- function(vars,
     }
     v.args <- paste(v.args, collapse = ",")
     v.args <- paste(" --export=ALL", v.args, sep = ",")
-    
-    node.args <- paste(" --nodes=1 --ntasks-per-node=", ncores, sep = "")
+
+    node.args <- paste(" --nodes=1 --cpus-per-task=", ncores, sep = "")
     time.arg <- paste(" --time=", walltime, sep = "")
     mem.arg <- paste(" --mem=", mem, sep = "")
     if (!missing(jobname)) {
