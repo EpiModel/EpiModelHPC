@@ -44,6 +44,6 @@ eligible for processing.}
 }
 \description{
 Wraps the \code{merge_simfiles} function to merge all sub-job
-             Rdata files and saves into a single output file, with the option
-             to delete the sub-job files.
+Rdata files and saves into a single output file, with the option
+to delete the sub-job files.
 }

@@ -17,7 +17,7 @@ This can be used to load the required modules (like R, python, etc).}
 a template function to be used by \code{add_workflow_step}
 }
 \description{
-This template makes the step run `git pull` and \code{renv::restore()}. This
+This template makes the step run \verb{git pull} and \code{renv::restore()}. This
 could help ensure that the project is up to date when running the rest of the
 workflow.
 See \code{slurmworkflow::step_tmpl_bash_lines} for details on step templates

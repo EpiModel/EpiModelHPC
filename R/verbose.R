@@ -16,14 +16,14 @@
 #' @keywords internal
 #'
 verbose.hpc.net <- function(x, type, s = 1, at = 2) {
-  
+
   if (interactive()) {
     if (type == "startup" && x$ncores == 1) {
       if (x$verbose == TRUE) {
         cat("\nStarting Network Simulation...")
       }
     }
-    
+
     if (type == "progress" && x$control$ncores == 1) {
       if (x$control$verbose == TRUE) {
         if (x$control$verbose.int == 0 && at == x$control$nsteps) {
@@ -37,7 +37,7 @@ verbose.hpc.net <- function(x, type, s = 1, at = 2) {
           cat("\nTimestep: ", at, "/", x$control$nsteps, sep = "")
           active <- x$attr$active
           status <- x$attr$status[which(active == 1)]
-          if (class(status) == "character") {
+          if (inherits(status, "character")) {
             status <- ifelse(status == "i", 1, 0)
           }
           cat("\nPrevalence:", sum(status, na.rm = TRUE))
@@ -47,15 +47,15 @@ verbose.hpc.net <- function(x, type, s = 1, at = 2) {
       }
     }
   } else {
-    if (type == "progress" && (at == 2 | at %% x$control$verbose.int == 0) && !is.null(x$control$simno))  {
+    if (type == "progress" && (at == 2 || at %% x$control$verbose.int == 0) && !is.null(x$control$simno))  {
       if (is.null(x$control$verbose.dir)) {
         fn <- paste0("out/sim", x$control$simno, ".txt")
       } else {
         fn <- paste0(x$control$verbose.dir, "sim", x$control$simno, ".txt")
       }
-      cat("\nSim: ", paste0(x$control$simno, ".", s), 
-          " | Time step: ", at, "/", x$control$nsteps, " | Time: ", as.character(Sys.time()), 
-          sep = "", file = fn, append = TRUE) 
+      cat("\nSim: ", paste0(x$control$simno, ".", s),
+          " | Time step: ", at, "/", x$control$nsteps, " | Time: ", as.character(Sys.time()),
+          sep = "", file = fn, append = TRUE)
     }
   }
 }

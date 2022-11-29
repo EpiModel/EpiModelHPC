@@ -59,7 +59,7 @@ savesim <- function(sim,
     keep <- c("param", "epi", "control")
     sim <- sim[keep]
     sim$param$netstats <- NULL
-    if (class(sim) == "list") {
+    if (inherits(sim, "list")) {
       class(sim) <- "netsim"
     }
     if (time.stamp == TRUE) {

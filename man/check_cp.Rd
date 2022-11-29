@@ -12,7 +12,7 @@ in \code{control$simno}.}
 }
 \description{
 Checks whether there are checkpointed data files in a specific
-             format given a simulation number.
+format given a simulation number.
 }
 \details{
 This function checks whether checkpointed data files are available for loading.
@@ -30,7 +30,7 @@ that these standards for file directory and name are consistent with the
 be inserted in the workflow of a simulation.
 
 The files are tested to see that they are of similar size, meaning that no
-file is less than 50% of the average file size of the others. Smaller size
+file is less than 50\% of the average file size of the others. Smaller size
 files usually indicates that the interim file saving was interrupted. If the
 files exist and are of correct size, a full directory name is returned, else
 \code{NULL} is returned.

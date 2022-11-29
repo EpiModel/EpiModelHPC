@@ -44,7 +44,7 @@ check_cp <- function(simno) {
   if (length(fn) < 16) {
     badFile <- TRUE
   } else {
-    badFile <- any(sapply(1:length(fn),
+    badFile <- any(sapply(seq_along(fn),
                           function(x) inherits(try(load(fn[x]), silent = TRUE), "try-error")))
   }
 

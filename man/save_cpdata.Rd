@@ -13,7 +13,7 @@ save_cpdata(dat, at)
 }
 \description{
 Module to save simulation data from stochastic network models
-             to disk at specified time intervals.
+to disk at specified time intervals.
 }
 \details{
 This module saves data to a standardized location with standardized file names

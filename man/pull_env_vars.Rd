@@ -7,21 +7,20 @@
 pull_env_vars(standard.vars = TRUE, num.vars, char.vars, logic.vars)
 }
 \arguments{
-\item{standard.vars}{Pull and assign four standard Slurm variables: simno,
-jobno, ncores, njobs.}
+\item{standard.vars}{Pull and assign four standard Slurm variables: simno, jobno, ncores, njobs.}
 
-\item{num.vars}{Vector of environmental variables to pull and assign as 
-numeric in the global environment.}
+\item{num.vars}{Vector of environmental variables to pull and assign as numeric in the global
+environment.}
 
-\item{char.vars}{Vector of environmental variables to pull and assign as
-character in the global environment.}
+\item{char.vars}{Vector of environmental variables to pull and assign as character in the global
+environment.}
 
-\item{logic.vars}{Vector of environmental variables to pull and assign
-as logical in the global environment.}
+\item{logic.vars}{Vector of environmental variables to pull and assign as logical in the global
+environment.}
 }
 \description{
-Pulls four environmental variables commonly used in Slurm jobs
-             directly into the Global Environment of an R Script.
+Pulls four environmental variables commonly used in Slurm jobs directly into the
+Global Environment of an R Script.
 }
 \examples{
 Sys.setenv("SIMNO"=23)
