@@ -9,3 +9,4 @@ inst/shiny/epiicm/rsconnect/
 ^\.github$
 ^doc$
 ^Meta$
+.lintr
