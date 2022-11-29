@@ -37,7 +37,7 @@ verbose.hpc.net <- function(x, type, s = 1, at = 2) {
           cat("\nTimestep: ", at, "/", x$control$nsteps, sep = "")
           active <- x$attr$active
           status <- x$attr$status[which(active == 1)]
-          if (class(status) == "character") {
+          if (inherits(status, "character")) {
             status <- ifelse(status == "i", 1, 0)
           }
           cat("\nPrevalence:", sum(status, na.rm = TRUE))
