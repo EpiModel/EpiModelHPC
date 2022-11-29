@@ -134,7 +134,7 @@ sbatch_master <- function(vars,
     SIMNO <- simno.start:(simno.start + nsets - 1)
   }
   if (is.null(narray)) {
-    narray <- ceiling(nsims/ncores)
+    narray <- ceiling(nsims / ncores)
   }
   NJOBS <- narray
   NSIMS <- nsims
@@ -153,7 +153,7 @@ sbatch_master <- function(vars,
   } else {
     ckpt.ch <- rep(c(pA.ckpt, pA.main), times = c(ckpt,  max(0, nrow(grd) - ckpt)))
     if (length(ckpt.ch) > nrow(grd)) {
-      ckpt.ch <- ckpt.ch[1:nrow(grd)]
+      ckpt.ch <- ckpt.ch[seq_len(nrow(grd))]
     }
   }
 
@@ -168,10 +168,10 @@ sbatch_master <- function(vars,
   if (append == FALSE) {
     cat("#!/bin/bash\n", file = master.file.loc)
   }
-  for (i in 1:nrow(grd)) {
+  for (i in seq_len(nrow(grd))) {
     v.args <- NA
-    for (j in 1:ncol(grd)) {
-      v.args[j] <- paste0(names(grd)[j], "=", grd[i,j])
+    for (j in seq_len(ncol(grd))) {
+      v.args[j] <- paste0(names(grd)[j], "=", grd[i, j])
     }
     v.args <- paste(v.args, collapse = ",")
     v.args <- paste(" --export=ALL", v.args, sep = ",")
@@ -214,6 +214,5 @@ sbatch_master <- function(vars,
       write.csv(out, file = param.file.loc, row.names = FALSE)
     }
   }
-
 
 }

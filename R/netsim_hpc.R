@@ -95,7 +95,7 @@ netsim_hpc <- function(x, param, init, control,
     }
 
     # Set CP save interval if missing
-    if (is.null(control$save.int) & !is.null(cp.save.int)) {
+    if (is.null(control$save.int) && !is.null(cp.save.int)) {
       if (verbose == TRUE) {
         cat("\nSetting save.int on control settings at", cp.save.int, "time steps ... ")
       }
@@ -103,7 +103,7 @@ netsim_hpc <- function(x, param, init, control,
     }
 
     # Store save CP on control settings
-    if (is.null(control$savedata.FUN) & !is.null(control$save.int)) {
+    if (is.null(control$savedata.FUN) && !is.null(control$save.int)) {
       control$savedata.FUN <- save_cpdata
       control$bi.mods <- c(control$bi.mods, "savedata.FUN")
     }
@@ -155,9 +155,9 @@ netsim_hpc <- function(x, param, init, control,
     xfn <- x
     i <- NULL # just to pass R CMD Check
     out <- foreach(i = 1:nsims) %dopar% {
-      control$nsims = 1
-      control$currsim = i
-      control$ncores = 1
+      control$nsims <- 1
+      control$currsim <- i
+      control$ncores <- 1
       fn <- list.files(xfn, pattern = paste0("sim", i, ".cp.rda"), full.names = TRUE)
       load(fn)
       ltstep <- x$last.ts
@@ -184,7 +184,7 @@ netsim_hpc <- function(x, param, init, control,
   if (verbose == TRUE) {
     cat("\nSaving simulation data ...")
   }
-  if (save.min == TRUE | save.max == TRUE) {
+  if (save.min == TRUE || save.max == TRUE) {
     savesim(sim, save.min = save.min, save.max = save.max, compress = compress)
   }
 
@@ -200,7 +200,7 @@ netsim_hpc <- function(x, param, init, control,
   }
 
   # Return object if not saved
-  if (save.min == FALSE & save.max == FALSE) {
+  if (save.min == FALSE && save.max == FALSE) {
     return(sim)
   }
 
