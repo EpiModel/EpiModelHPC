@@ -18,13 +18,16 @@ Depends:
     R (>= 4.0),
     EpiModel (>= 2.2)
 Imports:
+    dplyr,
+    tidyr,
     doParallel,
     foreach,
     ergm,
     fs,
     tergm,
     stringr,
-    slurmworkflow
+    slurmworkflow,
+    callr
 Suggests:
     rmarkdown,
     testthat,
