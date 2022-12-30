@@ -52,8 +52,8 @@ on, using the \code{foreach} and \code{doParallel} implementations.}
 }
 \description{
 Estimates statistical network models using the exponential
-             random graph modeling (ERGM) framework with extensions for
-             dynamic/temporal models (STERGM) in parallel.
+random graph modeling (ERGM) framework with extensions for
+dynamic/temporal models (STERGM) in parallel.
 }
 \details{
 Fits multiple temporal ERGMs in paralell by wrapping the

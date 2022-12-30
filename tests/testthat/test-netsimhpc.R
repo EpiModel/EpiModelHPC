@@ -23,4 +23,3 @@ if (dir.exists("tests/testthat/data/")) {
 if (file.exists("est.temp.rda")) {
   file.remove("est.temp.rda")
 }
-

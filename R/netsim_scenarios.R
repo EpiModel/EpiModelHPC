@@ -12,14 +12,14 @@
 #' @inheritSection slurmworkflow::step_tmpl_bash_lines Step Template
 #'
 #' @export
-step_tmpl_netsim_scenarios <- function(x, param, init, control,
+step_tmpl_netsim_scenarios <- function(path_to_x, param, init, control,
                                        scenarios_list, n_rep, n_cores,
                                        output_dir, libraries = NULL,
                                        save_pattern = "simple",
                                        setup_lines = NULL,
                                        max_array_size = NULL) {
   p_list <- netsim_scenarios_setup(
-    x, param, init, control,
+    path_to_x, param, init, control,
     scenarios_list, n_rep, n_cores,
     output_dir, libraries, save_pattern
   )
@@ -57,12 +57,12 @@ step_tmpl_netsim_scenarios <- function(x, param, init, control,
 #' @inheritSection netsim_run_one_scenario Checkpointing
 #'
 #' @export
-netsim_scenarios <- function(x, param, init, control,
+netsim_scenarios <- function(path_to_x, param, init, control,
                              scenarios_list, n_rep, n_cores,
                              output_dir, libraries = NULL,
                              save_pattern = "simple") {
   p_list <- netsim_scenarios_setup(
-    x, param, init, control,
+    path_to_x, param, init, control,
     scenarios_list, n_rep, n_cores,
     output_dir, libraries, save_pattern
   )
@@ -79,7 +79,7 @@ netsim_scenarios <- function(x, param, init, control,
 #' @inheritParams netsim_scenarios
 #'
 #' @return a list of arguments for `netsim_run_one_scenario`
-netsim_scenarios_setup <- function(x, param, init, control,
+netsim_scenarios_setup <- function(path_to_x, param, init, control,
                                    scenarios_list, n_rep, n_cores,
                                    output_dir, libraries, save_pattern) {
   libraries <- c("slurmworkflow", "EpiModelHPC", libraries)
@@ -92,16 +92,15 @@ netsim_scenarios_setup <- function(x, param, init, control,
   batchs_list <- rep(seq_len(n_batch), length(scenarios_list))
   scenarios_list <- rep(scenarios_list, each = n_batch)
 
-  save_elements <- character(0)
-  save_all <- "all" %in% save_pattern
-  if (!save_all)
-    save_elements <- make_save_elements(save_pattern)
+  raw_output <- !is.null(control[["raw.output"]]) && control[["raw.output"]]
+  save_all <- "all" %in% save_pattern || raw_output
+  save_elts <- if (save_all) character() else make_save_elements(save_pattern)
 
   list(
     scenarios_list = scenarios_list,
     batchs_list = batchs_list,
     MoreArgs = list(
-      x = x,
+      path_to_x = path_to_x,
       param = param,
       init = init,
       control = control,
@@ -111,7 +110,7 @@ netsim_scenarios_setup <- function(x, param, init, control,
       n_rep = n_rep,
       n_cores = n_cores,
       save_all = save_all,
-      save_elements = save_elements
+      save_elements = save_elts
     )
   )
 }
@@ -126,7 +125,8 @@ netsim_scenarios_setup <- function(x, param, init, control,
 #'   "simple" (defautlt) to only keep "epi", "param" and "control"; "restart" to
 #'   get the elements required to restart from such file; "all" to not trim the
 #'   object at all. `c("simple", "el.cuml")` is an example of a valid pattern to
-#'   save "epi", "param", "control" and "el.cuml".
+#'   save "epi", "param", "control" and "el.cuml". If `control$raw.output` is
+#'   `TRUE`, this parameter has no effect and the full result is saved.
 make_save_elements <- function(save_pattern) {
   save_elements <- save_pattern
   if ("simple" %in% save_pattern) {
@@ -142,7 +142,8 @@ make_save_elements <- function(save_pattern) {
     save_elements <- union(save_elements, need_restart)
     save_elements <- setdiff(save_elements, "restart")
   }
-  return(save_elements)
+
+  save_elements
 }
 
 #' Run one `netsim` call with a scenario and saves the results deterministically
@@ -150,6 +151,8 @@ make_save_elements <- function(save_pattern) {
 #' This inner function is called by `netsim_scenarios` and
 #' `step_tmpl_netsim_scenarios`.
 #'
+#' @param path_to_x Path to a Fitted network model object saved with `saveRDS`.
+#'   (See the `x` argument to the `EpiModel::netsim` function)
 #' @param scenario A single "`EpiModel` scenario" to be used in the simulation
 #' @param batch_num The batch number, calculated from the number of replications
 #'   and CPUs required.
@@ -170,11 +173,11 @@ make_save_elements <- function(save_pattern) {
 #' directories for each scenario. The `EpiModel::control.net` way of setting up
 #' checkpoints can be used transparently.
 netsim_run_one_scenario <- function(scenario, batch_num,
-                                    x, param, init, control,
+                                    path_to_x, param, init, control,
                                     libraries, output_dir,
                                     n_batch, n_rep, n_cores,
                                     save_all, save_elements) {
-  est <- x
+  est <- readRDS(path_to_x)
   start_time <- Sys.time()
   lapply(libraries, function(l) library(l, character.only = TRUE))
 
@@ -215,4 +218,36 @@ netsim_run_one_scenario <- function(scenario, batch_num,
 
   print("Done in: ")
   print(Sys.time() - start_time)
+}
+
+#' Helper function to access the file name elements of scenarios
+#'
+#' This function returns the list of simulation files and the corresponding
+#' scenario name and batch number present in a given directory. It is meant to
+#' be used after `netsim_scenarios` or `step_tmpl_netsim_scenarios`.
+#'
+#' @param scenario_dir the directory where `netsim_scenarios` saved it's
+#' simulations.
+#'
+#' @return a `tibble` with three columns: `file_name` - the full paths of
+#' the simulation file, `scenario_name` the associated scenario name,
+#' `batch_number` the associated batch number.
+#'
+#' @export
+get_scenarios_batches_infos <- function(scenario_dir) {
+  file_name_list <- fs::dir_ls(
+    scenario_dir,
+    regexp = "/sim__.*rds$",
+    type = "file"
+  )
+
+  parts <- dplyr::tibble(
+    file_name = file_name_list,
+    simple_name = fs::path_ext_remove(file_name)
+  )
+
+  tidyr::separate(
+    parts, simple_name, sep = "__", remove = TRUE,
+    into = c(NA, "scenario_name", "batch_number")
+  )
 }

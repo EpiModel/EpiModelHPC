@@ -1,18 +1,17 @@
 
 #' @title Pull Standard Environmental Variables in Slurm Jobs
 #'
-#' @description Pulls four environmental variables commonly used in Slurm jobs
-#'              directly into the Global Environment of an R Script.
+#' @description Pulls four environmental variables commonly used in Slurm jobs directly into the
+#'              Global Environment of an R Script.
 #'
-#' @param standard.vars Pull and assign four standard Slurm variables: simno,
-#'        jobno, ncores, njobs.
-#' @param num.vars Vector of environmental variables to pull and assign as 
-#'        numeric in the global environment.
-#' @param char.vars Vector of environmental variables to pull and assign as
-#'        character in the global environment.
-#' @param logic.vars Vector of environmental variables to pull and assign
-#'        as logical in the global environment.
-#' 
+#' @param standard.vars Pull and assign four standard Slurm variables: simno, jobno, ncores, njobs.
+#' @param num.vars Vector of environmental variables to pull and assign as numeric in the global
+#'        environment.
+#' @param char.vars Vector of environmental variables to pull and assign as character in the global
+#'        environment.
+#' @param logic.vars Vector of environmental variables to pull and assign as logical in the global
+#' environment.
+#'
 #' @export
 #'
 #' @examples
@@ -21,20 +20,20 @@
 #' Sys.setenv("SLURM_CPUS_PER_TASK"=4)
 #' Sys.setenv("NJOBS"=10)
 #' Sys.setenv("NSIMS"=100)
-#' 
+#'
 #' pull_env_vars(standard.vars = TRUE)
 #' ls()
-#' 
+#'
 #' Sys.setenv("tprob"=0.1)
 #' Sys.setenv("rrate"=14)
 #' Sys.setenv("scenario"="base")
 #' Sys.setenv("condition"=TRUE)
-#' 
+#'
 #' pull_env_vars(num.vars = c("tprob", "rrate"),
 #'               char.vars = "scenario",
 #'               logic.vars = "condition")
 #' ls()
-#' 
+#'
 pull_env_vars <- function(standard.vars = TRUE,
                           num.vars,
                           char.vars,
@@ -54,7 +53,7 @@ pull_env_vars <- function(standard.vars = TRUE,
     } else {
       assign("jobno", 1L, pos = 1)
     }
-    if (!is.na(simno) & !is.na(jobno)) {
+    if (!is.na(simno) && !is.na(jobno)) {
       fsimno <- paste(simno, jobno, sep = ".")
       assign("fsimno", fsimno, pos = 1)
     } else {
@@ -80,19 +79,19 @@ pull_env_vars <- function(standard.vars = TRUE,
     }
   }
   if (!missing(num.vars)) {
-    for (i in 1:length(num.vars)) {
+    for (i in seq_along(num.vars)) {
       var <- as.numeric(Sys.getenv(num.vars[i]))
       assign(num.vars[i], var, pos = 1)
     }
   }
   if (!missing(char.vars)) {
-    for (i in 1:length(char.vars)) {
+    for (i in seq_along(char.vars)) {
       var <- Sys.getenv(char.vars[i])
       assign(char.vars[i], var, pos = 1)
     }
   }
   if (!missing(logic.vars)) {
-    for (i in 1:length(logic.vars)) {
+    for (i in seq_along(logic.vars)) {
       var <- as.logical(Sys.getenv(logic.vars[i]))
       assign(logic.vars[i], var, pos = 1)
     }

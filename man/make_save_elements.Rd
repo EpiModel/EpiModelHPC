@@ -12,7 +12,8 @@ make_save_elements(save_pattern)
 "simple" (defautlt) to only keep "epi", "param" and "control"; "restart" to
 get the elements required to restart from such file; "all" to not trim the
 object at all. `c("simple", "el.cuml")` is an example of a valid pattern to
-save "epi", "param", "control" and "el.cuml".}
+save "epi", "param", "control" and "el.cuml". If `control$raw.output` is
+`TRUE`, this parameter has no effect and the full result is saved.}
 }
 \description{
 Helper function to create the `save_elements` character vector according to

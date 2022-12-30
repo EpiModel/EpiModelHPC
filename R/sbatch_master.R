@@ -8,29 +8,29 @@
 #' @param expand.vars If \code{TRUE}, expand the grid on the individual vars, else
 #'        the individual vars must be vectors of equal length.
 #' @param working.dir Path to write out the \code{master.file}, and if specified
-#'        the \code{runsim.file} and \code{param.file}. 
-#' @param master.file Name of the output bash shell script file to write. If 
+#'        the \code{runsim.file} and \code{param.file}.
+#' @param master.file Name of the output bash shell script file to write. If
 #'        \code{""}, then will print to console.
 #' @param runsim.file Name of the bash shell script file that contains the R batch
 #'        commands to be executed by \code{sbatch}.
 #' @param build.runsim If \code{TRUE}, will write out a bash shell script with the
 #'        file name \code{runsim.file} that loads the R environment listed in
-#'        \code{env.file} and execute \code{Rscript} on the file listed in 
+#'        \code{env.file} and execute \code{Rscript} on the file listed in
 #'        \code{rscript.file}.
 #' @param env.file Bash shell script to load the R environment desired. Optionally
-#'        kept in a user's home directory with the default file name. Example 
+#'        kept in a user's home directory with the default file name. Example
 #'        script below.
-#' @param rscript.file Name of the \code{.R} file that contains the primary 
+#' @param rscript.file Name of the \code{.R} file that contains the primary
 #'        simulation to be executed by \code{Rscript}.
-#' @param param.file Name of a csv file to write out the list of varying 
-#'        parameters and simulation numbers set within the function. 
-#' @param param.tag Character string for current scenario batch added to 
+#' @param param.file Name of a csv file to write out the list of varying
+#'        parameters and simulation numbers set within the function.
+#' @param param.tag Character string for current scenario batch added to
 #'        param.sheet.
 #' @param simno.start Starting number for the \code{SIMNO} variable. If missing
 #'        and \code{append=TRUE}, will read the lines of \code{outfile}
 #'        and start numbering at one after the previous maximum.
 #' @param nsims Total number of simulations across all array jobs.
-#' @param ncores Number of cores per node to use within each Slurm job. 
+#' @param ncores Number of cores per node to use within each Slurm job.
 #' @param narray Number of array batches within each Slurm job. If `NULL`, then
 #'        will use `nsims/ncores` array batches.
 #' @param ckpt If \code{TRUE}, use the checkpoint queue to submit jobs. If
@@ -58,23 +58,16 @@
 #' sbatch_master(vars, nsims = 50, ckpt = 10)
 #' sbatch_master(vars, simno.start = 1000)
 #' sbatch_master(vars, jobname = "epiSim")
-#' 
+#'
 #' \dontrun{
 #' # Full-scale example writing out files
 #' sbatch_master(vars, nsims = 50, simno.start = 1000, build.runsim = TRUE,
 #'               master.file = "master.sh", param.sheet = "params.csv")
-#' sbatch_master(vars, nsims = 50, append = TRUE, 
+#' sbatch_master(vars, nsims = 50, append = TRUE,
 #'               master.file = "master.sh", param.sheet = "params.csv")
-#' 
-#' ## Example bash environment file
-#' #!/bin/bash
-#' 
-#' . /gscratch/csde/sjenness/spack/share/spack/setup-env.sh
-#' module load gcc-8.2.0-gcc-4.8.5-rhsxipz
-#' module load r-3.5.1-gcc-8.2.0-4suigve
-#' 
+#'
 #' }
-#' 
+#'
 sbatch_master <- function(vars,
                           expand.vars = TRUE,
                           working.dir = "",
@@ -93,7 +86,7 @@ sbatch_master <- function(vars,
                           append = FALSE,
                           mem = "55G",
                           walltime = "1:00:00",
-                          jobname, 
+                          jobname,
                           partition.main = "csde",
                           partition.ckpt = "ckpt",
                           account.main = "csde",
@@ -108,7 +101,7 @@ sbatch_master <- function(vars,
   if (!is.null(param.file)) {
     param.file.loc <- paste0(working.dir, param.file)
   }
-  
+
   # build master.sh file
   if (!is.null(vars)) {
     if (expand.vars == TRUE) {
@@ -121,7 +114,7 @@ sbatch_master <- function(vars,
     grd.temp <- NULL
     nsets <- 1
   }
-  
+
   if (append == TRUE) {
     if (missing(simno.start)) {
       t <- read.table(master.file.loc)
@@ -141,7 +134,7 @@ sbatch_master <- function(vars,
     SIMNO <- simno.start:(simno.start + nsets - 1)
   }
   if (is.null(narray)) {
-    narray <- ceiling(nsims/ncores)
+    narray <- ceiling(nsims / ncores)
   }
   NJOBS <- narray
   NSIMS <- nsims
@@ -154,13 +147,13 @@ sbatch_master <- function(vars,
 
   pA.ckpt <- paste("-p", partition.ckpt, "-A", account.ckpt)
   pA.main <- paste("-p", partition.main, "-A", account.main)
-  
+
   if (is.logical(ckpt)) {
     ckpt.ch <- rep(ifelse(ckpt == TRUE, pA.ckpt, pA.main), nrow(grd))
   } else {
     ckpt.ch <- rep(c(pA.ckpt, pA.main), times = c(ckpt,  max(0, nrow(grd) - ckpt)))
     if (length(ckpt.ch) > nrow(grd)) {
-      ckpt.ch <- ckpt.ch[1:nrow(grd)]
+      ckpt.ch <- ckpt.ch[seq_len(nrow(grd))]
     }
   }
 
@@ -171,19 +164,19 @@ sbatch_master <- function(vars,
   } else {
     narray.ch <- " "
   }
-  
+
   if (append == FALSE) {
     cat("#!/bin/bash\n", file = master.file.loc)
   }
-  for (i in 1:nrow(grd)) {
+  for (i in seq_len(nrow(grd))) {
     v.args <- NA
-    for (j in 1:ncol(grd)) {
-      v.args[j] <- paste0(names(grd)[j], "=", grd[i,j])
+    for (j in seq_len(ncol(grd))) {
+      v.args[j] <- paste0(names(grd)[j], "=", grd[i, j])
     }
     v.args <- paste(v.args, collapse = ",")
     v.args <- paste(" --export=ALL", v.args, sep = ",")
-    
-    node.args <- paste(" --nodes=1 --ntasks-per-node=", ncores, sep = "")
+
+    node.args <- paste(" --nodes=1 --cpus-per-task=", ncores, sep = "")
     time.arg <- paste(" --time=", walltime, sep = "")
     mem.arg <- paste(" --mem=", mem, sep = "")
     if (!missing(jobname)) {
@@ -191,14 +184,14 @@ sbatch_master <- function(vars,
     } else {
       jname.arg <- paste(" --job-name=s", SIMNO[i], sep = "")
     }
-    
-    cat("\n", "sbatch ", ckpt.ch[i], narray.ch, 
+
+    cat("\n", "sbatch ", ckpt.ch[i], narray.ch,
         node.args, time.arg, mem.arg, jname.arg,
         v.args, " ", runsim.file,
         file = master.file.loc, append = TRUE, sep = "")
   }
   cat("\n", file = master.file.loc, append = TRUE)
-  
+
   # build runsim.sh script
   if (build.runsim == TRUE) {
     cat("#!/bin/bash\n",
@@ -221,6 +214,5 @@ sbatch_master <- function(vars,
       write.csv(out, file = param.file.loc, row.names = FALSE)
     }
   }
-
 
 }
