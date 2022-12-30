@@ -3,13 +3,13 @@
 #' @inheritParams swfcalib::calibration_step1
 #' @inheritParams netsim_run_one_scenario
 netsim_run_swfcalib_scenario <- function(calib_object, batch_num,
-                                         x, param, init, control,
+                                         path_to_x, param, init, control,
                                          libraries, output_dir,
                                          n_batch, n_rep, n_cores,
                                          save_all, save_elements) {
   scenario <- make_calibrated_scenario(calib_object)
   netsim_run_one_scenario(
-    scenario, batch_num, x, param, init, control,
+    scenario, batch_num, path_to_x, param, init, control,
     libraries, output_dir, n_batch, n_rep, n_cores, save_all, save_elements
   )
 }
@@ -30,12 +30,12 @@ make_calibrated_scenario <- function(calib_object) {
 #'
 #' @inheritParams swfcalib::calibration_step1
 #' @inheritParams netsim_scenarios_setup
-netsim_swfcalib_output_setup <- function(x, param, init, control,
+netsim_swfcalib_output_setup <- function(path_to_x, param, init, control,
                                          calib_object, n_rep, n_cores,
                                          output_dir, libraries, save_pattern) {
   scenarios_list <- NULL
   p_list <- netsim_scenarios_setup(
-    x, param, init, control,
+    path_to_x, param, init, control,
     scenarios_list, n_rep, n_cores,
     output_dir, libraries, save_pattern
   )
@@ -54,14 +54,14 @@ netsim_swfcalib_output_setup <- function(x, param, init, control,
 #' @inheritSection slurmworkflow::step_tmpl_bash_lines Step Template
 #'
 #' @export
-step_tmpl_netsim_swfcalib_output <- function(x, param, init, control,
+step_tmpl_netsim_swfcalib_output <- function(path_to_x, param, init, control,
                                              calib_object, n_rep, n_cores,
                                              output_dir, libraries = NULL,
                                              save_pattern = "simple",
                                              setup_lines = NULL,
                                              max_array_size = NULL) {
   p_list <- netsim_swfcalib_output_setup(
-    x, param, init, control,
+    path_to_x, param, init, control,
     calib_object, n_rep, n_cores,
     output_dir, libraries, save_pattern
   )
@@ -85,12 +85,12 @@ step_tmpl_netsim_swfcalib_output <- function(x, param, init, control,
 #' @inheritSection slurmworkflow::step_tmpl_bash_lines Step Template
 #'
 #' @export
-netsim_swfcalib_output <- function(x, param, init, control,
+netsim_swfcalib_output <- function(path_to_x, param, init, control,
                                    calib_object, n_rep, n_cores,
                                    output_dir, libraries = NULL,
                                    save_pattern = "simple") {
   p_list <- netsim_swfcalib_output_setup(
-    x, param, init, control,
+    path_to_x, param, init, control,
     calib_object, n_rep, n_cores,
     output_dir, libraries, save_pattern
   )
