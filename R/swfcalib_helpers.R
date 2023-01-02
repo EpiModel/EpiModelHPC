@@ -95,7 +95,7 @@ netsim_swfcalib_output <- function(path_to_x, param, init, control,
     output_dir, libraries, save_pattern
   )
 
-  for (i in seq_along(p_list$scenarios_list)) {
+  for (i in seq_along(p_list$batchs_list)) {
     args <- list(p_list$batchs_list[[i]])
     args <- c(args, p_list$MoreArgs)
     callr::r(do.call, args = list(netsim_run_swfcalib_scenario, args), show = TRUE)
