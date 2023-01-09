@@ -19,7 +19,7 @@ initialize_cp(x, param, init, control, s)
 }
 \description{
 Sets the parameters, initial conditions, and control settings on
-             the data object, necessary for checkpointing simulations.
+the data object, necessary for checkpointing simulations.
 }
 \details{
 When running a stochastic network model from checkpointed data, it is not

@@ -44,17 +44,17 @@ netest_par <- function(nw, formation, target.stats, coef.diss,
 
   modvar <- NULL
   nmods <- NULL
-  if (class(target.stats) == "list" & length(target.stats) > 1) {
+  if (inherits(target.stats, "list") && length(target.stats) > 1) {
     modvar <- "ts"
     nmods <- length(target.stats)
-  } else if (class(coef.diss) == "list" & length(coef.diss) > 1) {
+  } else if (inherits(coef.diss, "list") && length(coef.diss) > 1) {
     modvar <- "cd"
     nmods <- length(coef.diss)
   } else {
     stop("Either target.stats or coef.diss must be a list containing more than 1 element",
          call. = FALSE)
   }
-  if (class(target.stats) == "list" & class(coef.diss) == "list") {
+  if (inherits(target.stats, "list") && inherits(coef.diss, "list")) {
     stop("Only 1 of target.stats or coef.diss is allowed to have multiple inputs",
          call. = FALSE)
   }
@@ -93,7 +93,7 @@ netest_par <- function(nw, formation, target.stats, coef.diss,
   if (modvar == "cd") {
     out <- foreach(i = 1:nmods) %dopar% {
       netest(nw, formation, target.stats, coef.diss[[i]],
-             constraints, coef.form = NULL, edapprox = TRUE, 
+             constraints, coef.form = NULL, edapprox = TRUE,
              set.control.ergm, set.control.stergm, verbose = FALSE)
     }
   }

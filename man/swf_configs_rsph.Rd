@@ -6,8 +6,8 @@
 \usage{
 swf_configs_rsph(
   partition = "preemptable",
-  r_version = "4.1.2",
-  git_version = "2.31.1",
+  r_version = "4.2.1",
+  git_version = "2.35.1",
   mail_user = NULL
 )
 }
@@ -15,16 +15,16 @@ swf_configs_rsph(
 \item{partition}{Which partition to use on RSPH (either "compute" or
 "epimodel")}
 
-\item{r_version}{Which version of R to load (default="4.1.2")}
+\item{r_version}{Which version of R to load}
 
-\item{git_version}{Which version of Git to load (default="2.31.1")}
+\item{git_version}{Which version of Git to load}
 
 \item{mail_user}{The mail address to send the messages to, default is NULL
 (see 'sbatch --mail-type' argument)}
 }
 \value{
 a list containing \code{default_sbatch_opts}, \code{renv_sbatch_opts}
-  and \code{r_loader} (see the "hpc_configs" section)
+and \code{r_loader} (see the "hpc_configs" section)
 }
 \description{
 Preset of Configuration for the RSPH Cluster
@@ -32,14 +32,14 @@ Preset of Configuration for the RSPH Cluster
 \section{hpc_configs}{
 
 \enumerate{
-  \item \code{default_sbatch_opts} is a list of sbatch options to be passed to
-  \code{slurmworkflow::create_workflow}.
-  \item \code{renv_sbatch_opts} is a list of sbatch options to be passed to
-  \code{slurmworkflow::step_tmpl_renv_restore}. It provides sane defaults for
-  building the dependencies of an R project using \code{renv}
-  \item \code{r_loader} is a set of bash lines to make the R software available.
-  This is passed to the \code{setup_lines} arguments of the
-  \code{slurmworkflow::step_tmpl_} functions that requires it.
+\item \code{default_sbatch_opts} is a list of sbatch options to be passed to
+\code{slurmworkflow::create_workflow}.
+\item \code{renv_sbatch_opts} is a list of sbatch options to be passed to
+\code{slurmworkflow::step_tmpl_renv_restore}. It provides sane defaults for
+building the dependencies of an R project using \code{renv}
+\item \code{r_loader} is a set of bash lines to make the R software available.
+This is passed to the \code{setup_lines} arguments of the
+\code{slurmworkflow::step_tmpl_} functions that requires it.
 }
 }
 

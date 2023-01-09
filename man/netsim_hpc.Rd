@@ -30,7 +30,7 @@ object of class \code{netsim}.}
 
 \item{cp.save.int}{Check-pointing save interval, which is used to specify how
 often intermediate data should be saved out to disk. When a job has been
-check-pointed, it will resume automatically at the last saved time 
+check-pointed, it will resume automatically at the last saved time
 step stored on disk. If set to \code{NULL}, then no intermediate data
 storage will occur.}
 
@@ -45,7 +45,7 @@ function.}
 }
 \description{
 Simulates stochastic network epidemic models for infectious
-             disease dynamics in parallel.
+disease dynamics in parallel.
 }
 \details{
 This function provides a systematic method to running stochastic network
@@ -59,27 +59,27 @@ with the \code{EpiModel::netsim} function.
 
 This function performs the following tasks:
 \enumerate{
-  \item Check for the existence of checkpointed data, using the
-        \code{\link{check_cp}} function. If CP data are available, a
-        checkpointed model will be run, else a new model will be run.
-  \item Create a checkpoint directory if one does not exist at
-        "data/sim<simno>". This and the related checkpointing functions will 
-        not occur if \code{cp.save.int} is set to \code{NULL}.
-  \item Sets the checkpoint save interval at the number of time steps specified
-        in \code{cp.save.int}.
-  \item Resets the initialize module function to \code{\link{initialize_cp}}
-        if in checkpoint state.
-  \item Run the simulation, either new or checkpointed, with a call to
-        \code{EpiModel::netsim}.
-  \item Save the completed simulation data, using the functionality of
-        \code{\link{savesim}}.
-  \item Remove the checkpointed data and file directory created in step 1, if
-        it exists.
+\item Check for the existence of checkpointed data, using the
+\code{\link{check_cp}} function. If CP data are available, a
+checkpointed model will be run, else a new model will be run.
+\item Create a checkpoint directory if one does not exist at
+"data/simsimno". This and the related checkpointing functions will
+not occur if \code{cp.save.int} is set to \code{NULL}.
+\item Sets the checkpoint save interval at the number of time steps specified
+in \code{cp.save.int}.
+\item Resets the initialize module function to \code{\link{initialize_cp}}
+if in checkpoint state.
+\item Run the simulation, either new or checkpointed, with a call to
+\code{EpiModel::netsim}.
+\item Save the completed simulation data, using the functionality of
+\code{\link{savesim}}.
+\item Remove the checkpointed data and file directory created in step 1, if
+it exists.
 }
 
 The \code{x} argument must specify a \strong{file name} in a character string,
 rather than a \code{netest} or \code{netsim} class object directly. This is
-mainly for efficency purposes in running the models in parallel.
+mainly for efficiency purposes in running the models in parallel.
 
 If \code{save.min} and \code{save.max} are both set to \code{FALSE}, then the
 function will return rather than save the output EpiModel object.

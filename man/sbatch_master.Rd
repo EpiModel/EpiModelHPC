@@ -39,7 +39,7 @@ the individual vars must be vectors of equal length.}
 \item{working.dir}{Path to write out the \code{master.file}, and if specified
 the \code{runsim.file} and \code{param.file}.}
 
-\item{master.file}{Name of the output bash shell script file to write. If 
+\item{master.file}{Name of the output bash shell script file to write. If
 \code{""}, then will print to console.}
 
 \item{runsim.file}{Name of the bash shell script file that contains the R batch
@@ -47,20 +47,20 @@ commands to be executed by \code{sbatch}.}
 
 \item{build.runsim}{If \code{TRUE}, will write out a bash shell script with the
 file name \code{runsim.file} that loads the R environment listed in
-\code{env.file} and execute \code{Rscript} on the file listed in 
+\code{env.file} and execute \code{Rscript} on the file listed in
 \code{rscript.file}.}
 
 \item{env.file}{Bash shell script to load the R environment desired. Optionally
-kept in a user's home directory with the default file name. Example 
+kept in a user's home directory with the default file name. Example
 script below.}
 
-\item{rscript.file}{Name of the \code{.R} file that contains the primary 
+\item{rscript.file}{Name of the \code{.R} file that contains the primary
 simulation to be executed by \code{Rscript}.}
 
-\item{param.file}{Name of a csv file to write out the list of varying 
+\item{param.file}{Name of a csv file to write out the list of varying
 parameters and simulation numbers set within the function.}
 
-\item{param.tag}{Character string for current scenario batch added to 
+\item{param.tag}{Character string for current scenario batch added to
 param.sheet.}
 
 \item{simno.start}{Starting number for the \code{SIMNO} variable. If missing
@@ -71,8 +71,8 @@ and start numbering at one after the previous maximum.}
 
 \item{ncores}{Number of cores per node to use within each Slurm job.}
 
-\item{narray}{Number of array batches within each Slurm job. If `NULL`, then
-will use `nsims/ncores` array batches.}
+\item{narray}{Number of array batches within each Slurm job. If \code{NULL}, then
+will use \code{nsims/ncores} array batches.}
 
 \item{ckpt}{If \code{TRUE}, use the checkpoint queue to submit jobs. If
 numeric, will specify the first X jobs on the grid as non-backfill.}
@@ -98,7 +98,7 @@ simulation number in each job.}
 }
 \description{
 Creates a master-level SLURM::sbatch script given a set of parameter
-             combinations implied by environmental arguments used as parameters.
+combinations implied by environmental arguments used as parameters.
 }
 \examples{
 # Examples printing to console
@@ -114,15 +114,8 @@ sbatch_master(vars, jobname = "epiSim")
 # Full-scale example writing out files
 sbatch_master(vars, nsims = 50, simno.start = 1000, build.runsim = TRUE,
               master.file = "master.sh", param.sheet = "params.csv")
-sbatch_master(vars, nsims = 50, append = TRUE, 
+sbatch_master(vars, nsims = 50, append = TRUE,
               master.file = "master.sh", param.sheet = "params.csv")
-
-## Example bash environment file
-#!/bin/bash
-
-. /gscratch/csde/sjenness/spack/share/spack/setup-env.sh
-module load gcc-8.2.0-gcc-4.8.5-rhsxipz
-module load r-3.5.1-gcc-8.2.0-4suigve
 
 }
 

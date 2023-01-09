@@ -66,7 +66,7 @@ merge_simfiles <- function(simno, ftype = "min", indir = "data/",
       sim$temp <- NULL
       sim$el <- NULL
       sim$p <- NULL
-      if (class(sim) == "list" && all(c("epi", "param", "control") %in% names(sim))) {
+      if (inherits(sim, "list") && all(c("epi", "param", "control") %in% names(sim))) {
         class(sim) <- "netsim"
       }
       if (!is.null(vars)) {
@@ -80,7 +80,7 @@ merge_simfiles <- function(simno, ftype = "min", indir = "data/",
     if (i == 1) {
       out <- sim
     } else {
-      out <- merge(out, sim, param.error = FALSE)
+      out <- merge(out, sim, param.error = FALSE, keep.other = FALSE)
     }
     if (verbose == TRUE) {
       cat("File ", i, "/", length(fn), " Loaded ... \n", sep = "")

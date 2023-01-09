@@ -4,7 +4,7 @@
 sbatch_master(vars = NULL,
               working.dir = "inst/",
               master.file = "master.sh",
-              build.runsim = TRUE, 
+              build.runsim = TRUE,
               param.file = "params.csv",
               param.tag = "Calibrate",
               append = FALSE,
