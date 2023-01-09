@@ -9,7 +9,6 @@ editor_options:
   chunk_output_type: console
 ---
 
-
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -24,74 +23,161 @@ knitr::opts_chunk$set(
 Computer (HPC). In this vignette, a *workflow* refers to a set of tasks to be
 executed on the HPC, one after the other.
 
-We will describe how to construct and use 2 *workflows* using the
-[EpiModel/BigNets](https://github.com/EpiModel/BigNets) project.
+We will describe how to construct and use  *workflows* using the
+[EpiModel/EpiModelHIV-Template](https://github.com/EpiModel/EpiModelHIV-Template) project.
 
 This project uses [renv](https://rstudio.github.io/renv/index.html) and requires
 access to the [EpiModelHIV-p](https://github.com/EpiModelHIV-p) private
 repository. This vignette assumes that your project is hosted on a git
 repository checked out on your local computer and on the HPC.
 
-This vignette will use the Rollins School of Public Health cluster from [Emory
+This vignette will use the Rollins School of Public Health (RSPH) High
+Performance Computing cluster (HPC) from [Emory
 University](https://www.sph.emory.edu/) as an example.
 
-## Structure of the BigNets Project
+## Structure of an Applied EpiModelHIV Project
 
-The R scripts are all located in the "R" subdirectory and are named either like
-"01-snake_case_name.R" for scripts that represents steps that occur in a given
-order or "utils-snake_case_name.R" for elements to be used by multiple steps.
+The R scripts are all located in the "R/" subdirectory and are using the
+following naming conventions:
 
-All data used and produced by the project will be stored in either the
-"data/input/" or "data/output/" directories.
+- "01-snake_case_name.R": steps to be run locally in a given order.
+- "workflow_01-snake_case_names.R": scripts creating *workflow* directories to
+  be sent on the HPC.
+- "utils-snake_case_name.R": utility scripts to be `source`d by the steps or
+  *workflows*. They limit code repetition.
+
+The "data/" directory contains:
+
+- "data/input/": files required by the project before any code is ran. These
+  files are tracked by `git`.
+- "data/intermediate/": raw files produced and used by the code. They are not tracked by `git`.
+- "data/output/": final results, tables, graphs. Tracked by `git`.
+
+## General Steps in a Applied EpiModelHIV Project
+
+These applied projects aim to accurately represent the population of Men who
+have Sex with Men (MSM) from the Atlanta Metro area. And then simulate how
+the HIV epidemic would behave under different *intervention scenarios*.
+
+A (massive) oversimplification of the project would be to see it as the
+following 3 steps:
+
+1. Estimate the social networks modeling the population interactions.
+2. Calibrate the epidemic model to match key epidemiological targets.
+3. Run the model under *intervention scenarios* to assess their effects on the
+   epidemic.
+
+## Local vs HPC Context
+
+All the numbered scripts ("R/01-snake_case_name.R") are meant to be executed on
+your local computer. They allow you to explore all the steps and substeps on
+small networks with few replications. Most of them define a `context` variable
+at the top. This variable takes the value "local" or "hpc" and is use to set
+the context of the computation:
+- "local": Uses small networks and few replications, unfit for publication.
+  This is used to test the code and processes.
+- "hpc": Uses full size networks and many replications. This is used to produce
+  the analysis for publication. Once the code has been validated locally.
+
+A lot of the numbered scripts are re-used by the *workflows* with the `context`
+variable set to "hpc".
+
+The goal is: if your scripts run locally, they should run on the HPC
+without modification.
 
 ## Network Estimation and Diagnostics
 
 ### Overview
 
-This project simulates HIV dynamics on a population of 10 000 individuals. The
-first step is to estimate 3 networks of 10 000 nodes representing respectively
+This project simulates HIV dynamics on a population of 100 000 individuals. The
+first step is to estimate 3 networks of 100 000 nodes representing respectively
 *main*, *casual* and *one off* partnerships. This step will happen in the
-script "R/01-estimation.R". Afterwards we will want to diagnose this estimation
-using the script "R/02-diagnostics.R" and finally explore these diagnostics
-interactively in the script "R/03-diagnostics_explore.R".
+script "R/01-networks_estimation.R". Afterwards we will want to diagnose the
+estimations using the script "R/02-networks_diagnostics.R" and finally explore
+these diagnostics interactively in the script
+"R/03-networks_diagnostics_explore.R".
 
-The first two steps will be run on the HPC, then we will download the data
-produced to perform the third one.
+You should run these 3 scripts locally and make sure you understand what they do.
+Without modification, the `context` variable will be set to "local" and produce
+fast "Stochastic-Approximation" for 5k nodes networks.
 
-### Defining the "estimation" *workflow*
+**NOTE**: You should run each script in a fresh R console each time to avoid
+starting with a polluted environment that will lead to very complicated
+debugging. In RStudio: Ctrl-Shift-F10  or `.rs.restartR()` (aliased to `rs()`
+in the project). Do not do: `rm(list = ls())` instead, [it does not do the same
+thing and should not be used](https://rstats.wtf/save-source.html#rm-list-ls).
 
-The script "R/00-estimation_workflow.R" is responsible to the creation of the
-first *workflow*. We will walk through it block by block to understand the
-basics of `slurmworkflow`.
+### Defining the "networks_estimation" *workflow*
+
+Now that you have run the 3 scripts locally, we will define an HPC *workflow*
+to run the first 2 parts, networks estimation and networks diagnostics, with
+100k nodes networks with the full MCMLE estimation method. Trying to run this
+locally will take multiple days and probably crash your computer before ending.
+
+Instead, we will create a *workflow* locally, send it to the HPC, run it there
+and collect the results for analysis.
+
+The script "R/workflow_01-networks_estimation.R" is responsible to the creation
+of the first *workflow*. We will walk through it block by block to understand
+the basics of `slurmworkflow`.
 
 #### Setup
 
-A *workflow* exists on your computer as a subdirectory of the
-"workflows/" directory of your project.
+A *workflow* exists on your computer as a directory inside the "workflows/"
+directory of your project. Our first *workflow* is called "networks_estimation"
+and will live in "workflows/networks_estimation/".
 
-Before creating it, we set a few variable to make the process easily
-transportable to another cluster.
+First we load the required libraries and source the
+"R/utils-0_project_settings.R".
 
-```{r wf_1_setup, eval = FALSE}
-library(slurmworkflow)
-library(EpiModelHPC)
+```{r wf_1_setup1, eval = FALSE}
+# Libraries --------------------------------------------------------------------
+library("slurmworkflow")
+library("EpiModelHPC")
 
-hpc_configs <- swf_configs_rsph(
-  partition = "epimodel",
-  mail_user = "user@emory.edu"
-)
-max_cores <- 10
+# Settings ---------------------------------------------------------------------
+source("./R/utils-0_project_settings.R")
 ```
 
-Here we use the `EpiModelHPC::swf_configs_rsph` helper function to create the
+This last script contains variable used throughout the project. You should make
+sure that the `current_git_branch` is correct and put your emai address in
+`mail_user`. This way the HPC will send you a mail when the *workflow* is
+finished.
+
+Then we set a `max_cores` variable to 10. This will be the number of CPU cores
+to be used for the network estimations. 10 usually works fine.
+
+```{r wf_1_setup2, eval = FALSE}
+max_cores <- 10
+source("./R/utils-hpc_configs.R") # creates `hpc_configs`
+```
+
+The "R/utils-hpc_configs.R" script contains helper functions to simplify the HPC
+setup. Here is the part that should be uncommented for using the RSPH cluster:
+
+```{r wf_hpc_inputs, eval = FALSE}
+# Must be sourced **AFTER** "./R/utils-0_project_settings.R"
+
+hpc_configs <- EpiModelHPC::swf_configs_rsph(
+  partition = "epimodel",
+  r_version = "4.2.1",
+  mail_user = mail_user
+)
+```
+
+We use the `EpiModelHPC::swf_configs_rsph` helper function to create the
 `hpc_configs` objects that will holds some pre-defined configurations. We
 specify that we want to work on the "epimodel" partition and that e-mails
-telling us when the jobs are done should be sent to "user@emory.edu"
+telling us when the jobs are done should be sent to "user@emory.edu".
 
-We also set `max_cores` to 10 as trying to use more (up to 32 on RSPH) will
-massively slow down the estimation process.
+*Note*: the HPC is using the [Slurm workflow
+manager](https://slurm.schedmd.com/overview.html) to allocate tasks to
+computing nodes. The EpiModel partition allocate jobs to nodes *reserved* for
+the EpiModel team. The other option is *preemptable*, where you can use any
+empty node but may be kicked out if a *reserved* node is *preempted* by
+someone.
 
-#### Creating a *workflow*
+#### Creating the *workflow*
 
 The `slurmworkflow::create_workflow` function takes 2 mandatory arguments:
 
@@ -101,16 +187,17 @@ The `slurmworkflow::create_workflow` function takes 2 mandatory arguments:
    shared among all steps.
 
 ```{r wf_1_creation, eval = FALSE}
+# Workflow creation ------------------------------------------------------------
 wf <- create_workflow(
-  wf_name = "estimation",
+  wf_name = "networks_estimation",
   default_sbatch_opts = hpc_configs$default_sbatch_opts
 )
 ```
 
-Here we create a *workflow* called "estimation" and use the sbatch options
-stored in `hpc_configs$default_sbatch_opts`.
+Here we created a *workflow* called "networks_estimation" and use the sbatch
+options stored in `hpc_configs$default_sbatch_opts`.
 
-```{r wf_2_sbopts, eval = FALSE}
+```{r wf_1_sbopts0, eval = FALSE}
 hpc_configs$default_sbatch_opts
 #> list(
 #>   "partition" = "epimodel",
@@ -122,28 +209,28 @@ hpc_configs$default_sbatch_opts
 It specifies that we want to use the "epimodel" partition and that an
 e-mail should be sent if a task fails.
 
-With this we have created the directory "workflows/estimation" and stored a
-summary of it in the `wf` variable. For now our workflow has no steps.
+With this we have created the directory "workflows/networks_estimation" and
+stored a summary of it in the `wf` variable. For now our workflow has no steps.
 
-notes:
-- SLURM configuration can vary, on [HYAK](https://hyak.uw.edu/) for instance
+*notes*: SLURM configuration can vary, on [HYAK](https://hyak.uw.edu/) for instance
   there is  an accounting module and we would have to specify the "account"
   option). An equivalent
   `swf_configs_hyak` function exists for the HYAK ecosystem.
 - `default_sbatch_opts` and `sbatch_opts` parameters accept all the options for
   `sbatch` starting with "--". (e.g. "account" is valid but "A" is not, as it
   corresponds to the "-A" shorthand)
-- If a "workflows/estimation" directory already exists, `create_workflow` will
-  throw an error. You have to delete the previous versions of the workflow
-  yourself if you want to overwrite them.
+- If a "workflows/networks_estimation" directory already exists,
+  `create_workflow` will throw an error. You have to delete the previous
+  versions of the workflow yourself if you want to overwrite them.
 
-#### Addition of a `renv::restore` Step
+#### Adding of a `renv::restore` Step
 
 Before running the actual calculation, we want to make sure that the project on
-the HPC is up to date with the right package version. It translates to running
+the HPC is up to date with the right packages version. It translates to running
 `git pull` on the HPC and `renv::restore()` from the project.
 
-The `slurmworkflow::add_workflow_step` take 2 mandatory arguments:
+To do this we will add a *step* to the workflow. The
+`slurmworkflow::add_workflow_step` take 2 mandatory arguments:
 
 1. `wf_summary`: a summary of the workflow to edit (the `wf` variable)
 2. `step_tmpl`: a *step template*. These are made by a special kind of functions
@@ -153,30 +240,34 @@ Here we will also use the optional `sbatch_opts` arguments to override some
 of the default options defined above.
 
 ```{r wf_1_renv, eval = FALSE}
+# Update RENV on the HPC -------------------------------------------------------
 wf <- add_workflow_step(
   wf_summary = wf,
   step_tmpl = step_tmpl_renv_restore(
-    git_branch = "main",
+    git_branch = current_git_branch,
     setup_lines = hpc_configs$r_loader
   ),
   sbatch_opts = hpc_configs$renv_sbatch_opts
 )
+
 ```
 
 The *step template* here is from the function
-`EpiModelHPC::step_tmpl_renv_restore` it takes two arguments:
+`EpiModelHPC::step_tmpl_renv_restore` which takes two arguments:
 
 1. `git_branch`: the branch that the repository must follow. If the branch
     followed (on the HPC) is not the right one, the step will stop there to
-    avoid potential data loss and undefined behaviors. Here we use the `main`
-    branch of the `BigNets` project.
-2. `setup_lines` (see above) and internally sets up an `sbatch` task that
-    will run `git pull` and `renv::restore()`.
+    avoid potential data loss and undefined behaviors. Here we use the `current_git_branch`
+    variable defined in "R/utils-0_project_settings.R".
+2. `setup_lines`: some boilerplate `bash` code to allow running R code on the HPC.
+
+Internally this function sets up an `sbatch` task that will run `git pull` and
+`renv::restore()` on the HPC.
 
 For this specific task we need to change some of the `sbatch` options using
 `hpc_configs$renv_sbatch_opts`.
 
-```{r wf_1_sbopts, eval = FALSE}
+```{r wf_1_sbopts1, eval = FALSE}
 hpc_configs$renv_sbatch_opts
 #> list(
 #> "mem" = "16G",
@@ -185,53 +276,62 @@ hpc_configs$renv_sbatch_opts
 #> )
 ```
 
-it asks for 16GB of RAM, 4 cpus and tell SLURM that the job should take less
+It asks for 16GB of RAM, 4 CPUs and tell SLURM that the job should take less
 than 120 minutes.
 
-At the end we save back the updated workflow summary into `wf`.
+We assigned the result of the call to `wf` (`wf <- add_workflow_step(...)`), and
+the function modified the "workflows/networks_estimation/" folder.
 
-notes:
-- on the MOX cluster from HYAK, `renv_sbatch_opts` would also changes the
-  "partition" to "build" as on MOX the "default" partition does not have
+*notes*: on the MOX cluster from HYAK, `renv_sbatch_opts` would also changes the
+  `partition` to "build" as on MOX the "default" partition does not have
   internet access.
 
 #### Addition of the *estimation* Step
 
-Now that we know that the project is up to date on the HPC, we want to run the
-"R/01-estimation.R" script there.
+Now that we ensured that the project will be up to date on the HPC, we want to
+run the "R/01-networks_estimation.R" script there with `context <- "hpc"`.
 
 To do this we add another step with `slurmworkflow::add_workflow_step` but with
 a different *step template*.
 
 ```{r wf_1_est, eval = FALSE}
+# Estimate the networks --------------------------------------------------------
 wf <- add_workflow_step(
   wf_summary = wf,
   step_tmpl = step_tmpl_do_call_script(
-    r_script = "R/01-estimation.R",
-    args = list(ncores = max_cores),
+    r_script = "./R/01-networks_estimation.R",
+    args = list(
+      context = "hpc",
+      estimation_method = "MCMLE",
+      estimation_ncores = max_cores
+   ),
     setup_lines = hpc_configs$r_loader
   ),
   sbatch_opts = list(
     "cpus-per-task" = max_cores,
     "time" = "24:00:00",
-    "mem" = "0" # special: all mem on node
+    "mem" = "0"
   )
 )
 ```
 
 `slurmworkflow::step_tmpl_do_call_script` template sets up a step to run the
 script located **on the HPC** under the path `r_script`, here
-"R/01-estimation.R", with some variables pre-defined. Here we set the variable
-`ncores` to be equal to `max_cores` that we defined at the beginning.
+"R/01-networks_estimation.R", with some variables pre-defined.
+We set the following variables:
+- `context = "hpc"`: signals the script to use the "hpc" settings.
+- `estimation_method = "MCMLE"`: we want the slower but more accurate
+  estimation method.
+- `estimation_ncores = max_cores`: this estimation method benefits from being
+  parallelized. (more that 10 cores can slow things down significantly).
 
-If you take a look at the "R/01-estimation.R" script, you will see that a
-variable `ncores` is used but not defined in the script unless `interactive()`
-returns  `TRUE`, which would indicate that the script is being run
-interactively (i.e. in the R console or through RStudio). Thanks to our *step
-template* it will be defined when the script run as part of the workflow.
+If you take a look at the "R/01-networks_estimation.R" script, you will see that
+`estimation_method` and `estimation_ncores` are set if `context == "local"` but
+not for "hpc". Thanks to our *step template* they will be defined when the
+script run as part of the workflow.
 
-The syntax of `step_tmpl_do_call_script` to pass arguments to a script is
-similar to the one of `base::do.call`.
+*note*: The syntax of `step_tmpl_do_call_script` to pass arguments to a script
+is similar to the one of `base::do.call`.
 
 **Important note**: Some users like to clear their R environment by placing
 `rm(list = ls())` at the start of their scripts. In addition to [it being
@@ -247,24 +347,25 @@ to "epimodel" (using the values set in `create_workflow` at the beginning.
 
 This step will write 3 files on the HPC: (see the script itself for details)
 
-1. "data/input/epistats.rds"
-2. "data/input/netstats.rds"
-3. "data/input/netest.rds"
+1. "data/intermediate/estimates/epistats-hpc.rds"
+2. "data/intermediate/estimates/netstats-hpc.rds"
+3. "data/intermediate/estimates/netest-hpc.rds"
 
 #### Addition of the *diagnostics* Step
 
 Finally we want to generate diagnostics for these networks with
-"R/02-diagnostics.R".
+"R/02-networks_diagnostics.R".
 
 ```{r wf_1_diag, eval = FALSE}
+# Generate the diagnostics data ------------------------------------------------
 wf <- add_workflow_step(
   wf_summary = wf,
   step_tmpl = step_tmpl_do_call_script(
-    r_script = "R/02-diagnostics.R",
+    r_script = "./R/02-networks_diagnostics.R",
     args = list(
+      context = "hpc",
       ncores = max_cores,
-      nsims = 30,
-      nsteps = 1e3
+      nsims = 50
     ),
     setup_lines = hpc_configs$r_loader
   ),
@@ -272,85 +373,141 @@ wf <- add_workflow_step(
     "cpus-per-task" = max_cores,
     "time" = "04:00:00",
     "mem-per-cpu" = "4G",
-    "mail-type" = "END" # to get a mail upon completion
+    "mail-type" = "FAIL,END"
   )
 )
 ```
 
 This step uses the same template as before, with 3 variables passed to the
-script: `ncores`, `nsims` and `nsteps`.
+script: `context`, `ncores` and `nsteps`.
 
 As it is the last step of this *workflow* we override the "mail-type" `sbatch`
 option to receive a mail when this step ends. We do so to be notified when the
 workflow is finished.
 
-This step writes the file "data/input/netdx.rds" onto the HPC. (see the script
-itself for details)
+This step will write 3 files on the HPC: (see the script itself for details)
+
+1. "data/intermediate/calibration/netdx-main-hpc.rds"
+2. "data/intermediate/calibration/netdx-casl-hpc.rds"
+3. "data/intermediate/calibration/netdx-inst-hpc.rds"
 
 ### Using the "estimation" *workflow* on the RSPH HPC
 
 Now that our *estimation workflow* is set up, we need to send it to the HPC, run
 it and download the results.
 
-We assume that the "workflows/" and "data/" directories are not tracked by git
-(using ".gitignore" for example) and that the user has an SSH access to the HPC.
+We assume that the "workflows/" and "data/intermediate/" directories are not
+tracked by git (using ".gitignore" for example) and that the user has an SSH
+access to the HPC.
 
 We will use `scp` to copy the folder over to the HPC as it is available on
 Windows, MacOS and GNU/Linux.
 
-In this example, the "BigNets" repository is located at "~/projects/BigNets" on
+In this example, the "EpiModelHIV-Template" repository is located at
+"~/projects/EpiModelHIV-Template" on the HPC.
+
+Before sending the workflow, make sure that the project on the HPC has `renv`
+initialized. This means running `renv::init()` from the root of the project on
 the HPC.
 
 #### Sending the *workflow* to the HPC
 
-*All the commands below are to be run in a terminal on our local computer. On
-windows it can be the "terminal" on RStudio (not the R console)*
+If you have never used the command line before, we recommend using the terminal
+from RStudio (not the R console).
 
-First we ensure that the "workflows" folder is present on the HPC by running
+Everything written `<between angle brackets>` is to be replaced with the correct
+value.
 
-`$ ssh <user>@clogin01.sph.emory.edu "mkdir -p ~/projects/BigNets/workflows"`
+You should make sure to understand what each part of the commands do before
+running them. It will make your life easier.
 
-Then we copy the "estimation" directory
+The following commands are to be run from your local computer.
 
-`$ scp -r workflows/estimation <user>@clogin01.sph.emory.edu:projects/BigNets/workflows/`
+**MacOS or GNU/Linux**
+
+```
+# bash - local
+scp -r workflows/networks_estimation <user>@clogin01.sph.emory.edu:projects/EpiModelHIV-Template/workflows/
+```
+
+**Windows**
+
+```
+# bash - local
+set DISPLAY=
+scp -r workflows\networks_estimation <user>@clogin01.sph.emory.edu:projects/EpiModelHIV-Template/workflows/
+```
+
+Forgetting `set DISPLAY=` will prevent `scp` from working correctly.
+
+Note that its `workflows\networks_estimation`. Windows uses back-slashes for
+directories and Unix OSes uses forward-slashes.
 
 #### Running the *workflow* from the HPC
 
 For this step, you must be at the command line on the HPC. This means that you
-have run: `$ ssh <user>@clogin01.sph.emory.edu` from your local computer.
+have run: `ssh <user>@clogin01.sph.emory.edu` from your local computer.
+
+*run `set DISPLAY=` on Windows before if you get this error:
+`ssh_askpass: posix_spawnp: No such file or directory`*
 
 You also need to be at the root directory of the project (where the ".git"
 folder is as well as the "renv.lock" file". In this example you would get there
-by running `$ cd ~/projects/BigNets` The following steps will not work if you
-are not at the root of your project.
+by running `$ cd ~/projects/EpiModelHIV-Template`. The following steps will not
+work if you are not at the root of your project.
 
 Running the *workflow* is done by **executing** the file
 "workflows/estimation/start_workflow.sh" with the following command:
 
-`$ ./workflows/estimation/start_workflow.sh`
+```
+# bash - hpc
+./workflows/estimation/start_workflow.sh
+```
 
-This file is created automatically by `slurmworkflow` and should be executable
-(even when created on Windows). If it is not, run:
+If you are using Windows, the may not be executable. You can solve it with the
+following command:
 
-`$ chmod +x workflows/estimation/start_workflow.sh`
+```
+# bash - hpc
+chmod +x workflows/estimation/start_workflow.sh`
+```
 
 The workflow will not work if you *source* the file (with `source <script>` or
-`. <script>`)
+`. <script>`).
 
 #### Downloading the Results for Analysis
 
 Granting that the workflow worked correctly, you should receive a mail telling
-you that the last step ended with exit code 0 (success).
+you that the last step ended with exit code 0 (success, or 0 errors).
 
-We want to download the "data/input" directory back to our local machine:
+We want to download the "data/intermediate/estimates/" and
+"data/intermediate/diagnostics/" directories back to our local machine:
 
-`$ scp -r <user>@clogin01.sph.emory.edu:projects/BigNets/data/input data/`
+*These command are to be run from your local machine, not from the SSH session
+on the HPC.*
 
-*This command is to be run from our local machine, not from the SSH session on
-the HPC.*
+**MacOs or GNU/Linux**
+
+```
+# bash - local
+scp -r <user>@clogin01.sph.emory.edu:projects/EpiModelHIV-Template/data/intermediate/estimates data/intermediate/
+scp -r <user>@clogin01.sph.emory.edu:projects/EpiModelHIV-Template/data/intermediate/diagnostics data/intermediate/
+```
+
+**Windows**
+
+*Same notes as before for Windows*
+
+```
+# bash - local
+set DISPLAY=
+scp -r <user>@clogin01.sph.emory.edu:projects/EpiModelHIV-Template/data/intermediate/estimates data\intermediate\
+scp -r <user>@clogin01.sph.emory.edu:projects/EpiModelHIV-Template/data/intermediate/diagnostics data\intermediate\
+```
 
 We can now run the R script "03-diagnostics_explore.R" to see if everything is
-correct.
+correct. Don't forget to set the `context` to "hpc" at the top of the file to
+assess the right networks.
 
 ## Calibration of the Model
 
