@@ -509,69 +509,74 @@ We can now run the R script "03-diagnostics_explore.R" to see if everything is
 correct. Don't forget to set the `context` to "hpc" at the top of the file to
 assess the right networks.
 
-## Calibration of the Model
+## Running Intervention Scenarios of the Model
+
+We will skip directly to intervention scenarios *workflow* as the process is
+very similar for calibration.
+
+At this point, we assume that you have a
+"data/intermediate/estimates/restart-hpc.rds" file and a bunch of scenarios
+defined in "data/input/scenarios.csv"
+
+Further, we will not differentiate the command line from MacOS, GNU/Linux and
+Windows anymore.We will present only the UNIX version and Windows user can
+apply the same rules as previously when required.
 
 ### Overview
 
-Now that we have our networks correctly estimated and diagnosed, we want to run
-the epidemic models with different parameter values and pick the closest to our
-targets.
-
-To do so the script "R/11-calibration_sim.R" will run a set of `ncores`
-simulation of a given `scenario`. `slurmworkflow` will allow us to do so for a
-set of as many scenarios as we want replicated as necessary. Afterwards, the
-script "R/12-calibration_process.R" will calculate the outcomes of interest
-over all the scenarios and save a small summary. Then we will locally evaluate
-what was the best set of parameters.
+Here we will define a 3 steps workflow:
+1. a renv_update step as before.
+2. a set `nrep` replications of each scenario.
+3. a processing step.
 
 ### Defining the "calibration" *workflow*
 
-The script "R/10-calibration_worklow.R" is responsible to the creation of the
-second *workflow*.
+The script "R/workflow_06-intervention_scenario.R" is responsible of the
+creation of this *workflow*.
 
 #### Setup, Creation and `renv::restore`
 
 ```{r wf_2_setup, eval = FALSE}
-library(slurmworkflow)
-library(EpiModelHPC)
+# Libraries --------------------------------------------------------------------
+library("slurmworkflow")
+library("EpiModelHPC")
+library("EpiModelHIV")
 
-hpc_configs <- swf_configs_rsph(
-  partition = "preemptable",
-  mail_user = "user@emory.edu"
-)
+# Settings ---------------------------------------------------------------------
+source("./R/utils-0_project_settings.R")
+context <- "hpc"
 max_cores <- 32
 
-## Workflow creation ------------------------------------------------------------
+source("./R/utils-default_inputs.R") # make `path_to_est`, `param` and `init`
+source("./R/utils-hpc_configs.R") # creates `hpc_configs`
+
+# ------------------------------------------------------------------------------
+
+# Workflow creation
 wf <- create_workflow(
-  wf_name = "calibration",
+  wf_name = "intervention_scenarios",
   default_sbatch_opts = hpc_configs$default_sbatch_opts
 )
 
-## Update RENV on the HPC -------------------------------------------------------
+# Update RENV on the HPC
 wf <- add_workflow_step(
   wf_summary = wf,
   step_tmpl = step_tmpl_renv_restore(
-    git_branch = "main",
+    git_branch = current_git_branch,
     setup_lines = hpc_configs$r_loader
   ),
   sbatch_opts = hpc_configs$renv_sbatch_opts
 )
 ```
 
-We go quickly on these three steps as they are similar to the previous
-workflow. The main difference is that we are going to use the *preemptable*
-partition on RSPH. To do so we set the `partition` arguments of
-`swf_configs_rsph` to "preemptable". This modifies the "partion" in
-the `default_sbatch_opts` to "preemptable".
-
-notes:
-- on HYAK, the equivalent of "preemptable" would be "ckpt". By inputing
-  `partition = "ckpt"`. This modifies the "partition" and "account" in the
-  `default_sbatch_opts` to "ckpt" and "csde-ckpt" respectively.
+We go quickly on this part as it is  similar to the previous workflow.
+If you tested the numbered script locally, all the sourced files should make
+sense to you.
 
 #### Addition of the *simulation* Step
 
-This step assumes that you know how to run an EpiModel network simulation.
+This step assumes that you know how to run an EpiModel network simulation. This
+part is similar to the local script "R/40-intervention_scenarios.R".
 
 Terminology:
     - simulation: One run of an epidemic model.
@@ -581,46 +586,62 @@ Terminology:
         They all share the same scenario.
 
 
-In this step we need the `est`, `param`, `init` and `control` objects as for a
-normal `EpiModel::netsim` call. They are loaded from various utility scripts at
-the top of the code block. The `control` object only differ in the sense that
-`nsims` and `ncores` will be overridden later on.
+In this step we need the `path_to_restart`, `param`, `init` and `control`
+objects as for a the `EpiModelHPC::netsim_scenarios` call. They are loaded from
+"R/utils-default_inputs.R".
+
+The `control` object differs from it's usual form as
+the `nsims` and `ncores` argument will be overridden by the *workflow*.
 
 ```{r wf_2_sim1, eval = FALSE}
-source("R/utils-netsize.R")
-source("R/utils-netsim_inputs.R")
-source("R/utils-targets.R")
-
+# Controls
+source("./R/utils-targets.R")
 control <- control_msm(
-  nsteps = calibration_length,
-  nsims = 1, ncores = 1,
+  start               = restart_time,
+  nsteps              = intervention_end,
+  nsims               = 1,
+  ncores              = 1,
+  initialize.FUN      = reinit_msm,
   cumulative.edgelist = TRUE,
-  truncate.el.cuml = 0,
-  verbose = FALSE,
-  .tracker.list = calibration_trackers # created in R/utils-targets.R
+  truncate.el.cuml    = 0,
+  .tracker.list       = calibration_trackers,
+  verbose             = FALSE
 )
 ```
-We then load a `data.frame` of 4 scenarios found in
-"data/input/calib_scenarios.csv" and transform it into a scenario list.
+
+As in other scripts, the `restart_time` and `intervention_end` are loaded from
+the "R/utils-0_project_settings" script.
+
+Note that for these simulations we restart note from time zero but from a
+previous simulation. Therefore we need to specify a different `initialize.FUN`
+to handle the restarting process. `reinit_msm` is such a function in
+`EpiModelHIV-p`.
+
+We then load a `tibble` of 2 scenarios found in
+"data/input/scenarios.csv" and transform it into a scenario list.
 
 
 ```{r wf_2_sim2, eval = FALSE}
-scenarios.df <- read.csv("data/input/calib_scenarios.csv")
-scenarios.list <- EpiModel::create_scenario_list(scenarios.df)
+scenarios_df <- readr::read_csv("./data/input/scenarios.csv")
+scenarios_list <- EpiModel::create_scenario_list(scenarios_df)
 ```
 
 To account for the variability in our models, we want each scenario to be run
-500 times.
+120 times. (usually 500 to 1000 times for the final paper).
 
 As before we use `add_workflow_step` to create the step. This time we use the
 *step template* `EpiModelHPC::step_tmpl_netsim_scenarios`. It takes as arguments:
 
-- `est`, `param`, `init`, and `control` like a normal `EpiModel::netsim` call
-- `scenarios.list`: the list of scenarios produced by `create_scenario_list`
+- `path_to_est`, `param`, `init`, and `control`. `path_to_est` is the where the
+  workflow should look for the `est` file on the HPC. Here we will pass `path_to_restart` which is "data/intermediate/estimates/restart-hpc.rds"
+- `scenarios_list`: the list of scenarios produced by `create_scenario_list`
 - `output_dir`: a path to a directory to store the results
 - `libraries`: a character vector of the libraries required to run the model.
     here we only need "EpiModelHIV"
-- `n_rep`: the number of time each scenarios must be simulated. (here 500)
+- `save_pattern`: what part of the `sim` object should be kept. Simple will keep
+    only `epi`, `param` and `control`. Other values can be used in other use
+    cases.
+- `n_rep`: the number of time each scenarios must be simulated. (here 120)
 - `n_cores`: the number of cores to be used on each node
 - `max_array_size` is detailed below but a value of 500 is usually fine.
 - `setup_lines`: same as before.
@@ -629,19 +650,21 @@ As before we use `add_workflow_step` to create the step. This time we use the
 wf <- add_workflow_step(
   wf_summary = wf,
   step_tmpl = step_tmpl_netsim_scenarios(
-    est, param, init, control,
-    scenarios_list = scenarios.list,
-    output_dir = "data/output/calib",
+    path_to_restart, param, init, control,
+    scenarios_list = scenarios_list,
+    output_dir = "./data/intermediate/scenarios",
     libraries = "EpiModelHIV",
-    n_rep = 500,
+    save_pattern = "simple",
+    n_rep = 120,
     n_cores = max_cores,
     max_array_size = 500,
     setup_lines = hpc_configs$r_loader
   ),
   sbatch_opts = list(
+    "mail-type" = "FAIL,TIME_LIMIT",
     "cpus-per-task" = max_cores,
-    "time" = "01:00:00",
-    "mem" = "0" # special: all mem on node
+    "time" = "04:00:00",
+    "mem" = 0
   )
 )
 ```
@@ -650,38 +673,40 @@ This step will run the simulations and save the result to `output_dir` using the
 following format: `paste0("sim__", scenario[["id"]], "__", batch_num, ".rds")`.
 
 As we are running the simulations on 32 core machines, each scenario will be run
-over 16 batches, with the last one containing only 20 simulations to get to the
-desired 500. `(15 * 32 + 200 == 500)`.
+over 4 batches, with the last one containing only 24 simulations to get to the
+desired 120. `(3 * 32 + 24 == 120)`.
 
-*NOTE*:
-The `max_array_size` argument allow us to constrain how many runs
-could be submitted as once. On RSPH one is limited to around 1000 job submission
+*NOTE*: The `max_array_size` argument allow us to constrain how many runs could
+be submitted as once. On RSPH HPC one is limited to around 1000 job submission
 at a time. Trying to submit more will result on SLURM rejecting all the jobs.
-To prevent this, `step_tmpl_map_script` will split the job into parts that will
-be submitted one after the other. If the length of `scenarios.list` was 3 000,
-`max_array_size = 500` would split it in 6 parts were each part would not be
-submitted before the previous one is over.
+To prevent this, `slurmworkflow` will split the job into parts that will be
+submitted automatically one after the other. If the length of `scenarios_list`
+was 3 000, `max_array_size = 500` would split it in 6 parts were each part
+would not be submitted before the previous one is over.
 
 #### Addition of the *processing* Step
 
 Now that all the batches have been run we will process them and create a small
-summary `data.frame` to be downloaded and evaluated locally.
+summary `tibble` to be downloaded and evaluated locally.
 
-We return to `step_tmpl_do_call_script` as this steps.
+We return to `step_tmpl_do_call_script` for this steps.
 
 ```{r wf_2_process, eval = FALSE}
+# Process calibrations
+#
+# produce a data frame with the calibration targets for each scenario
 wf <- add_workflow_step(
   wf_summary = wf,
   step_tmpl = step_tmpl_do_call_script(
-    r_script = "R/12-calibration_process.R",
+    r_script = "./R/41-intervention_scenarios_process.R",
     args = list(
-      ncores = 16,
-      nsteps = 52
+      context = "hpc",
+      ncores = 15
     ),
     setup_lines = hpc_configs$r_loader
   ),
   sbatch_opts = list(
-    "cpus-per-task" = 16,
+    "cpus-per-task" = max_cores,
     "time" = "04:00:00",
     "mem-per-cpu" = "4G",
     "mail-type" = "END"
@@ -691,26 +716,38 @@ wf <- add_workflow_step(
 
 The arguments we pass to the script are `ncores`, how many cores to use as this
 step will process the files in parallel using the [`future.apply`
-package](https://future.apply.futureverse.org/), and `nsteps`, over how many
-steps should the outcome be calculated. Here 52 means that we calculate the
-outcomes over the last 52 weeks of each simulation.
+package](https://future.apply.futureverse.org/), and `context = "hpc"` as
+before.
 
-This script will save a single file: "data/output/calib/assessments.rds"
+This script will save two file:
+1. "data/intermediate/scenarios/assessments_raws.rds"
+2. "data/intermediate/scenarios/assessments.rds"
+
+See the script itself to see what it does.
 
 ### Using the "calibration" *workflow* on the RSPH HPC
 
 We send the *workflow* as before with:
 
-`$ scp -r workflows/calibration <user>@clogin01.sph.emory.edu:projects/BigNets/workflows/`
+```
+# bash - local
+scp -r workflows/intervention_scenarios <user>@clogin01.sph.emory.edu:projects/EpiModelHIV-Template/workflows/
+```
 
 run it from our project directory on the HPC with:
 
-`$ ./workflows/calibration/start_workflow.sh`
+```
+# bash - hpc
+./workflows/intervention_scenarios/start_workflow.sh
+```
 
 and finally we download the results for evaluation:
 
-`$ scp <user>@clogin01.sph.emory.edu:projects/BigNets/data/output/calib/assessments data/output/calib/`
+```
+# bash - local
+scp -r <user>@clogin01.sph.emory.edu:projects/EpiModelHIV-Template/data/intermediate/scenarios/assessments_raws.rds data/intermediate/calibration/
+scp -r <user>@clogin01.sph.emory.edu:projects/EpiModelHIV-Template/data/intermediate/scenarios/assessments_raws.rds data/intermediate/scenarios/
+```
 
-We can now run the R script "13-calibration_eval.R" to find the best set of
-parameters.
+We can now use these files as we please locally.
 
