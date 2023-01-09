@@ -240,7 +240,7 @@ get_scenarios_batches_infos <- function(scenario_dir) {
     regexp = "/sim__.*rds$",
     type = "file"
   )
-
+# nolint start
   parts <- dplyr::tibble(
     file_name = file_name_list,
     simple_name = fs::path_ext_remove(file_name)
@@ -250,4 +250,5 @@ get_scenarios_batches_infos <- function(scenario_dir) {
     parts, simple_name, sep = "__", remove = TRUE,
     into = c(NA, "scenario_name", "batch_number")
   )
+# nolint end
 }
