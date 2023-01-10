@@ -1,5 +1,8 @@
 context("Network model with scenarios")
 
+output_dir <- "testscen_dir"
+if (!dir.exists(output_dir)) dir.create(output_dir)
+
 test_that("SIS with scenarios", {
   set.seed(10)
 
@@ -14,7 +17,6 @@ test_that("SIS with scenarios", {
   control <- control.net(type = "SIS", nsims = 1, nsteps = 2, verbose = FALSE)
   init <- init.net(i.num = 10)
 
-  output_dir <- "testscen_dir"
   saveRDS(est, paste0(output_dir, "/est.rds"))
 
   scenarios.df <- dplyr::tribble(
