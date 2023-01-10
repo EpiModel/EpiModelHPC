@@ -531,7 +531,7 @@ Here we will define a 3 steps workflow:
 
 ### Defining the "calibration" *workflow*
 
-The script "R/workflow_06-intervention_scenario.R" is responsible of the
+The script "R/workflow_05-intervention_scenario.R" is responsible of the
 creation of this *workflow*.
 
 #### Setup, Creation and `renv::restore`
