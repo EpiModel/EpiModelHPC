@@ -529,7 +529,7 @@ Here we will define a 3 steps workflow:
 2. a set `nrep` replications of each scenario.
 3. a processing step.
 
-### Defining the "calibration" *workflow*
+### Defining the "intervention_scenarios" *workflow*
 
 The script "R/workflow_05-intervention_scenario.R" is responsible of the
 creation of this *workflow*.
@@ -725,7 +725,7 @@ This script will save two file:
 
 See the script itself to see what it does.
 
-### Using the "calibration" *workflow* on the RSPH HPC
+### Using the "intervention_scenarios" *workflow* on the RSPH HPC
 
 We send the *workflow* as before with:
 
