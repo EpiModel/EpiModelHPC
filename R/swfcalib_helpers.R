@@ -101,3 +101,14 @@ netsim_swfcalib_output <- function(path_to_x, param, init, control,
     callr::r(do.call, args = list(netsim_run_swfcalib_scenario, args), show = TRUE)
   }
 }
+
+#' @export
+swfcalib_proposal_to_scenario <- function(proposal) {
+  scenario_df <- proposal
+  scenario_df[[".scenario.id"]] <- scenario_df[[".proposal_index"]]
+  scenario_df[[".at"]] <- 1
+  scenario_df[[".proposal_index"]] <- NULL
+  scenario_df[[".wave"]] <- NULL
+  scenario_df[[".iteration"]] <- NULL
+  EpiModel::create_scenario_list(scenario_df)[[1]]
+}
