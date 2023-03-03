@@ -2,10 +2,10 @@
 % Please edit documentation in R/swfcalib_helpers.R
 \name{step_tmpl_netsim_swfcalib_output}
 \alias{step_tmpl_netsim_swfcalib_output}
-\title{Step template to run sims with the result of an `swfcalib` calibration}
+\title{Step template to run sims with the result of an \code{swfcalib} calibration}
 \usage{
 step_tmpl_netsim_swfcalib_output(
-  x,
+  path_to_x,
   param,
   init,
   control,
@@ -20,9 +20,8 @@ step_tmpl_netsim_swfcalib_output(
 )
 }
 \arguments{
-\item{x}{Fitted network model object, as an object of class \code{netest}.
-Alternatively, if restarting a previous simulation, may be an object
-of class \code{netsim}.}
+\item{path_to_x}{Path to a Fitted network model object saved with \code{saveRDS}.
+(See the \code{x} argument to the \code{EpiModel::netsim} function)}
 
 \item{param}{Model parameters, as an object of class \code{param.net}.}
 
@@ -43,11 +42,12 @@ of class \code{netsim}.}
 required for the model to run. (e.g. EpiModelHIV or EpiModelCOVID)}
 
 \item{save_pattern}{A character vector of what should be kept in the final
-`netsim` objects. It can contain the names of the elements as well as:
+\code{netsim} objects. It can contain the names of the elements as well as:
 "simple" (defautlt) to only keep "epi", "param" and "control"; "restart" to
 get the elements required to restart from such file; "all" to not trim the
-object at all. `c("simple", "el.cuml")` is an example of a valid pattern to
-save "epi", "param", "control" and "el.cuml".}
+object at all. \code{c("simple", "el.cuml")} is an example of a valid pattern to
+save "epi", "param", "control" and "el.cuml". If \code{control$raw.output} is
+\code{TRUE}, this parameter has no effect and the full result is saved.}
 
 \item{setup_lines}{(optional) a vector of bash lines to be run first.
 This can be used to load the required modules (like R, python, etc).}
@@ -60,12 +60,12 @@ allowed to submit to slurm on your HPC.}
 a template function to be used by \code{add_workflow_step}
 }
 \description{
-Step template to run sims with the result of an `swfcalib` calibration
+Step template to run sims with the result of an \code{swfcalib} calibration
 }
 \section{Checkpointing}{
 
-This function takes care of editing `.checkpoint.dir` to create unique sub
-directories for each scenario. The `EpiModel::control.net` way of setting up
+This function takes care of editing \code{.checkpoint.dir} to create unique sub
+directories for each scenario. The \code{EpiModel::control.net} way of setting up
 checkpoints can be used transparently.
 }
 

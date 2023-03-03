@@ -2,12 +2,12 @@
 % Please edit documentation in R/swfcalib_helpers.R
 \name{netsim_run_swfcalib_scenario}
 \alias{netsim_run_swfcalib_scenario}
-\title{Run one `netsim` call with the result of an `swfcalib` calibration}
+\title{Run one \code{netsim} call with the result of an \code{swfcalib} calibration}
 \usage{
 netsim_run_swfcalib_scenario(
   calib_object,
   batch_num,
-  x,
+  path_to_x,
   param,
   init,
   control,
@@ -26,9 +26,8 @@ netsim_run_swfcalib_scenario(
 \item{batch_num}{The batch number, calculated from the number of replications
 and CPUs required.}
 
-\item{x}{Fitted network model object, as an object of class \code{netest}.
-Alternatively, if restarting a previous simulation, may be an object
-of class \code{netsim}.}
+\item{path_to_x}{Path to a Fitted network model object saved with \code{saveRDS}.
+(See the \code{x} argument to the \code{EpiModel::netsim} function)}
 
 \item{param}{Model parameters, as an object of class \code{param.net}.}
 
@@ -42,18 +41,18 @@ required for the model to run. (e.g. EpiModelHIV or EpiModelCOVID)}
 
 \item{output_dir}{The folder where the simulation files are to be stored.}
 
-\item{n_batch}{The number of batches to be run `ceiling(n_rep / n_cores)`.}
+\item{n_batch}{The number of batches to be run \code{ceiling(n_rep / n_cores)}.}
 
 \item{n_rep}{The number of replication to be run for each scenario.}
 
 \item{n_cores}{number of cores to run the processing on}
 
 \item{save_all}{A flag instructing to save the result of the
-`EpiModel::netsim` call as is if TRUE.}
+\code{EpiModel::netsim} call as is if TRUE.}
 
 \item{save_elements}{A character vector of elements to keep from the
-`netsim` object if `save_all` is `FALSE`}
+\code{netsim} object if \code{save_all} is \code{FALSE}}
 }
 \description{
-Run one `netsim` call with the result of an `swfcalib` calibration
+Run one \code{netsim} call with the result of an \code{swfcalib} calibration
 }

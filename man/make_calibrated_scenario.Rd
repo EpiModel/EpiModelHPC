@@ -2,7 +2,7 @@
 % Please edit documentation in R/swfcalib_helpers.R
 \name{make_calibrated_scenario}
 \alias{make_calibrated_scenario}
-\title{Make an EpiModel scenario using the result of an `swfcalib` calibration}
+\title{Make an EpiModel scenario using the result of an \code{swfcalib} calibration}
 \usage{
 make_calibrated_scenario(calib_object)
 }
@@ -10,5 +10,5 @@ make_calibrated_scenario(calib_object)
 \item{calib_object}{a formatted calibration object}
 }
 \description{
-Make an EpiModel scenario using the result of an `swfcalib` calibration
+Make an EpiModel scenario using the result of an \code{swfcalib} calibration
 }

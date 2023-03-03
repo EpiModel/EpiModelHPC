@@ -2,7 +2,7 @@
 % Please edit documentation in R/netsim_scenarios.R
 \name{netsim_run_one_scenario}
 \alias{netsim_run_one_scenario}
-\title{Run one `netsim` call with a scenario and saves the results deterministically}
+\title{Run one \code{netsim} call with a scenario and saves the results deterministically}
 \usage{
 netsim_run_one_scenario(
   scenario,
@@ -21,13 +21,13 @@ netsim_run_one_scenario(
 )
 }
 \arguments{
-\item{scenario}{A single "`EpiModel` scenario" to be used in the simulation}
+\item{scenario}{A single "\code{EpiModel} scenario" to be used in the simulation}
 
 \item{batch_num}{The batch number, calculated from the number of replications
 and CPUs required.}
 
-\item{path_to_x}{Path to a Fitted network model object saved with `saveRDS`.
-(See the `x` argument to the `EpiModel::netsim` function)}
+\item{path_to_x}{Path to a Fitted network model object saved with \code{saveRDS}.
+(See the \code{x} argument to the \code{EpiModel::netsim} function)}
 
 \item{param}{Model parameters, as an object of class \code{param.net}.}
 
@@ -41,26 +41,26 @@ required for the model to run. (e.g. EpiModelHIV or EpiModelCOVID)}
 
 \item{output_dir}{The folder where the simulation files are to be stored.}
 
-\item{n_batch}{The number of batches to be run `ceiling(n_rep / n_cores)`.}
+\item{n_batch}{The number of batches to be run \code{ceiling(n_rep / n_cores)}.}
 
 \item{n_rep}{The number of replication to be run for each scenario.}
 
 \item{n_cores}{The number of CPUs on which the simulations will be run.}
 
 \item{save_all}{A flag instructing to save the result of the
-`EpiModel::netsim` call as is if TRUE.}
+\code{EpiModel::netsim} call as is if TRUE.}
 
 \item{save_elements}{A character vector of elements to keep from the
-`netsim` object if `save_all` is `FALSE`}
+\code{netsim} object if \code{save_all} is \code{FALSE}}
 }
 \description{
-This inner function is called by `netsim_scenarios` and
-`step_tmpl_netsim_scenarios`.
+This inner function is called by \code{netsim_scenarios} and
+\code{step_tmpl_netsim_scenarios}.
 }
 \section{Checkpointing}{
 
-This function takes care of editing `.checkpoint.dir` to create unique sub
-directories for each scenario. The `EpiModel::control.net` way of setting up
+This function takes care of editing \code{.checkpoint.dir} to create unique sub
+directories for each scenario. The \code{EpiModel::control.net} way of setting up
 checkpoints can be used transparently.
 }
 
