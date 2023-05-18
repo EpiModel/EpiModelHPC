@@ -18,14 +18,16 @@ netest_par(
 )
 }
 \arguments{
-\item{nw}{An object of class \code{network}.}
+\item{nw}{An object of class \code{network} or \code{egor}, with the latter
+indicating an \code{ergm.ego} fit.}
 
 \item{formation}{Right-hand sided STERGM formation formula in the form
 \code{~edges + ...}, where \code{...} are additional network
 statistics.}
 
 \item{target.stats}{Vector of target statistics for the formation model, with
-one number for each network statistic in the model.}
+one number for each network statistic in the model.  Ignored if
+fitting via \code{ergm.ego}.}
 
 \item{coef.diss}{An object of class \code{disscoef} output from the
 \code{\link[EpiModel]{dissolution_coefs}} function.}
@@ -39,7 +41,9 @@ formula.}
 
 \item{edapprox}{If \code{TRUE}, use the indirect edges dissolution
 approximation  method for the dynamic model fit, otherwise use the
-more time-intensive full STERGM estimation (see details).}
+more time-intensive full STERGM estimation (see details).  For
+\code{nw} of class \code{egor}, only \code{edapprox = TRUE} is
+supported.}
 
 \item{set.control.ergm}{Control arguments passed to \code{ergm} (see
 details).}

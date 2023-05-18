@@ -7,16 +7,16 @@
 get_scenarios_batches_infos(scenario_dir)
 }
 \arguments{
-\item{scenario_dir}{the directory where `netsim_scenarios` saved it's
+\item{scenario_dir}{the directory where \code{netsim_scenarios} saved it's
 simulations.}
 }
 \value{
-a `tibble` with three columns: `file_name` - the full paths of
-the simulation file, `scenario_name` the associated scenario name,
-`batch_number` the associated batch number.
+a \code{tibble} with three columns: \code{file_name} - the full paths of
+the simulation file, \code{scenario_name} the associated scenario name,
+\code{batch_number} the associated batch number.
 }
 \description{
 This function returns the list of simulation files and the corresponding
 scenario name and batch number present in a given directory. It is meant to
-be used after `netsim_scenarios` or `step_tmpl_netsim_scenarios`.
+be used after \code{netsim_scenarios} or \code{step_tmpl_netsim_scenarios}.
 }
