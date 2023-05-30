@@ -317,7 +317,7 @@ merge_netsim_scenarios_tibble <- function(sim_dir, output_dir, steps_to_keep,
   for (scenario in unique(batches_infos$scenario_name)) {
     scenario_infos <- dplyr::filter(batches_infos, scenario_name == scenario)
 
-    df_list <- future::future_lapply(
+    df_list <- future.apply::future_lapply(
       seq_len(nrow(scenario_infos)),
       function(i) {
         sc_inf <- scenario_infos[i, ]
