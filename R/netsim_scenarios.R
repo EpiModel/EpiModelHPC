@@ -345,7 +345,7 @@ merge_netsim_scenarios_tibble <- function(sim_dir, output_dir, steps_to_keep,
 #' @export
 step_tmpl_merge_scenarios_tbl <- function(sim_dir, output_dir, steps_to_keep,
                                           cols = dplyr::everything(),
-                                          ncores = 1) {
+                                          ncores = 1, setup_lines = NULL) {
   merge_fun <- function(sim_dir, output_dir, steps_to_keep, cols, ncores) {
     future::plan("multicore", workers = ncores)
     EpiModelHPC::merge_netsim_scenarios_tibble(
@@ -359,6 +359,7 @@ step_tmpl_merge_scenarios_tbl <- function(sim_dir, output_dir, steps_to_keep,
 
   slurmworkflow::step_tmpl_do_call(
     what = merge_fun,
-    args = list(sim_dir, output_dir, steps_to_keep, rlang::quo(cols))
+    args = list(sim_dir, output_dir, steps_to_keep, rlang::quo(cols)),
+    setup_lines = setup_lines
   )
 }
