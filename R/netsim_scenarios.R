@@ -352,8 +352,7 @@ step_tmpl_merge_scenarios_tbl <- function(sim_dir, output_dir, steps_to_keep,
       sim_dir = sim_dir,
       output_dir = output_dir,
       steps_to_keep = steps_to_keep,
-      cols = {{ cols }},
-      ncores = ncores
+      cols = {{ cols }}
     )
 
   }
