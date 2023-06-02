@@ -355,14 +355,13 @@ step_tmpl_merge_scenarios_tbl <- function(sim_dir, output_dir, steps_to_keep,
       sim_dir = sim_dir,
       output_dir = output_dir,
       steps_to_keep = steps_to_keep,
-      cols = rlang::enquo(cols)
+      cols = {{ cols }}
     )
-
   }
 
   slurmworkflow::step_tmpl_do_call(
     what = merge_fun,
-    args = list(sim_dir, output_dir, steps_to_keep, rlang::quo(cols), n_cores),
+    args = list(sim_dir, output_dir, steps_to_keep, rlang::enquo(cols), n_cores),
     setup_lines = setup_lines
   )
 }
