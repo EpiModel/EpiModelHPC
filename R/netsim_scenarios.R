@@ -341,3 +341,24 @@ merge_netsim_scenarios_tibble <- function(sim_dir, output_dir, steps_to_keep,
     saveRDS(df_sc, fs::path(output_dir, paste0("df__", scenario, ".rds")))
   }
 }
+
+#' @export
+step_tmpl_merge_scenarios_tbl <- function(sim_dir, output_dir, steps_to_keep,
+                                          cols = dplyr::everything(),
+                                          ncores = 1) {
+  merge_fun <- function(sim_dir, output_dir, steps_to_keep, cols, ncores) {
+    future::plan("multicore", workers = ncores)
+    EpiModelHPC::merge_netsim_scenarios_tibble(
+      sim_dir = sim_dir,
+      output_dir = output_dir,
+      steps_to_keep = steps_to_keep,
+      cols = {{ cols }}
+    )
+
+  }
+
+  slurmworkflow::step_tmpl_do_call(
+    what = merge_fun,
+    args = list(sim_dir, output_dir, steps_to_keep, rlang::quo(cols))
+  )
+}
