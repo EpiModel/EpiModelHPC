@@ -342,13 +342,20 @@ merge_netsim_scenarios_tibble <- function(sim_dir, output_dir, steps_to_keep,
   }
 }
 
+#' Step Template to Create a Single Sim File per Scenarios Using the Files From
+#' `netsim_scenarios`
+#'
 #' @inheritParams slurmworkflow::step_tmpl_map
 #' @inheritParams merge_netsim_scenarios
 #'
+#' @inherit slurmworkflow::step_tmpl_rscript return
+#' @inheritSection slurmworkflow::step_tmpl_bash_lines Step Template
+#'
 #' @export
-step_tmpl_merge_scenarios_tbl <- function(sim_dir, output_dir, steps_to_keep,
-                                          cols = dplyr::everything(),
-                                          n_cores = 1, setup_lines = NULL) {
+step_tmpl_merge_netsim_scenarios_tibble <- function(
+                      sim_dir, output_dir, steps_to_keep,
+                      cols = dplyr::everything(), n_cores = 1,
+                      setup_lines = NULL) {
   merge_fun <- function(sim_dir, output_dir, steps_to_keep, cols, n_cores) {
     future::plan("multicore", workers = n_cores)
     EpiModelHPC::merge_netsim_scenarios_tibble(
