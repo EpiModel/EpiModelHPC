@@ -263,7 +263,6 @@ get_scenarios_batches_infos <- function(scenario_dir) {
 #'
 #' @inheritParams EpiModel::merge.netsim
 #'
-#' @export
 merge_netsim_scenarios <- function(sim_dir, output_dir,
                                    keep.transmat = TRUE, keep.network = TRUE,
                                    keep.nwstats = TRUE, keep.other = TRUE,
