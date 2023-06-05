@@ -19,6 +19,15 @@ step_tmpl_merge_netsim_scenarios_tibble(
 
 \item{output_dir}{The folder where the merged files will be stored.}
 
+\item{steps_to_keep}{Numbers of time steps add the end of the simulation to
+keep in the \code{data.frame}.}
+
+\item{cols}{\if{html}{\out{<tidy-select>}} columns to keep in the \code{data.frame}. By default all
+columns are kept. And in any case, the \code{batch_number}, \code{sim} and \code{time}
+are always kept.}
+
+\item{n_cores}{Parallelize the process over \code{n_cores} (default = 1)}
+
 \item{setup_lines}{(optional) a vector of bash lines to be run first.
 This can be used to load the required modules (like R, python, etc).}
 }
