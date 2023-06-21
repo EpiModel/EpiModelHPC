@@ -20,9 +20,8 @@ netsim_run_swfcalib_scenario <- function(calib_object, batch_num,
 make_calibrated_scenario <- function(calib_object) {
   calib_object <- swfcalib:::load_calib_object(calib_object)
   calibrated_scenario <- swfcalib:::get_default_proposal(calib_object)
-  calibrated_scenario[[".at"]] <- 1
-  calibrated_scenario[[".scenario.id"]] <- "calibrated"
-  EpiModel::create_scenario_list(calibrated_scenario)[[1]]
+  proposal <- swfcalib_proposal_to_scenario(calibrated_scenario)
+  EpiModel::create_scenario_list(proposal)[[1]]
 }
 
 
