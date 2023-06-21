@@ -137,7 +137,8 @@ make_save_elements <- function(save_pattern) {
     need_restart <- c(
       "param", "control", "epi",
       "nwparam", "attr", "temp",
-      "el", "el.cuml", "_last_unique_id"
+      "el", "el.cuml", "_last_unique_id",
+      "coef.form", "num.nw", "el", "network"
     )
     save_elements <- union(save_elements, need_restart)
     save_elements <- setdiff(save_elements, "restart")
@@ -251,4 +252,179 @@ get_scenarios_batches_infos <- function(scenario_dir) {
     into = c(NA, "scenario_name", "batch_number")
   )
 # nolint end
+}
+
+
+#' Create a Single Sim File per Scenarios Using the Files From
+#' `netsim_scenarios`
+#'
+#' @param sim_dir The folder where the simulation files are to be stored.
+#' @param output_dir The folder where the merged files will be stored.
+#'
+#' @inheritParams EpiModel::merge.netsim
+#' @inheritParams EpiModel::truncate_sim
+#'
+#' @export
+merge_netsim_scenarios <- function(sim_dir, output_dir,
+                                   keep.transmat = TRUE, keep.network = TRUE,
+                                   keep.nwstats = TRUE, keep.other = TRUE,
+                                   param.error = FALSE, keep.diss.stats = TRUE,
+                                   truncate.at = NULL) {
+
+  if (!fs::dir_exists(output_dir)) fs::dir_create(output_dir)
+  batches_infos <- EpiModelHPC::get_scenarios_batches_infos(sim_dir)
+
+  future.apply::future_lapply(
+    unique(batches_infos$scenario_name),
+    function(scenario) {
+      scenario_infos <- dplyr::filter(batches_infos, scenario_name == scenario)
+      file_paths <- scenario_infos$file_name
+      for (j in seq_along(file_paths)) {
+        current <- readRDS(file_paths[j])
+        if (!is.null(truncate.at)) {
+          current <- EpiModel::truncate_sim(current, truncate.at)
+        }
+
+        if (j == 1) {
+          merged <- current
+        } else {
+          merged <- merge(
+            merged, current,
+            keep.transmat = keep.transmat,
+            keep.network = keep.network,
+            keep.nwstats = keep.nwstats,
+            keep.other = keep.other,
+            param.error = param.error,
+            keep.diss.stats = keep.diss.stats
+          )
+        }
+
+        saveRDS(
+          merged,
+          fs::path(output_dir, paste0("merged__", scenario, ".rds"))
+        )
+      }
+  })
+}
+
+#' Step Template to Create a Single Sim File per Scenarios Using the Files From
+#' `netsim_scenarios`
+#'
+#' @param n_cores Parallelize the process over `n_cores` (default = 1)
+#'
+#' @inheritParams slurmworkflow::step_tmpl_map
+#' @inheritParams merge_netsim_scenarios
+#'
+#' @inherit slurmworkflow::step_tmpl_rscript return
+#' @inheritSection slurmworkflow::step_tmpl_bash_lines Step Template
+#'
+#' @export
+step_tmpl_merge_netsim_scenarios <- function(sim_dir, output_dir,
+                                             keep.transmat = TRUE,
+                                             keep.network = TRUE,
+                                             keep.nwstats = TRUE,
+                                             keep.other = TRUE,
+                                             param.error = FALSE,
+                                             keep.diss.stats = TRUE,
+                                             truncate.at = NULL, n_cores = 1,
+                                             setup_lines = NULL) {
+
+  merge_fun <- function(sim_dir, output_dir, keep.transmat, keep.network,
+                        keep.nwstats, keep.other, param.error, keep.diss.stats,
+                        truncate.at, n_cores) {
+    future::plan("multicore", workers = n_cores)
+    EpiModelHPC::merge_netsim_scenarios(
+      sim_dir, output_dir,
+      keep.transmat, keep.network, keep.nwstats, keep.other, keep.diss.stats,
+      param.error, truncate.at
+    )
+  }
+
+  slurmworkflow::step_tmpl_do_call(
+    what = merge_fun,
+    args = list(
+      sim_dir, output_dir,
+      keep.transmat, keep.network, keep.nwstats, keep.other, keep.diss.stats,
+      param.error, truncate.at, n_cores),
+    setup_lines = setup_lines
+  )
+}
+
+#' Create a Single Sim File per Scenarios Using the Files From
+#' `netsim_scenarios`
+#'
+#' @param steps_to_keep Numbers of time steps add the end of the simulation to
+#'   keep in the `data.frame`.
+#' @param cols <tidy-select> columns to keep in the `data.frame`. By default all
+#'    columns are kept. And in any case, the `batch_number`, `sim` and `time`
+#'    are always kept.
+#'
+#' @inheritParams merge_netsim_scenarios
+#'
+#' @export
+merge_netsim_scenarios_tibble <- function(sim_dir, output_dir, steps_to_keep,
+                                          cols = dplyr::everything()) {
+  expr <- rlang::enquo(cols)
+  if (!fs::dir_exists(output_dir)) fs::dir_create(output_dir)
+  batches_infos <- EpiModelHPC::get_scenarios_batches_infos(sim_dir)
+
+  for (scenario in unique(batches_infos$scenario_name)) {
+    scenario_infos <- dplyr::filter(batches_infos, scenario_name == scenario)
+
+    df_list <- future.apply::future_lapply(
+      seq_len(nrow(scenario_infos)),
+      function(i) {
+        sc_inf <- scenario_infos[i, ]
+        d <- readRDS(sc_inf$file_name) |>
+          dplyr::as_tibble() |>
+          dplyr::filter(time >= max(time) - steps_to_keep)
+
+        d_fix <- dplyr::select(d, sim, time)
+        d_var <- dplyr::select(d, -c(sim, time))
+
+        pos <- tidyselect::eval_select(expr, data = d_var)
+        d_var <- rlang::set_names(d_var[pos], names(pos))
+
+        dplyr::bind_cols(d_fix, d_var) |>
+          dplyr::mutate(,
+            batch_number = sc_inf$batch_number) |>
+          dplyr::select(batch_number, sim, time, dplyr::everything())
+      }
+    )
+    df_sc <- dplyr::bind_rows(df_list)
+    saveRDS(df_sc, fs::path(output_dir, paste0("df__", scenario, ".rds")))
+  }
+}
+
+#' Step Template to Create a Single Sim File per Scenarios Using the Files From
+#' `netsim_scenarios`
+#'
+#' @param n_cores Parallelize the process over `n_cores` (default = 1)
+#'
+#' @inheritParams slurmworkflow::step_tmpl_map
+#' @inheritParams merge_netsim_scenarios_tibble
+#'
+#' @inherit slurmworkflow::step_tmpl_rscript return
+#' @inheritSection slurmworkflow::step_tmpl_bash_lines Step Template
+#'
+#' @export
+step_tmpl_merge_netsim_scenarios_tibble <- function(
+                      sim_dir, output_dir, steps_to_keep,
+                      cols = dplyr::everything(), n_cores = 1,
+                      setup_lines = NULL) {
+  merge_fun <- function(sim_dir, output_dir, steps_to_keep, cols, n_cores) {
+    future::plan("multicore", workers = n_cores)
+    EpiModelHPC::merge_netsim_scenarios_tibble(
+      sim_dir = sim_dir,
+      output_dir = output_dir,
+      steps_to_keep = steps_to_keep,
+      cols = {{ cols }}
+    )
+  }
+
+  slurmworkflow::step_tmpl_do_call(
+    what = merge_fun,
+    args = list(sim_dir, output_dir, steps_to_keep, rlang::enquo(cols), n_cores),
+    setup_lines = setup_lines
+  )
 }
