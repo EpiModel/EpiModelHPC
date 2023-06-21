@@ -79,8 +79,8 @@ Step Templates are helper functions to be used within \code{add_workflow_step}.
 Some basic ones are provided by the \code{slurmworkflow} package. They instruct
 the workflow to run either a bash script, a set of bash lines given as a
 character vector or an R script.
-Additional Step Templates can be created to simplify specific tasks, see the
-\code{vignette("making-a-custom-step-template")} for details.
+Additional Step Templates can be created to simplify specific tasks. The
+easiest way to do so is as wrappers around existing templates.
 
 }
 
