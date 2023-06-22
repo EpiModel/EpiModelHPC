@@ -16,7 +16,7 @@ URL: http://epimodel.org/
 BugReports: https://github.com/EpiModel/EpiModelHPC/issues
 Depends:
     R (>= 4.1),
-    EpiModel (>= 2.3.0)
+    EpiModel (>= 2.2.0)
 Imports:
     dplyr,
     tidyr,
