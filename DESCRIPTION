@@ -15,8 +15,8 @@ License: GPL-3
 URL: http://epimodel.org/
 BugReports: https://github.com/EpiModel/EpiModelHPC/issues
 Depends:
-    R (>= 4.0),
-    EpiModel (>= 2.2)
+    R (>= 4.1),
+    EpiModel (>= 2.3.0)
 Imports:
     dplyr,
     tidyr,
@@ -24,6 +24,10 @@ Imports:
     foreach,
     ergm,
     fs,
+    future,
+    future.apply,
+    rlang,
+    tidyselect,
     tergm,
     stringr,
     slurmworkflow,

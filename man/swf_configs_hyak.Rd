@@ -7,7 +7,7 @@
 swf_configs_hyak(
   hpc = "klone",
   partition = "csde",
-  r_version = "4.1.0",
+  r_version = "4.2.2",
   mail_user = NULL
 )
 }

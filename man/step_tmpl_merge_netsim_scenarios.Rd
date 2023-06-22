@@ -48,6 +48,8 @@ params (in \code{\link[EpiModel]{param.net}}) or controls (passed in
 \item{keep.diss.stats}{If \code{TRUE}, keep \code{diss.stats} from the
 original \code{x} and \code{y} objects.}
 
+\item{truncate.at}{Time step at which to left-truncate the time series.}
+
 \item{n_cores}{Parallelize the process over \code{n_cores} (default = 1)}
 
 \item{setup_lines}{(optional) a vector of bash lines to be run first.
