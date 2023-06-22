@@ -385,8 +385,8 @@ merge_netsim_scenarios_tibble <- function(sim_dir, output_dir, steps_to_keep,
           dplyr::as_tibble() |>
           dplyr::filter(.data$time >= max(.data$time) - steps_to_keep)
 
-        d_fix <- dplyr::select(d, sim, time)
-        d_var <- dplyr::select(d, -c(sim, time))
+        d_fix <- dplyr::select(d, "sim", "time")
+        d_var <- dplyr::select(d, -c("sim", "time"))
 
         pos <- tidyselect::eval_select(expr, data = d_var)
         d_var <- rlang::set_names(d_var[pos], names(pos))
@@ -394,7 +394,7 @@ merge_netsim_scenarios_tibble <- function(sim_dir, output_dir, steps_to_keep,
         dplyr::bind_cols(d_fix, d_var) |>
           dplyr::mutate(,
             batch_number = sc_inf$batch_number) |>
-          dplyr::select(batch_number, sim, time, dplyr::everything())
+          dplyr::select("batch_number", "sim", "time", dplyr::everything())
       }
     )
     df_sc <- dplyr::bind_rows(df_list)
