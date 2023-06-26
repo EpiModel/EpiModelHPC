@@ -20,8 +20,8 @@ step_tmpl_netsim_scenarios(
 )
 }
 \arguments{
-\item{path_to_x}{Path to a Fitted network model object saved with `saveRDS`.
-(See the `x` argument to the `EpiModel::netsim` function)}
+\item{path_to_x}{Path to a Fitted network model object saved with \code{saveRDS}.
+(See the \code{x} argument to the \code{EpiModel::netsim} function)}
 
 \item{param}{Model parameters, as an object of class \code{param.net}.}
 
@@ -43,12 +43,12 @@ step_tmpl_netsim_scenarios(
 required for the model to run. (e.g. EpiModelHIV or EpiModelCOVID)}
 
 \item{save_pattern}{A character vector of what should be kept in the final
-`netsim` objects. It can contain the names of the elements as well as:
+\code{netsim} objects. It can contain the names of the elements as well as:
 "simple" (defautlt) to only keep "epi", "param" and "control"; "restart" to
 get the elements required to restart from such file; "all" to not trim the
-object at all. `c("simple", "el.cuml")` is an example of a valid pattern to
-save "epi", "param", "control" and "el.cuml". If `control$raw.output` is
-`TRUE`, this parameter has no effect and the full result is saved.}
+object at all. \code{c("simple", "el.cuml")} is an example of a valid pattern to
+save "epi", "param", "control" and "el.cuml". If \code{control$raw.output} is
+\code{TRUE}, this parameter has no effect and the full result is saved.}
 
 \item{setup_lines}{(optional) a vector of bash lines to be run first.
 This can be used to load the required modules (like R, python, etc).}
@@ -61,14 +61,14 @@ allowed to submit to slurm on your HPC.}
 a template function to be used by \code{add_workflow_step}
 }
 \description{
-This step template is similar to `netsim_scenarios` but for the HPC. It uses
-`slurmworkflow::step_tmpl_map` internally and should be used as any
-`slurmworkflow` step. For details, see `netsim_scenarios` documentation.
+This step template is similar to \code{netsim_scenarios} but for the HPC. It uses
+\code{slurmworkflow::step_tmpl_map} internally and should be used as any
+\code{slurmworkflow} step. For details, see \code{netsim_scenarios} documentation.
 }
 \section{Checkpointing}{
 
-This function takes care of editing `.checkpoint.dir` to create unique sub
-directories for each scenario. The `EpiModel::control.net` way of setting up
+This function takes care of editing \code{.checkpoint.dir} to create unique sub
+directories for each scenario. The \code{EpiModel::control.net} way of setting up
 checkpoints can be used transparently.
 }
 
@@ -79,8 +79,8 @@ Step Templates are helper functions to be used within \code{add_workflow_step}.
 Some basic ones are provided by the \code{slurmworkflow} package. They instruct
 the workflow to run either a bash script, a set of bash lines given as a
 character vector or an R script.
-Additional Step Templates can be created to simplify specific tasks, see the
-\code{vignette("making-a-custom-step-template")} for details.
+Additional Step Templates can be created to simplify specific tasks. The
+easiest way to do so is as wrappers around existing templates.
 
 }
 

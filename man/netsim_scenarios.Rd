@@ -18,8 +18,8 @@ netsim_scenarios(
 )
 }
 \arguments{
-\item{path_to_x}{Path to a Fitted network model object saved with `saveRDS`.
-(See the `x` argument to the `EpiModel::netsim` function)}
+\item{path_to_x}{Path to a Fitted network model object saved with \code{saveRDS}.
+(See the \code{x} argument to the \code{EpiModel::netsim} function)}
 
 \item{param}{Model parameters, as an object of class \code{param.net}.}
 
@@ -41,30 +41,30 @@ netsim_scenarios(
 required for the model to run. (e.g. EpiModelHIV or EpiModelCOVID)}
 
 \item{save_pattern}{A character vector of what should be kept in the final
-`netsim` objects. It can contain the names of the elements as well as:
+\code{netsim} objects. It can contain the names of the elements as well as:
 "simple" (defautlt) to only keep "epi", "param" and "control"; "restart" to
 get the elements required to restart from such file; "all" to not trim the
-object at all. `c("simple", "el.cuml")` is an example of a valid pattern to
-save "epi", "param", "control" and "el.cuml". If `control$raw.output` is
-`TRUE`, this parameter has no effect and the full result is saved.}
+object at all. \code{c("simple", "el.cuml")} is an example of a valid pattern to
+save "epi", "param", "control" and "el.cuml". If \code{control$raw.output} is
+\code{TRUE}, this parameter has no effect and the full result is saved.}
 }
 \description{
-This function will run `n_rep` replications of each scenarios in
-the `scenarios_list`. It runs them as multiple batches of up to
-`n_cores` simulations at a time. The simfiles are then stored in the
-`output_dir` folder and are named using the following pattern:
+This function will run \code{n_rep} replications of each scenarios in
+the \code{scenarios_list}. It runs them as multiple batches of up to
+\code{n_cores} simulations at a time. The simfiles are then stored in the
+\code{output_dir} folder and are named using the following pattern:
 "sim__name_of_scenario__2.rds". Where the last number is the batch number
 for this particular scenario. Each scenario is therefore run over
-`ceiling(n_rep / n_cores)` batches.
+\code{ceiling(n_rep / n_cores)} batches.
 This function is meant to mimic the behavior of
-`step_tmpl_netsim_scenarios` in your local machine. It should fail
+\code{step_tmpl_netsim_scenarios} in your local machine. It should fail
 in a similar fashion an reciprocally, if it runs correctly locally, moving
 to an HPC should not produce any issue.
 }
 \section{Checkpointing}{
 
-This function takes care of editing `.checkpoint.dir` to create unique sub
-directories for each scenario. The `EpiModel::control.net` way of setting up
+This function takes care of editing \code{.checkpoint.dir} to create unique sub
+directories for each scenario. The \code{EpiModel::control.net} way of setting up
 checkpoints can be used transparently.
 }
 

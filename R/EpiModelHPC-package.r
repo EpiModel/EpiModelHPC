@@ -33,6 +33,7 @@
 #' @import EpiModel doParallel foreach ergm tergm
 #' @importFrom utils read.table read.csv write.csv
 #' @importFrom stringr str_pad
+#' @importFrom rlang .data
 #' @docType package
 #' @keywords package
 #'

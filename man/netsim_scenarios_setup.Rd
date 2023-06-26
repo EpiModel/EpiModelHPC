@@ -2,7 +2,7 @@
 % Please edit documentation in R/netsim_scenarios.R
 \name{netsim_scenarios_setup}
 \alias{netsim_scenarios_setup}
-\title{Helper function to  create the parameters for `netsim_run_one_scenario`}
+\title{Helper function to  create the parameters for \code{netsim_run_one_scenario}}
 \usage{
 netsim_scenarios_setup(
   path_to_x,
@@ -18,8 +18,8 @@ netsim_scenarios_setup(
 )
 }
 \arguments{
-\item{path_to_x}{Path to a Fitted network model object saved with `saveRDS`.
-(See the `x` argument to the `EpiModel::netsim` function)}
+\item{path_to_x}{Path to a Fitted network model object saved with \code{saveRDS}.
+(See the \code{x} argument to the \code{EpiModel::netsim} function)}
 
 \item{param}{Model parameters, as an object of class \code{param.net}.}
 
@@ -41,16 +41,16 @@ netsim_scenarios_setup(
 required for the model to run. (e.g. EpiModelHIV or EpiModelCOVID)}
 
 \item{save_pattern}{A character vector of what should be kept in the final
-`netsim` objects. It can contain the names of the elements as well as:
+\code{netsim} objects. It can contain the names of the elements as well as:
 "simple" (defautlt) to only keep "epi", "param" and "control"; "restart" to
 get the elements required to restart from such file; "all" to not trim the
-object at all. `c("simple", "el.cuml")` is an example of a valid pattern to
-save "epi", "param", "control" and "el.cuml". If `control$raw.output` is
-`TRUE`, this parameter has no effect and the full result is saved.}
+object at all. \code{c("simple", "el.cuml")} is an example of a valid pattern to
+save "epi", "param", "control" and "el.cuml". If \code{control$raw.output} is
+\code{TRUE}, this parameter has no effect and the full result is saved.}
 }
 \value{
-a list of arguments for `netsim_run_one_scenario`
+a list of arguments for \code{netsim_run_one_scenario}
 }
 \description{
-Helper function to  create the parameters for `netsim_run_one_scenario`
+Helper function to  create the parameters for \code{netsim_run_one_scenario}
 }
