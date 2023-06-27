@@ -101,6 +101,11 @@ netsim_swfcalib_output <- function(path_to_x, param, init, control,
   }
 }
 
+#' Convert an swfcalib Proposal into an EpiModel Scenario
+#'
+#' @param proposal an swfcalib formatted proposal
+#' @return an EpiModel Scenario
+#'
 #' @export
 swfcalib_proposal_to_scenario <- function(proposal) {
   scenario_df <- proposal
