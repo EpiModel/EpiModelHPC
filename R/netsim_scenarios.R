@@ -244,11 +244,11 @@ get_scenarios_batches_infos <- function(scenario_dir) {
 # nolint start
   parts <- dplyr::tibble(
     file_name = file_name_list,
-    simple_name = fs::path_ext_remove(file_name)
+    simple_name = fs::path_ext_remove(.data$file_name)
   )
 
   tidyr::separate(
-    parts, simple_name, sep = "__", remove = TRUE,
+    .data$parts, .data$simple_name, sep = "__", remove = TRUE,
     into = c(NA, "scenario_name", "batch_number")
   )
 # nolint end
@@ -260,9 +260,9 @@ get_scenarios_batches_infos <- function(scenario_dir) {
 #'
 #' @param sim_dir The folder where the simulation files are to be stored.
 #' @param output_dir The folder where the merged files will be stored.
+#' @param truncate.at Time step at which to left-truncate the time series.
 #'
 #' @inheritParams EpiModel::merge.netsim
-#' @inheritParams EpiModel::truncate_sim
 #'
 #' @export
 merge_netsim_scenarios <- function(sim_dir, output_dir,
@@ -277,7 +277,10 @@ merge_netsim_scenarios <- function(sim_dir, output_dir,
   future.apply::future_lapply(
     unique(batches_infos$scenario_name),
     function(scenario) {
-      scenario_infos <- dplyr::filter(batches_infos, scenario_name == scenario)
+      scenario_infos <- dplyr::filter(
+        .data$batches_infos,
+        .data$scenario_name == scenario
+      )
       file_paths <- scenario_infos$file_name
       for (j in seq_along(file_paths)) {
         current <- readRDS(file_paths[j])
@@ -369,7 +372,10 @@ merge_netsim_scenarios_tibble <- function(sim_dir, output_dir, steps_to_keep,
   batches_infos <- EpiModelHPC::get_scenarios_batches_infos(sim_dir)
 
   for (scenario in unique(batches_infos$scenario_name)) {
-    scenario_infos <- dplyr::filter(batches_infos, scenario_name == scenario)
+    scenario_infos <- dplyr::filter(
+      .data$batches_infos,
+      .data$scenario_name == scenario
+    )
 
     df_list <- future.apply::future_lapply(
       seq_len(nrow(scenario_infos)),
@@ -377,10 +383,10 @@ merge_netsim_scenarios_tibble <- function(sim_dir, output_dir, steps_to_keep,
         sc_inf <- scenario_infos[i, ]
         d <- readRDS(sc_inf$file_name) |>
           dplyr::as_tibble() |>
-          dplyr::filter(time >= max(time) - steps_to_keep)
+          dplyr::filter(.data$time >= max(.data$time) - steps_to_keep)
 
-        d_fix <- dplyr::select(d, sim, time)
-        d_var <- dplyr::select(d, -c(sim, time))
+        d_fix <- dplyr::select(d, "sim", "time")
+        d_var <- dplyr::select(d, -c("sim", "time"))
 
         pos <- tidyselect::eval_select(expr, data = d_var)
         d_var <- rlang::set_names(d_var[pos], names(pos))
@@ -388,7 +394,7 @@ merge_netsim_scenarios_tibble <- function(sim_dir, output_dir, steps_to_keep,
         dplyr::bind_cols(d_fix, d_var) |>
           dplyr::mutate(,
             batch_number = sc_inf$batch_number) |>
-          dplyr::select(batch_number, sim, time, dplyr::everything())
+          dplyr::select("batch_number", "sim", "time", dplyr::everything())
       }
     )
     df_sc <- dplyr::bind_rows(df_list)
