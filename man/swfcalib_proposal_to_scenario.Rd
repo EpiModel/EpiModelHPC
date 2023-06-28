@@ -10,7 +10,7 @@ swfcalib_proposal_to_scenario(proposal)
 \item{proposal}{an swfcalib formatted proposal}
 }
 \value{
-an EpiModel Scenario
+a list of a single EpiModel scenario
 }
 \description{
 Convert an swfcalib Proposal into an EpiModel Scenario
