@@ -13,7 +13,7 @@ swfcalib_proposal_to_scenario(proposal, id = NULL)
 \code{.proposal_index} or "default" if the former is \code{NULL} as well.}
 }
 \value{
-a list of a single EpiModel scenario
+an EpiModel scenario
 }
 \description{
 Convert an swfcalib Proposal into an EpiModel Scenario

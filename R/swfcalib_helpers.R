@@ -106,7 +106,7 @@ netsim_swfcalib_output <- function(path_to_x, param, init, control,
 #' @param proposal an swfcalib formatted proposal
 #' @param id the `.scenario.id` for the scenario. If `NULL`, use the
 #'   `.proposal_index` or "default" if the former is `NULL` as well.
-#' @return a list of a single EpiModel scenario
+#' @return an EpiModel scenario
 #'
 #' @export
 swfcalib_proposal_to_scenario <- function(proposal, id = NULL) {
@@ -124,5 +124,5 @@ swfcalib_proposal_to_scenario <- function(proposal, id = NULL) {
   scenario_df[[".proposal_index"]] <- NULL
   scenario_df[[".wave"]] <- NULL
   scenario_df[[".iteration"]] <- NULL
-  EpiModel::create_scenario_list(scenario_df)[[1]]
+  scenario_df
 }
