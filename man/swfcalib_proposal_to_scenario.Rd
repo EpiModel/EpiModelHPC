@@ -4,10 +4,13 @@
 \alias{swfcalib_proposal_to_scenario}
 \title{Convert an swfcalib Proposal into an EpiModel Scenario}
 \usage{
-swfcalib_proposal_to_scenario(proposal)
+swfcalib_proposal_to_scenario(proposal, id = NULL)
 }
 \arguments{
 \item{proposal}{an swfcalib formatted proposal}
+
+\item{id}{the \code{.scenario.id} for the scenario. If \code{NULL}, use the
+\code{.proposal_index} or "default" if the former is \code{NULL} as well.}
 }
 \value{
 a list of a single EpiModel scenario
