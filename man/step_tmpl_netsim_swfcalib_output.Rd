@@ -14,7 +14,7 @@ step_tmpl_netsim_swfcalib_output(
   n_cores,
   output_dir,
   libraries = NULL,
-  save_pattern = "simple",
+  save_pattern = "restart",
   setup_lines = NULL,
   max_array_size = NULL
 )
