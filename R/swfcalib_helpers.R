@@ -124,5 +124,5 @@ swfcalib_proposal_to_scenario <- function(proposal, id = NULL) {
   scenario_df[[".proposal_index"]] <- NULL
   scenario_df[[".wave"]] <- NULL
   scenario_df[[".iteration"]] <- NULL
-  scenario_df
+  EpiModel::create_scenario_list(scenario_df)[[1]]
 }
