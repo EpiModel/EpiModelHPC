@@ -136,7 +136,7 @@ make_save_elements <- function(save_pattern) {
   if ("restart" %in% save_pattern) {
     need_restart <- c(
       "param", "control", "epi",
-      "nwparam", "attr", "temp",
+      "nwparam", "attr", "temp", "net_attr",
       "el", "el.cuml", "_last_unique_id",
       "coef.form", "num.nw", "el", "network"
     )
