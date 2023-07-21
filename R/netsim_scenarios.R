@@ -248,10 +248,8 @@ get_scenarios_batches_infos <- function(scenario_dir) {
   )
 
   tidyr::separate(
-    parts
-    .data$simple_name,
-    sep = "__",
-    remove = TRUE,
+    parts,
+    .data$simple_name, sep = "__", remove = TRUE,
     into = c(NA, "scenario_name", "batch_number")
   )
 # nolint end
