@@ -248,7 +248,10 @@ get_scenarios_batches_infos <- function(scenario_dir) {
   )
 
   tidyr::separate(
-    parts, .data$simple_name, sep = "__", remove = TRUE,
+    parts
+    .data$simple_name,
+    sep = "__",
+    remove = TRUE,
     into = c(NA, "scenario_name", "batch_number")
   )
 # nolint end
@@ -278,7 +281,7 @@ merge_netsim_scenarios <- function(sim_dir, output_dir,
     unique(batches_infos$scenario_name),
     function(scenario) {
       scenario_infos <- dplyr::filter(
-        .data$batches_infos,
+        batches_infos,
         .data$scenario_name == scenario
       )
       file_paths <- scenario_infos$file_name
@@ -373,7 +376,7 @@ merge_netsim_scenarios_tibble <- function(sim_dir, output_dir, steps_to_keep,
 
   for (scenario in unique(batches_infos$scenario_name)) {
     scenario_infos <- dplyr::filter(
-      .data$batches_infos,
+      batches_infos,
       .data$scenario_name == scenario
     )
 
