@@ -17,6 +17,8 @@ test_that("SIS with scenarios", {
   control <- control.net(type = "SIS", nsims = 1, nsteps = 2, verbose = FALSE)
   init <- init.net(i.num = 10)
 
+  output_dir <- "testscen_dir"
+
   saveRDS(est, paste0(output_dir, "/est.rds"))
 
   scenarios.df <- dplyr::tribble(
@@ -33,6 +35,7 @@ test_that("SIS with scenarios", {
   n_cores <- 2
   n_scen <- length(scenarios.list)
   netsim_scenarios(
+
     path_to_x = paste0(output_dir, "/est.rds"),
     param, init, control,
     scenarios_list = scenarios.list,

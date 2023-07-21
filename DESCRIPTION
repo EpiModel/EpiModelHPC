@@ -31,6 +31,7 @@ Imports:
     tergm,
     stringr,
     slurmworkflow,
+    swfcalib,
     callr
 Suggests:
     rmarkdown,
@@ -38,7 +39,8 @@ Suggests:
     network,
     knitr
 Remotes:
- github::EpiModel/slurmworkflow
+ github::EpiModel/slurmworkflow,
+ github::EpiModel/swfcalib
 VignetteBuilder: knitr
 RoxygenNote: 7.2.3
 Encoding: UTF-8

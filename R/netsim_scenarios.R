@@ -136,7 +136,7 @@ make_save_elements <- function(save_pattern) {
   if ("restart" %in% save_pattern) {
     need_restart <- c(
       "param", "control", "epi",
-      "nwparam", "attr", "temp",
+      "nwparam", "attr", "temp", "net_attr",
       "el", "el.cuml", "_last_unique_id",
       "coef.form", "num.nw", "el", "network"
     )
@@ -248,7 +248,8 @@ get_scenarios_batches_infos <- function(scenario_dir) {
   )
 
   tidyr::separate(
-    parts, .data$simple_name, sep = "__", remove = TRUE,
+    parts,
+    .data$simple_name, sep = "__", remove = TRUE,
     into = c(NA, "scenario_name", "batch_number")
   )
 # nolint end
@@ -278,7 +279,7 @@ merge_netsim_scenarios <- function(sim_dir, output_dir,
     unique(batches_infos$scenario_name),
     function(scenario) {
       scenario_infos <- dplyr::filter(
-        .data$batches_infos,
+        batches_infos,
         .data$scenario_name == scenario
       )
       file_paths <- scenario_infos$file_name
@@ -373,7 +374,7 @@ merge_netsim_scenarios_tibble <- function(sim_dir, output_dir, steps_to_keep,
 
   for (scenario in unique(batches_infos$scenario_name)) {
     scenario_infos <- dplyr::filter(
-      .data$batches_infos,
+      batches_infos,
       .data$scenario_name == scenario
     )
 
