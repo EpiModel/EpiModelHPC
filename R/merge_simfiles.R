@@ -18,6 +18,8 @@
 #'        statistics and network statistics at a specified time step.
 #' @param verbose If \code{TRUE}, print file load progress to console.
 #'
+#' @inheritParams EpiModel::merge.netsim
+#'
 #' @details
 #' This function merges individual simulation runs stored in separate Rdata files
 #' into one larger output object for analysis. This function would typically be
@@ -34,7 +36,8 @@
 #' @export
 #'
 merge_simfiles <- function(simno, ftype = "min", indir = "data/",
-                           vars = NULL,  truncate.at = NULL, verbose = TRUE) {
+                           vars = NULL,  truncate.at = NULL, keep.other = FALSE,
+                           verbose = TRUE) {
 
   if (!(ftype %in% c("min", "max"))) {
     stop("ftype must be either \"min\" or \"max\" ", call. = FALSE)
@@ -80,7 +83,7 @@ merge_simfiles <- function(simno, ftype = "min", indir = "data/",
     if (i == 1) {
       out <- sim
     } else {
-      out <- merge(out, sim, param.error = FALSE, keep.other = FALSE)
+      out <- merge(out, sim, param.error = FALSE, keep.other = keep.other)
     }
     if (verbose == TRUE) {
       cat("File ", i, "/", length(fn), " Loaded ... \n", sep = "")
