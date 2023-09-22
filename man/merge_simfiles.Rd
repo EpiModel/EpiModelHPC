@@ -10,6 +10,7 @@ merge_simfiles(
   indir = "data/",
   vars = NULL,
   truncate.at = NULL,
+  keep.other = FALSE,
   verbose = TRUE
 )
 }
@@ -30,6 +31,10 @@ statistics and other ancillary data are removed.}
 
 \item{truncate.at}{Left-truncates a simulation epidemiological summary
 statistics and network statistics at a specified time step.}
+
+\item{keep.other}{If \code{TRUE}, keep the other simulation elements (as set
+by the \code{save.other} parameter in \code{control.netsim}) from the
+original \code{x} and \code{y} elements.}
 
 \item{verbose}{If \code{TRUE}, print file load progress to console.}
 }
