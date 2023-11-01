@@ -12,7 +12,7 @@ Maintainer: Samuel Jenness <samuel.m.jenness@emory.edu>
 Authors@R: c(person("Samuel", "Jenness",
     role=c("cre","aut"), email="samuel.m.jenness@emory.edu"))
 License: GPL-3
-URL: http://epimodel.org/
+URL: http://epimodel.org/, http://epimodel.github.io/EpiModelHPC/
 BugReports: https://github.com/EpiModel/EpiModelHPC/issues
 Depends:
     R (>= 4.1),
