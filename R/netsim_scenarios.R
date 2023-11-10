@@ -230,7 +230,7 @@ netsim_run_one_scenario <- function(scenario, batch_num,
 #' @param scenario_dir the directory where `netsim_scenarios` saved it's
 #' simulations.
 #'
-#' @return a `tibble` with three columns: `file_name` - the full paths of
+#' @return a `tibble` with three columns: `file_path` - the full paths of
 #' the simulation file, `scenario_name` the associated scenario name,
 #' `batch_number` the associated batch number.
 #'
@@ -241,9 +241,9 @@ get_scenarios_batches_infos <- function(scenario_dir) {
     regexp = "/sim__.*rds$",
     type = "file"
   )
-# nolint start
+
   parts <- dplyr::tibble(
-    file_name = file_name_list,
+    file_path = file_name_list,
     simple_name = fs::path_ext_remove(.data$file_name)
   )
 
@@ -252,7 +252,6 @@ get_scenarios_batches_infos <- function(scenario_dir) {
     .data$simple_name, sep = "__", remove = TRUE,
     into = c(NA, "scenario_name", "batch_number")
   )
-# nolint end
 }
 
 
@@ -433,5 +432,38 @@ step_tmpl_merge_netsim_scenarios_tibble <- function(
     what = merge_fun,
     args = list(sim_dir, output_dir, steps_to_keep, rlang::enquo(cols), n_cores),
     setup_lines = setup_lines
+  )
+}
+
+#' Helper function to access the infos on merged scenarios `data.frame`
+#'
+#' This function returns the list of scenario tibble files and the corresponding
+#' scenario name present in a given directory. It is meant to
+#' be used after `merge_netsim_scenarios_tibble` or
+#' `step_tmpl_merge_netsim_scenarios_tibble`.
+#'
+#' @param scenario_dir the directory where `merge_netsim_scenarios_tibble` saved
+#' the merged tibbles.
+#'
+#' @return a `tibble` with two columns: `file_path` - the full path of
+#' the scenario tibble file and `scenario_name` the associated scenario name.
+#'
+#' @export
+get_scenarios_tibble_infos <- function(scenario_dir) {
+  file_name_list <- fs::dir_ls(
+    scenario_dir,
+    regexp = "/df__.*rds$",
+    type = "file"
+  )
+
+  parts <- dplyr::tibble(
+    file_path = file_name_list,
+    simple_name = fs::path_ext_remove(.data$file_name)
+  )
+
+  tidyr::separate(
+    parts,
+    .data$simple_name, sep = "__", remove = TRUE,
+    into = c(NA, "scenario_name")
   )
 }

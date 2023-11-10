@@ -11,7 +11,7 @@ get_scenarios_batches_infos(scenario_dir)
 simulations.}
 }
 \value{
-a \code{tibble} with three columns: \code{file_name} - the full paths of
+a \code{tibble} with three columns: \code{file_path} - the full paths of
 the simulation file, \code{scenario_name} the associated scenario name,
 \code{batch_number} the associated batch number.
 }
