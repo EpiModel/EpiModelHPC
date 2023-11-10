@@ -244,7 +244,7 @@ get_scenarios_batches_infos <- function(scenario_dir) {
 
   parts <- dplyr::tibble(
     file_path = file_name_list,
-    simple_name = fs::path_ext_remove(.data$file_name)
+    simple_name = fs::path_ext_remove(.data$file_path)
   )
 
   tidyr::separate(
@@ -281,7 +281,7 @@ merge_netsim_scenarios <- function(sim_dir, output_dir,
         batches_infos,
         .data$scenario_name == scenario
       )
-      file_paths <- scenario_infos$file_name
+      file_paths <- scenario_infos$file_path
       for (j in seq_along(file_paths)) {
         current <- readRDS(file_paths[j])
         if (!is.null(truncate.at)) {
@@ -381,7 +381,7 @@ merge_netsim_scenarios_tibble <- function(sim_dir, output_dir, steps_to_keep,
       seq_len(nrow(scenario_infos)),
       function(i) {
         sc_inf <- scenario_infos[i, ]
-        d <- readRDS(sc_inf$file_name) |>
+        d <- readRDS(sc_inf$file_path) |>
           dplyr::as_tibble() |>
           dplyr::filter(.data$time >= max(.data$time) - steps_to_keep)
 
@@ -458,7 +458,7 @@ get_scenarios_tibble_infos <- function(scenario_dir) {
 
   parts <- dplyr::tibble(
     file_path = file_name_list,
-    simple_name = fs::path_ext_remove(.data$file_name)
+    simple_name = fs::path_ext_remove(.data$file_path)
   )
 
   tidyr::separate(
