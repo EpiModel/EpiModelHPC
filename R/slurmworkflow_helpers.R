@@ -79,8 +79,8 @@ swf_configs_hyak <- function(hpc = "klone", partition = "csde",
 #'
 #' @export
 swf_configs_rsph <- function(partition = "preemptable",
-                             r_version = "4.2.1",
-                             git_version = "2.35.1",
+                             r_version = "4.3.2",
+                             git_version = "2.42.0",
                              mail_user = NULL) {
 
   if (!partition %in% c("preemptable", "epimodel"))
@@ -98,7 +98,7 @@ swf_configs_rsph <- function(partition = "preemptable",
   hpc_configs[["renv_sbatch_opts"]] <- swf_renv_sbatch_opts()
 
   hpc_configs[["r_loader"]] <- c(
-    ". /projects/epimodel/spack/share/spack/setup-env.sh",
+    ". /projects/epimodel/spack_alg/share/spack/setup-env.sh",
     "spack unload -a",
     paste0("spack load r@", r_version),
     paste0("spack load git@", git_version)
@@ -147,4 +147,3 @@ step_tmpl_renv_restore <- function(git_branch, setup_lines = NULL) {
 
   slurmworkflow::step_tmpl_bash_lines(instructions)
 }
-
