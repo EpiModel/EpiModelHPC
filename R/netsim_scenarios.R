@@ -274,6 +274,9 @@ merge_netsim_scenarios <- function(sim_dir, output_dir,
   if (!fs::dir_exists(output_dir)) fs::dir_create(output_dir)
   batches_infos <- EpiModelHPC::get_scenarios_batches_infos(sim_dir)
 
+  oopts <- options(future.globals.maxSize = Inf)
+  on.exit(options(oopts))
+
   future.apply::future_lapply(
     unique(batches_infos$scenario_name),
     function(scenario) {
@@ -370,6 +373,9 @@ merge_netsim_scenarios_tibble <- function(sim_dir, output_dir, steps_to_keep,
   expr <- rlang::enquo(cols)
   if (!fs::dir_exists(output_dir)) fs::dir_create(output_dir)
   batches_infos <- EpiModelHPC::get_scenarios_batches_infos(sim_dir)
+
+  oopts <- options(future.globals.maxSize = Inf)
+  on.exit(options(oopts))
 
   for (scenario in unique(batches_infos$scenario_name)) {
     scenario_infos <- dplyr::filter(
