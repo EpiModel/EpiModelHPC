@@ -1,10 +1,9 @@
-pandoc: 2.19.2
-pkgdown: 2.0.7
+pandoc: 3.1.11
+pkgdown: 2.1.1
 pkgdown_sha: ~
 articles:
   epimodelhiv-slurmworkflow: epimodelhiv-slurmworkflow.html
-last_built: 2023-11-10T09:00Z
+last_built: 2024-10-15T09:47Z
 urls:
   reference: http://epimodel.github.io/EpiModelHPC/reference
   article: http://epimodel.github.io/EpiModelHPC/articles
-
