@@ -274,6 +274,8 @@ merge_netsim_scenarios <- function(sim_dir, output_dir,
   if (!fs::dir_exists(output_dir)) fs::dir_create(output_dir)
   batches_infos <- EpiModelHPC::get_scenarios_batches_infos(sim_dir)
 
+  oopts <- options(future.globals.maxSize = Inf)
+  on.exit(options(oopts))
   future.apply::future_lapply(
     unique(batches_infos$scenario_name),
     function(scenario) {
@@ -336,8 +338,6 @@ step_tmpl_merge_netsim_scenarios <- function(sim_dir, output_dir,
                         keep.nwstats, keep.other, param.error, keep.diss.stats,
                         truncate.at, n_cores) {
     future::plan("multicore", workers = n_cores)
-    oopts <- options(future.globals.maxSize = Inf)
-    on.exit(options(oopts))
     EpiModelHPC::merge_netsim_scenarios(
       sim_dir, output_dir,
       keep.transmat, keep.network, keep.nwstats, keep.other, keep.diss.stats,
@@ -380,6 +380,8 @@ merge_netsim_scenarios_tibble <- function(sim_dir, output_dir, steps_to_keep,
       .data$scenario_name == scenario
     )
 
+    oopts <- options(future.globals.maxSize = Inf)
+    on.exit(options(oopts))
     df_list <- future.apply::future_lapply(
       seq_len(nrow(scenario_infos)),
       function(i) {
@@ -422,8 +424,6 @@ step_tmpl_merge_netsim_scenarios_tibble <- function(
                       setup_lines = NULL) {
   merge_fun <- function(sim_dir, output_dir, steps_to_keep, cols, n_cores) {
     future::plan("multicore", workers = n_cores)
-    oopts <- options(future.globals.maxSize = Inf)
-    on.exit(options(oopts))
     EpiModelHPC::merge_netsim_scenarios_tibble(
       sim_dir = sim_dir,
       output_dir = output_dir,
