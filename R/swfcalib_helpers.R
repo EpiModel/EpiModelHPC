@@ -5,12 +5,11 @@
 netsim_run_swfcalib_scenario <- function(calib_object, batch_num,
                                          path_to_x, param, init, control,
                                          libraries, output_dir,
-                                         n_batch, n_rep, n_cores,
-                                         save_all, save_elements) {
+                                         n_batch, n_rep, n_cores) {
   scenario <- make_calibrated_scenario(calib_object)
   netsim_run_one_scenario(
     scenario, batch_num, path_to_x, param, init, control,
-    libraries, output_dir, n_batch, n_rep, n_cores, save_all, save_elements
+    libraries, output_dir, n_batch, n_rep, n_cores
   )
 }
 
@@ -35,7 +34,7 @@ netsim_swfcalib_output_setup <- function(path_to_x, param, init, control,
   p_list <- netsim_scenarios_setup(
     path_to_x, param, init, control,
     scenarios_list, n_rep, n_cores,
-    output_dir, libraries, save_pattern
+    output_dir, libraries
   )
   p_list$scenarios_list <- NULL
   p_list$MoreArgs$calib_object <- calib_object
@@ -55,13 +54,12 @@ netsim_swfcalib_output_setup <- function(path_to_x, param, init, control,
 step_tmpl_netsim_swfcalib_output <- function(path_to_x, param, init, control,
                                              calib_object, n_rep, n_cores,
                                              output_dir, libraries = NULL,
-                                             save_pattern = "restart",
                                              setup_lines = NULL,
                                              max_array_size = NULL) {
   p_list <- netsim_swfcalib_output_setup(
     path_to_x, param, init, control,
     calib_object, n_rep, n_cores,
-    output_dir, libraries, save_pattern
+    output_dir, libraries
   )
 
   slurmworkflow::step_tmpl_map(
@@ -85,18 +83,21 @@ step_tmpl_netsim_swfcalib_output <- function(path_to_x, param, init, control,
 #' @export
 netsim_swfcalib_output <- function(path_to_x, param, init, control,
                                    calib_object, n_rep, n_cores,
-                                   output_dir, libraries = NULL,
-                                   save_pattern = "simple") {
+                                   output_dir, libraries = NULL) {
   p_list <- netsim_swfcalib_output_setup(
     path_to_x, param, init, control,
     calib_object, n_rep, n_cores,
-    output_dir, libraries, save_pattern
+    output_dir, libraries
   )
 
   for (i in seq_along(p_list$batchs_list)) {
     args <- list(p_list$batchs_list[[i]])
     args <- c(args, p_list$MoreArgs)
-    callr::r(do.call, args = list(netsim_run_swfcalib_scenario, args), show = TRUE)
+    callr::r(
+      do.call,
+      args = list(netsim_run_swfcalib_scenario, args),
+      show = TRUE
+    )
   }
 }
 

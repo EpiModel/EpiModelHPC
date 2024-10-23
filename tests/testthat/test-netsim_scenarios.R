@@ -41,15 +41,10 @@ test_that("SIS with scenarios", {
     scenarios_list = scenarios.list,
     n_rep = n_rep, n_cores = n_cores,
     output_dir = output_dir,
-    libraries = NULL,
-    save_pattern = c("simple", "_last_unique_id", "absent")
+    libraries = NULL
   )
 
   sim <- readRDS(paste0(output_dir, "/sim__base__1.rds"))
-  expect_setequal(
-    names(sim),
-    c("epi", "param", "control", "_last_unique_id")
-  )
 
   testthat::expect_length(
     list.files(output_dir),

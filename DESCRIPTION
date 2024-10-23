@@ -1,6 +1,6 @@
 Package: EpiModelHPC
-Version: 2.2.0
-Date: 2023-11-10
+Version: 2.5.0
+Date: 2024-10-18
 Title: EpiModel Extensions for High-Performance Computing
 Description: Extension package to EpiModel to run large-scale stochastic network
     models on modern high-performance computing systems. Functionality provided to
@@ -16,7 +16,7 @@ URL: http://epimodel.org/, http://epimodel.github.io/EpiModelHPC/
 BugReports: https://github.com/EpiModel/EpiModelHPC/issues
 Depends:
     R (>= 4.1),
-    EpiModel (>= 2.2.0)
+    EpiModel (>= 2.5.0)
 Imports:
     dplyr,
     tidyr,
@@ -42,6 +42,6 @@ Remotes:
  github::EpiModel/slurmworkflow,
  github::EpiModel/swfcalib
 VignetteBuilder: knitr
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
