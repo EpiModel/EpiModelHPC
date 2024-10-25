@@ -50,6 +50,7 @@ step_tmpl_netsim_scenarios <- function(path_to_x, param, init, control,
 #'
 #' @param scenarios_list A list of scenarios to be run. Produced by the
 #'   \code{EpiModel::create_scenario_list} function
+#' @param ... for compatibility reasons
 #'
 #' @inheritParams netsim_run_one_scenario
 #' @inheritSection netsim_run_one_scenario Checkpointing

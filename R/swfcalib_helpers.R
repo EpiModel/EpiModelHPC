@@ -29,7 +29,7 @@ make_calibrated_scenario <- function(calib_object) {
 #' @inheritParams netsim_scenarios_setup
 netsim_swfcalib_output_setup <- function(path_to_x, param, init, control,
                                          calib_object, n_rep, n_cores,
-                                         output_dir, libraries, save_pattern) {
+                                         output_dir, libraries) {
   scenarios_list <- NULL
   p_list <- netsim_scenarios_setup(
     path_to_x, param, init, control,
