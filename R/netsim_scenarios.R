@@ -16,7 +16,7 @@ step_tmpl_netsim_scenarios <- function(path_to_x, param, init, control,
                                        scenarios_list, n_rep, n_cores,
                                        output_dir, libraries = NULL,
                                        setup_lines = NULL,
-                                       max_array_size = NULL) {
+                                       max_array_size = NULL, ...) {
   p_list <- netsim_scenarios_setup(
     path_to_x, param, init, control,
     scenarios_list, n_rep, n_cores,
@@ -57,7 +57,7 @@ step_tmpl_netsim_scenarios <- function(path_to_x, param, init, control,
 #' @export
 netsim_scenarios <- function(path_to_x, param, init, control,
                              scenarios_list, n_rep, n_cores,
-                             output_dir, libraries = NULL) {
+                             output_dir, libraries = NULL, ...) {
   p_list <- netsim_scenarios_setup(
     path_to_x, param, init, control,
     scenarios_list, n_rep, n_cores,

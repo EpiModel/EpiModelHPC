@@ -13,7 +13,8 @@ netsim_scenarios(
   n_rep,
   n_cores,
   output_dir,
-  libraries = NULL
+  libraries = NULL,
+  ...
 )
 }
 \arguments{

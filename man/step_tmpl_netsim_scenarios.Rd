@@ -15,7 +15,8 @@ step_tmpl_netsim_scenarios(
   output_dir,
   libraries = NULL,
   setup_lines = NULL,
-  max_array_size = NULL
+  max_array_size = NULL,
+  ...
 )
 }
 \arguments{
@@ -47,6 +48,9 @@ This can be used to load the required modules (like R, python, etc).}
 \item{max_array_size}{maximum number of array jobs to be submitted at the
 same time. Should be strictly less than the maximum number of jobs you are
 allowed to submit to slurm on your HPC.}
+
+\item{...}{arguments to vectorize over (vectors or lists of strictly
+positive length, or all of zero length).  See also ‘Details’.}
 }
 \value{
 a template function to be used by \code{add_workflow_step}
