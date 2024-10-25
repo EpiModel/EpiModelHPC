@@ -39,6 +39,8 @@ netsim_scenarios(
 
 \item{libraries}{A character vector containing the name of the libraries
 required for the model to run. (e.g. EpiModelHIV or EpiModelCOVID)}
+
+\item{...}{for compatibility reasons}
 }
 \description{
 This function will run \code{n_rep} replications of each scenarios in

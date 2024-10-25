@@ -13,8 +13,7 @@ netsim_swfcalib_output_setup(
   n_rep,
   n_cores,
   output_dir,
-  libraries,
-  save_pattern
+  libraries
 )
 }
 \arguments{
