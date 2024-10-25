@@ -15,13 +15,12 @@
 step_tmpl_netsim_scenarios <- function(path_to_x, param, init, control,
                                        scenarios_list, n_rep, n_cores,
                                        output_dir, libraries = NULL,
-                                       save_pattern = "simple",
                                        setup_lines = NULL,
-                                       max_array_size = NULL) {
+                                       max_array_size = NULL, ...) {
   p_list <- netsim_scenarios_setup(
     path_to_x, param, init, control,
     scenarios_list, n_rep, n_cores,
-    output_dir, libraries, save_pattern
+    output_dir, libraries
   )
 
   slurmworkflow::step_tmpl_map(
@@ -51,20 +50,19 @@ step_tmpl_netsim_scenarios <- function(path_to_x, param, init, control,
 #'
 #' @param scenarios_list A list of scenarios to be run. Produced by the
 #'   \code{EpiModel::create_scenario_list} function
+#' @param ... for compatibility reasons
 #'
 #' @inheritParams netsim_run_one_scenario
-#' @inheritParams make_save_elements
 #' @inheritSection netsim_run_one_scenario Checkpointing
 #'
 #' @export
 netsim_scenarios <- function(path_to_x, param, init, control,
                              scenarios_list, n_rep, n_cores,
-                             output_dir, libraries = NULL,
-                             save_pattern = "simple") {
+                             output_dir, libraries = NULL, ...) {
   p_list <- netsim_scenarios_setup(
     path_to_x, param, init, control,
     scenarios_list, n_rep, n_cores,
-    output_dir, libraries, save_pattern
+    output_dir, libraries
   )
 
   for (i in seq_along(p_list$scenarios_list)) {
@@ -81,7 +79,7 @@ netsim_scenarios <- function(path_to_x, param, init, control,
 #' @return a list of arguments for `netsim_run_one_scenario`
 netsim_scenarios_setup <- function(path_to_x, param, init, control,
                                    scenarios_list, n_rep, n_cores,
-                                   output_dir, libraries, save_pattern) {
+                                   output_dir, libraries) {
   libraries <- c("slurmworkflow", "EpiModelHPC", libraries)
   if (is.null(scenarios_list)) {
     scenarios_list <- data.frame(.at = 0, .scenario.id = "empty_scenario")
@@ -91,10 +89,6 @@ netsim_scenarios_setup <- function(path_to_x, param, init, control,
   n_batch <- ceiling(n_rep / n_cores)
   batchs_list <- rep(seq_len(n_batch), length(scenarios_list))
   scenarios_list <- rep(scenarios_list, each = n_batch)
-
-  raw_output <- !is.null(control[["raw.output"]]) && control[["raw.output"]]
-  save_all <- "all" %in% save_pattern || raw_output
-  save_elts <- if (save_all) character() else make_save_elements(save_pattern)
 
   list(
     scenarios_list = scenarios_list,
@@ -108,43 +102,9 @@ netsim_scenarios_setup <- function(path_to_x, param, init, control,
       output_dir = output_dir,
       n_batch = n_batch,
       n_rep = n_rep,
-      n_cores = n_cores,
-      save_all = save_all,
-      save_elements = save_elts
+      n_cores = n_cores
     )
   )
-}
-
-#' Create the `save_elements` vector for `netsim_run_one_scenario`
-#'
-#' Helper function to create the `save_elements` character vector according to
-#' the `save_pattern`.
-#'
-#' @param save_pattern A character vector of what should be kept in the final
-#'   `netsim` objects. It can contain the names of the elements as well as:
-#'   "simple" (defautlt) to only keep "epi", "param" and "control"; "restart" to
-#'   get the elements required to restart from such file; "all" to not trim the
-#'   object at all. `c("simple", "el.cuml")` is an example of a valid pattern to
-#'   save "epi", "param", "control" and "el.cuml". If `control$raw.output` is
-#'   `TRUE`, this parameter has no effect and the full result is saved.
-make_save_elements <- function(save_pattern) {
-  save_elements <- save_pattern
-  if ("simple" %in% save_pattern) {
-    save_elements <- union(save_elements, c("param", "epi", "control"))
-    save_elements <- setdiff(save_elements, "simple")
-  }
-  if ("restart" %in% save_pattern) {
-    need_restart <- c(
-      "param", "control", "epi",
-      "nwparam", "attr", "temp", "net_attr",
-      "el", "el.cuml", "_last_unique_id",
-      "coef.form", "num.nw", "el", "network"
-    )
-    save_elements <- union(save_elements, need_restart)
-    save_elements <- setdiff(save_elements, "restart")
-  }
-
-  save_elements
 }
 
 #' Run one `netsim` call with a scenario and saves the results deterministically
@@ -163,10 +123,6 @@ make_save_elements <- function(save_pattern) {
 #' @param output_dir The folder where the simulation files are to be stored.
 #' @param libraries A character vector containing the name of the libraries
 #'   required for the model to run. (e.g. EpiModelHIV or EpiModelCOVID)
-#' @param save_all A flag instructing to save the result of the
-#'   `EpiModel::netsim` call as is if TRUE.
-#' @param save_elements A character vector of elements to keep from the
-#'   `netsim` object if `save_all` is `FALSE`
 #' @inheritParams EpiModel::netsim
 #'
 #' @section Checkpointing:
@@ -176,8 +132,7 @@ make_save_elements <- function(save_pattern) {
 netsim_run_one_scenario <- function(scenario, batch_num,
                                     path_to_x, param, init, control,
                                     libraries, output_dir,
-                                    n_batch, n_rep, n_cores,
-                                    save_all, save_elements) {
+                                    n_batch, n_rep, n_cores) {
   est <- readRDS(path_to_x)
   start_time <- Sys.time()
   lapply(libraries, function(l) library(l, character.only = TRUE))
@@ -202,16 +157,6 @@ netsim_run_one_scenario <- function(scenario, batch_num,
   print(paste0("Starting simulation for scenario: ", scenario[["id"]]))
   print(paste0("Batch number: ", batch_num, " / ", n_batch))
   sim <- EpiModel::netsim(est, param_sc, init, control)
-
-  if (!save_all) {
-    print(paste0(
-      "Triming simulation in file to keep only: `",
-      paste0(save_elements, collapse = "`, `"),
-      "`"
-    ))
-    remove_elts <- setdiff(names(sim), save_elements)
-    sim[remove_elts] <- NULL
-  }
 
   file_name <- paste0("sim__", scenario[["id"]], "__", batch_num, ".rds")
   print(paste0("Saving simulation in file: ", file_name))
@@ -272,7 +217,7 @@ merge_netsim_scenarios <- function(sim_dir, output_dir,
                                    truncate.at = NULL) {
 
   if (!fs::dir_exists(output_dir)) fs::dir_create(output_dir)
-  batches_infos <- EpiModelHPC::get_scenarios_batches_infos(sim_dir)
+  batches_infos <- get_scenarios_batches_infos(sim_dir)
 
   oopts <- options(future.globals.maxSize = Inf)
   on.exit(options(oopts))
@@ -309,7 +254,8 @@ merge_netsim_scenarios <- function(sim_dir, output_dir,
           fs::path(output_dir, paste0("merged__", scenario, ".rds"))
         )
       }
-  })
+    }
+  )
 }
 
 #' Step Template to Create a Single Sim File per Scenarios Using the Files From
@@ -372,7 +318,7 @@ merge_netsim_scenarios_tibble <- function(sim_dir, output_dir, steps_to_keep,
                                           cols = dplyr::everything()) {
   expr <- rlang::enquo(cols)
   if (!fs::dir_exists(output_dir)) fs::dir_create(output_dir)
-  batches_infos <- EpiModelHPC::get_scenarios_batches_infos(sim_dir)
+  batches_infos <- get_scenarios_batches_infos(sim_dir)
 
   for (scenario in unique(batches_infos$scenario_name)) {
     scenario_infos <- dplyr::filter(
@@ -434,7 +380,13 @@ step_tmpl_merge_netsim_scenarios_tibble <- function(
 
   slurmworkflow::step_tmpl_do_call(
     what = merge_fun,
-    args = list(sim_dir, output_dir, steps_to_keep, rlang::enquo(cols), n_cores),
+    args = list(
+      sim_dir,
+      output_dir,
+      steps_to_keep,
+      rlang::enquo(cols),
+      n_cores
+    ),
     setup_lines = setup_lines
   )
 }

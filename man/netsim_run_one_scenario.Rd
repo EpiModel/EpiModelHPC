@@ -15,9 +15,7 @@ netsim_run_one_scenario(
   output_dir,
   n_batch,
   n_rep,
-  n_cores,
-  save_all,
-  save_elements
+  n_cores
 )
 }
 \arguments{
@@ -46,12 +44,6 @@ required for the model to run. (e.g. EpiModelHIV or EpiModelCOVID)}
 \item{n_rep}{The number of replication to be run for each scenario.}
 
 \item{n_cores}{The number of CPUs on which the simulations will be run.}
-
-\item{save_all}{A flag instructing to save the result of the
-\code{EpiModel::netsim} call as is if TRUE.}
-
-\item{save_elements}{A character vector of elements to keep from the
-\code{netsim} object if \code{save_all} is \code{FALSE}}
 }
 \description{
 This inner function is called by \code{netsim_scenarios} and

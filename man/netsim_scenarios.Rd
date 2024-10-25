@@ -14,7 +14,7 @@ netsim_scenarios(
   n_cores,
   output_dir,
   libraries = NULL,
-  save_pattern = "simple"
+  ...
 )
 }
 \arguments{
@@ -40,13 +40,7 @@ netsim_scenarios(
 \item{libraries}{A character vector containing the name of the libraries
 required for the model to run. (e.g. EpiModelHIV or EpiModelCOVID)}
 
-\item{save_pattern}{A character vector of what should be kept in the final
-\code{netsim} objects. It can contain the names of the elements as well as:
-"simple" (defautlt) to only keep "epi", "param" and "control"; "restart" to
-get the elements required to restart from such file; "all" to not trim the
-object at all. \code{c("simple", "el.cuml")} is an example of a valid pattern to
-save "epi", "param", "control" and "el.cuml". If \code{control$raw.output} is
-\code{TRUE}, this parameter has no effect and the full result is saved.}
+\item{...}{for compatibility reasons}
 }
 \description{
 This function will run \code{n_rep} replications of each scenarios in

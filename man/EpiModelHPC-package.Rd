@@ -34,4 +34,17 @@ The source code for this extension package is hosted on Github
 at \url{http://github.com/statnet/EpiModelHPC}. Bug reports and
 feature requests may be filed there.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{http://epimodel.org/}
+  \item \url{http://epimodel.github.io/EpiModelHPC/}
+  \item Report bugs at \url{https://github.com/EpiModel/EpiModelHPC/issues}
+}
+
+}
+\author{
+\strong{Maintainer}: Samuel Jenness \email{samuel.m.jenness@emory.edu}
+
+}
 \keyword{package}
