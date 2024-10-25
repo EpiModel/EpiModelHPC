@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">EpiModelHPC</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -51,8 +51,7 @@
 <span>  <span class="va">n_rep</span>,</span>
 <span>  <span class="va">n_cores</span>,</span>
 <span>  <span class="va">output_dir</span>,</span>
-<span>  <span class="va">libraries</span>,</span>
-<span>  <span class="va">save_pattern</span></span>
+<span>  <span class="va">libraries</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -97,16 +96,6 @@
 <dt id="arg-libraries">libraries<a class="anchor" aria-label="anchor" href="#arg-libraries"></a></dt>
 <dd><p>A character vector containing the name of the libraries
 required for the model to run. (e.g. EpiModelHIV or EpiModelCOVID)</p></dd>
-
-
-<dt id="arg-save-pattern">save_pattern<a class="anchor" aria-label="anchor" href="#arg-save-pattern"></a></dt>
-<dd><p>A character vector of what should be kept in the final
-<code>netsim</code> objects. It can contain the names of the elements as well as:
-"simple" (defautlt) to only keep "epi", "param" and "control"; "restart" to
-get the elements required to restart from such file; "all" to not trim the
-object at all. <code>c("simple", "el.cuml")</code> is an example of a valid pattern to
-save "epi", "param", "control" and "el.cuml". If <code>control$raw.output</code> is
-<code>TRUE</code>, this parameter has no effect and the full result is saved.</p></dd>
 
 </dl></div>
 
