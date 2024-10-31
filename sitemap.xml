@@ -11,6 +11,7 @@
 <url><loc>http://epimodel.github.io/EpiModelHPC/reference/index.html</loc></url>
 <url><loc>http://epimodel.github.io/EpiModelHPC/reference/initialize_cp.html</loc></url>
 <url><loc>http://epimodel.github.io/EpiModelHPC/reference/make_calibrated_scenario.html</loc></url>
+<url><loc>http://epimodel.github.io/EpiModelHPC/reference/make_save_elements.html</loc></url>
 <url><loc>http://epimodel.github.io/EpiModelHPC/reference/merge_netsim_scenarios.html</loc></url>
 <url><loc>http://epimodel.github.io/EpiModelHPC/reference/merge_netsim_scenarios_tibble.html</loc></url>
 <url><loc>http://epimodel.github.io/EpiModelHPC/reference/merge_simfiles.html</loc></url>
