@@ -187,15 +187,14 @@ get_scenarios_batches_infos <- function(scenario_dir) {
     type = "file"
   )
 
-  parts <- dplyr::tibble(
-    file_path = file_name_list,
-    simple_name = fs::path_ext_remove(.data$file_path)
-  )
+  parts <- file_name_list |>
+    fs::path_file() |>
+    stringr::str_match("sim__(?<scenario>.*)__(?<batch>[0-9]+).rds")
 
-  tidyr::separate(
-    parts,
-    .data$simple_name, sep = "__", remove = TRUE,
-    into = c(NA, "scenario_name", "batch_number")
+  dplyr::tibble(
+    file_path = file_name_list,
+    scenario_name = parts[, "scenario"],
+    batch_number = parts[, "batch"]
   )
 }
 
@@ -412,14 +411,12 @@ get_scenarios_tibble_infos <- function(scenario_dir) {
     type = "file"
   )
 
-  parts <- dplyr::tibble(
-    file_path = file_name_list,
-    simple_name = fs::path_ext_remove(.data$file_path)
-  )
+  parts <- file_name_list |>
+    fs::path_file() |>
+    stringr::str_match("df__(?<scenario>.*).rds")
 
-  tidyr::separate(
-    parts,
-    .data$simple_name, sep = "__", remove = TRUE,
-    into = c(NA, "scenario_name")
+  dplyr::tibble(
+    file_path = file_name_list,
+    scenario_name = parts[, "scenario"]
   )
 }
