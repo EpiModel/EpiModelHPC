@@ -194,7 +194,7 @@ get_scenarios_batches_infos <- function(scenario_dir) {
   dplyr::tibble(
     file_path = file_name_list,
     scenario_name = parts[, "scenario"],
-    batch_number = parts[, "batch"]
+    batch_number = as.integer(parts[, "batch"])
   )
 }
 
@@ -342,7 +342,7 @@ merge_netsim_scenarios_tibble <- function(sim_dir, output_dir, steps_to_keep,
         d_var <- rlang::set_names(d_var[pos], names(pos))
 
         dplyr::bind_cols(d_fix, d_var) |>
-          dplyr::mutate(batch_number = sc_inf$batch_number) |>
+          dplyr::mutate(batch_number = as.integer(sc_inf$batch_number)) |>
           dplyr::select("batch_number", "sim", "time", dplyr::everything())
       }
     )
