@@ -149,7 +149,7 @@ step_tmpl_renv_restore <- function(git_branch, setup_lines = NULL, lockfile = NU
   } else {
     instructions <- c(
       instructions,
-      paste0("Rscript -e \"renv::restore(lockfile = ", lockfile, ")\"")
+      paste0("Rscript -e \"renv::restore(lockfile = '", lockfile, "')\"")
     )
   }
 
