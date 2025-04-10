@@ -147,8 +147,10 @@ step_tmpl_renv_restore <- function(git_branch, setup_lines = NULL, lockfile = NU
   if (is.null(lockfile)) {
     instructions <- c(instructions, "Rscript -e \"renv::restore()\"")
   } else {
-    instructions <- c(instructions,
-                      "Rscript -e \"renv::restore(lockfile = lockfile)\"")
+    instructions <- c(
+      instructions,
+      paste0("Rscript -e \"renv::restore(lockfile = ", lockfile, ")\"")
+    )
   }
 
   instructions <- slurmworkflow::helper_use_setup_lines(instructions, setup_lines)
