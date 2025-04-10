@@ -127,11 +127,12 @@ swf_renv_sbatch_opts <- function() {
 #'   the project is not following the right branch, this step will error.
 #' @param setup_lines (optional) a vector of bash lines to be run first.
 #'   This can be used to load the required modules (like R, python, etc).
+#' @param lockfile (optional) path to an alternative lockfile to restore
 #'
 #' @return a template function to be used by \code{add_workflow_step}
 #'
 #' @export
-step_tmpl_renv_restore <- function(git_branch, setup_lines = NULL) {
+step_tmpl_renv_restore <- function(git_branch, setup_lines = NULL, lockfile = NULL) {
   instructions <- c(
     "CUR_BRANCH=$(git rev-parse --abbrev-ref HEAD)",
     paste0("if [[ \"$CUR_BRANCH\" != \"", git_branch, "\" ]]; then"),
@@ -141,10 +142,16 @@ step_tmpl_renv_restore <- function(git_branch, setup_lines = NULL) {
     "fi",
     "git pull",
     "Rscript -e \"renv::init(bare = TRUE, load = FALSE)\"",
-    "Rscript -e \"renv::restore()\""
+    "Rscript -e \"renv::restore(lockfile = lockfile)\""
   )
+  if (is.null(lockfile)) {
+    instructions <- c(instructions, "Rscript -e \"renv::restore()\"")
+  } else {
+    instructions <- c(instructions,
+                      "Rscript -e \"renv::restore(lockfile = lockfile)\"")
+  }
+
   instructions <- slurmworkflow::helper_use_setup_lines(instructions, setup_lines)
 
   slurmworkflow::step_tmpl_bash_lines(instructions)
 }
-
