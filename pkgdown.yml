@@ -3,7 +3,7 @@ pkgdown: 2.1.1
 pkgdown_sha: ~
 articles:
   epimodelhiv-slurmworkflow: epimodelhiv-slurmworkflow.html
-last_built: 2025-04-10T13:03Z
+last_built: 2025-04-10T13:13Z
 urls:
   reference: http://epimodel.github.io/EpiModelHPC/reference
   article: http://epimodel.github.io/EpiModelHPC/articles

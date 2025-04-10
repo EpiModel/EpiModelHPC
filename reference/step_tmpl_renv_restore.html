@@ -51,7 +51,7 @@ See <code><a href="https://epimodel.github.io/slurmworkflow/reference/step_tmpl_
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">step_tmpl_renv_restore</span><span class="op">(</span><span class="va">git_branch</span>, setup_lines <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">step_tmpl_renv_restore</span><span class="op">(</span><span class="va">git_branch</span>, setup_lines <span class="op">=</span> <span class="cn">NULL</span>, lockfile <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -66,6 +66,10 @@ the project is not following the right branch, this step will error.</p></dd>
 <dt id="arg-setup-lines">setup_lines<a class="anchor" aria-label="anchor" href="#arg-setup-lines"></a></dt>
 <dd><p>(optional) a vector of bash lines to be run first.
 This can be used to load the required modules (like R, python, etc).</p></dd>
+
+
+<dt id="arg-lockfile">lockfile<a class="anchor" aria-label="anchor" href="#arg-lockfile"></a></dt>
+<dd><p>(optional) path to an alternative lockfile to restore</p></dd>
 
 </dl></div>
     <div class="section level2">
