@@ -4,7 +4,7 @@
 \alias{step_tmpl_renv_restore}
 \title{Step template to update a project \code{renv}}
 \usage{
-step_tmpl_renv_restore(git_branch, setup_lines = NULL)
+step_tmpl_renv_restore(git_branch, setup_lines = NULL, lockfile = NULL)
 }
 \arguments{
 \item{git_branch}{The git branch that the project is supposed to follow. If
@@ -12,6 +12,8 @@ the project is not following the right branch, this step will error.}
 
 \item{setup_lines}{(optional) a vector of bash lines to be run first.
 This can be used to load the required modules (like R, python, etc).}
+
+\item{lockfile}{(optional) path to an alternative lockfile to restore}
 }
 \value{
 a template function to be used by \code{add_workflow_step}
