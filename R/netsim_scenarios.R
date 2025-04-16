@@ -349,6 +349,7 @@ merge_netsim_scenarios_tibble <- function(sim_dir, output_dir, steps_to_keep,
     df_sc <- dplyr::bind_rows(df_list) |>
       dplyr::mutate(
         tmp_max_sim = max(.data$sim),
+        sim_number = .data$sim,
         sim = .data$tmp_max_sim * (.data$batch_number - 1) + .data$sim
       ) |>
       dplyr::select(-c("tmp_max_sim"))
