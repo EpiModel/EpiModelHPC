@@ -32,6 +32,10 @@ step_tmpl_netsim_scenarios <- function(path_to_x, param, init, control,
     max_array_size = max_array_size,
     setup_lines = setup_lines
   )
+  message(
+    "Simulations for `step_tmpl_netsim_scenarios` will be saved in: \n",
+    "    \"", output_dir, "\""
+  )
 }
 
 #' Function to run EpiModel network simulations with scenarios
