@@ -1,0 +1,125 @@
+# Package index
+
+## All functions
+
+- [`EpiModelHPC-package`](http://epimodel.github.io/EpiModelHPC/reference/EpiModelHPC-package.md)
+  [`EpiModelHPC`](http://epimodel.github.io/EpiModelHPC/reference/EpiModelHPC-package.md)
+  : EpiModel Extensions for High-Performance Computing
+
+- [`check_cp()`](http://epimodel.github.io/EpiModelHPC/reference/check_cp.md)
+  : Checks for Checkpointed Rdata Files
+
+- [`get_scenarios_batches_infos()`](http://epimodel.github.io/EpiModelHPC/reference/get_scenarios_batches_infos.md)
+  : Helper function to access the file name elements of scenarios
+
+- [`get_scenarios_tibble_infos()`](http://epimodel.github.io/EpiModelHPC/reference/get_scenarios_tibble_infos.md)
+  :
+
+  Helper function to access the infos on merged scenarios `data.frame`
+
+- [`initialize_cp()`](http://epimodel.github.io/EpiModelHPC/reference/initialize_cp.md)
+  : Initializes Network Model after Checkpointing
+
+- [`make_calibrated_scenario()`](http://epimodel.github.io/EpiModelHPC/reference/make_calibrated_scenario.md)
+  :
+
+  Make an EpiModel scenario using the result of an `swfcalib`
+  calibration
+
+- [`merge_netsim_scenarios()`](http://epimodel.github.io/EpiModelHPC/reference/merge_netsim_scenarios.md)
+  :
+
+  Create a Single Sim File per Scenarios Using the Files From
+  `netsim_scenarios`
+
+- [`merge_netsim_scenarios_tibble()`](http://epimodel.github.io/EpiModelHPC/reference/merge_netsim_scenarios_tibble.md)
+  :
+
+  Create a Single Sim File per Scenarios Using the Files From
+  `netsim_scenarios`
+
+- [`merge_simfiles()`](http://epimodel.github.io/EpiModelHPC/reference/merge_simfiles.md)
+  : Save Simulation Data from Stochastic Network Models
+
+- [`netsim_hpc()`](http://epimodel.github.io/EpiModelHPC/reference/netsim_hpc.md)
+  : Stochastic Network Models on High-Performance Computing Systems
+
+- [`netsim_run_one_scenario()`](http://epimodel.github.io/EpiModelHPC/reference/netsim_run_one_scenario.md)
+  :
+
+  Run one `netsim` call with a scenario and saves the results
+  deterministically
+
+- [`netsim_run_swfcalib_scenario()`](http://epimodel.github.io/EpiModelHPC/reference/netsim_run_swfcalib_scenario.md)
+  :
+
+  Run one `netsim` call with the result of an `swfcalib` calibration
+
+- [`netsim_scenarios()`](http://epimodel.github.io/EpiModelHPC/reference/netsim_scenarios.md)
+  : Function to run EpiModel network simulations with scenarios
+
+- [`netsim_scenarios_setup()`](http://epimodel.github.io/EpiModelHPC/reference/netsim_scenarios_setup.md)
+  :
+
+  Helper function to create the parameters for `netsim_run_one_scenario`
+
+- [`netsim_swfcalib_output()`](http://epimodel.github.io/EpiModelHPC/reference/netsim_swfcalib_output.md)
+  :
+
+  Function to run an EpiModel sim with the result of an `swfcalib`
+  calibration
+
+- [`netsim_swfcalib_output_setup()`](http://epimodel.github.io/EpiModelHPC/reference/netsim_swfcalib_output_setup.md)
+  :
+
+  Helper function to create the parameters for
+  `netsim_run_swfcalib_scenario`
+
+- [`process_simfiles()`](http://epimodel.github.io/EpiModelHPC/reference/process_simfiles.md)
+  : Process sub-job simulation files saved as a series of Rdata files.
+
+- [`pull_env_vars()`](http://epimodel.github.io/EpiModelHPC/reference/pull_env_vars.md)
+  : Pull Standard Environmental Variables in Slurm Jobs
+
+- [`save_cpdata()`](http://epimodel.github.io/EpiModelHPC/reference/save_cpdata.md)
+  : Saves for Network Simulation Rdata Files for Checkpointing
+
+- [`savesim()`](http://epimodel.github.io/EpiModelHPC/reference/savesim.md)
+  : Save Simulation Data from Stochastic Network Models
+
+- [`sbatch_master()`](http://epimodel.github.io/EpiModelHPC/reference/sbatch_master.md)
+  : Create sbatch Bash Shell Script with Parameter Combination
+
+- [`step_tmpl_merge_netsim_scenarios()`](http://epimodel.github.io/EpiModelHPC/reference/step_tmpl_merge_netsim_scenarios.md)
+  :
+
+  Step Template to Create a Single Sim File per Scenarios Using the
+  Files From `netsim_scenarios`
+
+- [`step_tmpl_merge_netsim_scenarios_tibble()`](http://epimodel.github.io/EpiModelHPC/reference/step_tmpl_merge_netsim_scenarios_tibble.md)
+  :
+
+  Step Template to Create a Single Sim File per Scenarios Using the
+  Files From `netsim_scenarios`
+
+- [`step_tmpl_netsim_scenarios()`](http://epimodel.github.io/EpiModelHPC/reference/step_tmpl_netsim_scenarios.md)
+  : Step template to run EpiModel network simulations with scenarios
+
+- [`step_tmpl_netsim_swfcalib_output()`](http://epimodel.github.io/EpiModelHPC/reference/step_tmpl_netsim_swfcalib_output.md)
+  :
+
+  Step template to run sims with the result of an `swfcalib` calibration
+
+- [`step_tmpl_renv_restore()`](http://epimodel.github.io/EpiModelHPC/reference/step_tmpl_renv_restore.md)
+  :
+
+  Step template to update a project `renv`
+
+- [`swf_configs_hyak()`](http://epimodel.github.io/EpiModelHPC/reference/swf_configs_hyak.md)
+  : Preset of Configuration for the HYAK Cluster
+
+- [`swf_configs_rsph()`](http://epimodel.github.io/EpiModelHPC/reference/swf_configs_rsph.md)
+  : Preset of Configuration for the RSPH Cluster
+
+- [`swfcalib_proposal_to_scenario()`](http://epimodel.github.io/EpiModelHPC/reference/swfcalib_proposal_to_scenario.md)
+  : Convert an swfcalib Proposal into an EpiModel Scenario
