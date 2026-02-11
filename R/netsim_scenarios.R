@@ -23,6 +23,11 @@ step_tmpl_netsim_scenarios <- function(path_to_x, param, init, control,
     output_dir, libraries
   )
 
+  message(
+    "Simulations for `step_tmpl_netsim_scenarios` will be saved in: \n",
+    "    \"", output_dir, "\""
+  )
+
   slurmworkflow::step_tmpl_map(
     FUN = netsim_run_one_scenario,
     scenario = p_list$scenarios_list,
@@ -31,10 +36,6 @@ step_tmpl_netsim_scenarios <- function(path_to_x, param, init, control,
 
     max_array_size = max_array_size,
     setup_lines = setup_lines
-  )
-  message(
-    "Simulations for `step_tmpl_netsim_scenarios` will be saved in: \n",
-    "    \"", output_dir, "\""
   )
 }
 

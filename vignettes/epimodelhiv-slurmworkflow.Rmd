@@ -50,7 +50,7 @@ The "data/" directory contains:
 
 - "data/input/": files required by the project before any code is ran. These
   files are tracked by `git`.
-- "data/intermediate/": raw files produced and used by the code. They are not tracked by `git`.
+- "data/run/": raw files produced and used by the code. They are not tracked by `git`.
 - "data/output/": final results, tables, graphs. Tracked by `git`.
 
 ## General Steps in a Applied EpiModelHIV Project
@@ -750,4 +750,3 @@ scp -r <user>@clogin01.sph.emory.edu:projects/EpiModelHIV-Template/data/intermed
 ```
 
 We can now use these files as we please locally.
-
