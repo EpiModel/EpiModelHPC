@@ -4,7 +4,10 @@ This step template is similar to `netsim_scenarios` but for the HPC. It
 uses
 [`slurmworkflow::step_tmpl_map`](https://epimodel.github.io/slurmworkflow/reference/step_tmpl_map.html)
 internally and should be used as any `slurmworkflow` step. For details,
-see `netsim_scenarios` documentation.
+see `netsim_scenarios` documentation. The inner parallelization is by
+default handled with `future::plan("multicore", workers = n_cores)`.
+Using `control$future.use.plan <- future::tweaked(<your plan>)` will
+bypass this setting.
 
 ## Usage
 
@@ -76,9 +79,12 @@ step_tmpl_netsim_scenarios(
 
 - max_array_size:
 
-  maximum number of array jobs to be submitted at the same time. Should
-  be strictly less than the maximum number of jobs you are allowed to
-  submit to slurm on your HPC.
+  maximum number of array jobs to be submitted at once. It should be
+  strictly less than the maximum number of jobs you are allowed to
+  submit to `slurm` on your HPC. If the number of jobs is greater than
+  `max_array_size`, they will be submitted in multiple batches. The
+  submission of the next batch is automatically handled by
+  `slurmworkflow`.
 
 - ...:
 
