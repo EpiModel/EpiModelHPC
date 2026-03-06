@@ -3,6 +3,10 @@
 #' This step template is similar to `netsim_scenarios` but for the HPC. It uses
 #' `slurmworkflow::step_tmpl_map` internally and should be used as any
 #' `slurmworkflow` step. For details, see `netsim_scenarios` documentation.
+#' The inner parallelization is by default handled with
+#' `future::plan("multicore", workers = n_cores)`.
+#' Using `control$future.use.plan <- future::tweaked(<your plan>)` will bypass
+#' this setting.
 #'
 #' @inheritParams slurmworkflow::step_tmpl_map
 #' @inheritParams netsim_scenarios
@@ -17,6 +21,13 @@ step_tmpl_netsim_scenarios <- function(path_to_x, param, init, control,
                                        output_dir, libraries = NULL,
                                        setup_lines = NULL,
                                        max_array_size = NULL, ...) {
+
+  # Set a `multicore` plan with `n_cores` workers by default.
+  # Bypassed if `control$future.use.plan` is manually set
+  if (!inherits(control$future.use.plan, c("tweaked", "future"))) {
+    control$future.use.plan <- future::tweaked("multicore", workers = n_cores)
+  }
+
   p_list <- netsim_scenarios_setup(
     path_to_x, param, init, control,
     scenarios_list, n_rep, n_cores,
@@ -94,6 +105,14 @@ netsim_scenarios_setup <- function(path_to_x, param, init, control,
   n_batch <- ceiling(n_rep / n_cores)
   batchs_list <- rep(seq_len(n_batch), length(scenarios_list))
   scenarios_list <- rep(scenarios_list, each = n_batch)
+
+  if (isTRUE(control$future.use.plan)) {
+    stop(
+      "`netsim_scenarios` do not accept `control$future.use.plan == TRUE`.\n",
+      "use `control$future.use.plan = future::tweak(<your plan>)` \n",
+      " to setup a custom ."
+    )
+  }
 
   list(
     scenarios_list = scenarios_list,
