@@ -25,7 +25,7 @@ step_tmpl_netsim_scenarios <- function(path_to_x, param, init, control,
   # Set a `multicore` plan with `n_cores` workers by default.
   # Bypassed if `control$future.use.plan` is manually set
   if (!inherits(control$future.use.plan, c("tweaked", "future"))) {
-    control$future.use.plan <- future::tweaked("multicore", workers = n_cores)
+    control$future.use.plan <- future::tweak("multicore", workers = n_cores)
   }
 
   p_list <- netsim_scenarios_setup(
