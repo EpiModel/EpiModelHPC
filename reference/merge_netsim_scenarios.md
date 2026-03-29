@@ -55,9 +55,9 @@ merge_netsim_scenarios(
 - param.error:
 
   If `TRUE`, if `x` and `y` have different params (in
-  [`param.net`](http://epimodel.github.io/EpiModel/reference/param.net.md))
+  [`param.net`](https://epimodel.github.io/EpiModel/reference/param.net.html))
   or controls (passed in
-  [`control.net`](http://epimodel.github.io/EpiModel/reference/control.net.md))
+  [`control.net`](https://epimodel.github.io/EpiModel/reference/control.net.html))
   an error will prevent the merge. Use `FALSE` to override that check.
 
 - keep.diss.stats:

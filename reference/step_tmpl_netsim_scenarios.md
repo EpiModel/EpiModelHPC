@@ -34,7 +34,7 @@ step_tmpl_netsim_scenarios(
 
   Path to a Fitted network model object saved with `saveRDS`. (See the
   `x` argument to the
-  [`EpiModel::netsim`](http://epimodel.github.io/EpiModel/reference/netsim.md)
+  [`EpiModel::netsim`](https://epimodel.github.io/EpiModel/reference/netsim.html)
   function)
 
 - param:
@@ -52,7 +52,7 @@ step_tmpl_netsim_scenarios(
 - scenarios_list:
 
   A list of scenarios to be run. Produced by the
-  [`EpiModel::create_scenario_list`](http://epimodel.github.io/EpiModel/reference/create_scenario_list.md)
+  [`EpiModel::create_scenario_list`](https://epimodel.github.io/EpiModel/reference/create_scenario_list.html)
   function
 
 - n_rep:
@@ -99,7 +99,7 @@ a template function to be used by `add_workflow_step`
 
 This function takes care of editing `.checkpoint.dir` to create unique
 sub directories for each scenario. The
-[`EpiModel::control.net`](http://epimodel.github.io/EpiModel/reference/control.net.md)
+[`EpiModel::control.net`](https://epimodel.github.io/EpiModel/reference/control.net.html)
 way of setting up checkpoints can be used transparently.
 
 ## Step Template

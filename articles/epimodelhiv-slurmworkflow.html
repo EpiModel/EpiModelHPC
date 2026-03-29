@@ -57,7 +57,7 @@
 
       <h1>Using `slurmworkflow` with EpiModel</h1>
             
-            <h4 data-toc-skip class="date">2026-03-06</h4>
+            <h4 data-toc-skip class="date">2026-03-29</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/EpiModel/EpiModelHPC/blob/main/vignettes/epimodelhiv-slurmworkflow.Rmd" class="external-link"><code>vignettes/epimodelhiv-slurmworkflow.Rmd</code></a></small>
       <div class="d-none name"><code>epimodelhiv-slurmworkflow.Rmd</code></div>
@@ -646,7 +646,7 @@ from a previous simulation. Therefore we need to specify a different
 “data/input/scenarios.csv” and transform it into a scenario list.</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">scenarios_df</span> <span class="op">&lt;-</span> <span class="fu">readr</span><span class="fu">::</span><span class="fu">read_csv</span><span class="op">(</span><span class="st">"./data/input/scenarios.csv"</span><span class="op">)</span></span>
-<span><span class="va">scenarios_list</span> <span class="op">&lt;-</span> <span class="fu">EpiModel</span><span class="fu">::</span><span class="fu"><a href="http://epimodel.github.io/EpiModel/reference/create_scenario_list.html" class="external-link">create_scenario_list</a></span><span class="op">(</span><span class="va">scenarios_df</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">scenarios_list</span> <span class="op">&lt;-</span> <span class="fu">EpiModel</span><span class="fu">::</span><span class="fu"><a href="https://epimodel.github.io/EpiModel/reference/create_scenario_list.html" class="external-link">create_scenario_list</a></span><span class="op">(</span><span class="va">scenarios_df</span><span class="op">)</span></span></code></pre></div>
 <p>To account for the variability in our models, we want each scenario
 to be run 120 times. (usually 500 to 1000 times for the final
 paper).</p>

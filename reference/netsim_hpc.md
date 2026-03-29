@@ -77,7 +77,7 @@ checkpointing method. Checkpointing is defined as incrementally saving
 simulation data for the purpose of reloading it if a simulation job is
 canceled and restarted. If checkpointing is not needed, users are
 advised to run their models directly with the
-[`EpiModel::netsim`](http://epimodel.github.io/EpiModel/reference/netsim.md)
+[`EpiModel::netsim`](https://epimodel.github.io/EpiModel/reference/netsim.html)
 function.
 
 This function performs the following tasks:
@@ -99,7 +99,7 @@ This function performs the following tasks:
     if in checkpoint state.
 
 5.  Run the simulation, either new or checkpointed, with a call to
-    [`EpiModel::netsim`](http://epimodel.github.io/EpiModel/reference/netsim.md).
+    [`EpiModel::netsim`](https://epimodel.github.io/EpiModel/reference/netsim.html).
 
 6.  Save the completed simulation data, using the functionality of
     [`savesim`](http://epimodel.github.io/EpiModelHPC/reference/savesim.md).

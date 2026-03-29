@@ -35,7 +35,7 @@ netsim_run_swfcalib_scenario(
 
   Path to a Fitted network model object saved with `saveRDS`. (See the
   `x` argument to the
-  [`EpiModel::netsim`](http://epimodel.github.io/EpiModel/reference/netsim.md)
+  [`EpiModel::netsim`](https://epimodel.github.io/EpiModel/reference/netsim.html)
   function)
 
 - param:

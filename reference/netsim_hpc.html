@@ -114,7 +114,7 @@ models in parallel on high-performance computing systems.</p>
 method. Checkpointing is defined as incrementally saving simulation data for
 the purpose of reloading it if a simulation job is canceled and restarted. If
 checkpointing is not needed, users are advised to run their models directly
-with the <code><a href="http://epimodel.github.io/EpiModel/reference/netsim.html" class="external-link">EpiModel::netsim</a></code> function.</p>
+with the <code><a href="https://epimodel.github.io/EpiModel/reference/netsim.html" class="external-link">EpiModel::netsim</a></code> function.</p>
 <p>This function performs the following tasks:</p><ol><li><p>Check for the existence of checkpointed data, using the
 <code><a href="check_cp.html">check_cp</a></code> function. If CP data are available, a
 checkpointed model will be run, else a new model will be run.</p></li>
@@ -126,7 +126,7 @@ in <code>cp.save.int</code>.</p></li>
 <li><p>Resets the initialize module function to <code><a href="initialize_cp.html">initialize_cp</a></code>
 if in checkpoint state.</p></li>
 <li><p>Run the simulation, either new or checkpointed, with a call to
-<code><a href="http://epimodel.github.io/EpiModel/reference/netsim.html" class="external-link">EpiModel::netsim</a></code>.</p></li>
+<code><a href="https://epimodel.github.io/EpiModel/reference/netsim.html" class="external-link">EpiModel::netsim</a></code>.</p></li>
 <li><p>Save the completed simulation data, using the functionality of
 <code><a href="savesim.html">savesim</a></code>.</p></li>
 <li><p>Remove the checkpointed data and file directory created in step 1, if

@@ -26,7 +26,7 @@ step_tmpl_netsim_swfcalib_output(
 
   Path to a Fitted network model object saved with `saveRDS`. (See the
   `x` argument to the
-  [`EpiModel::netsim`](http://epimodel.github.io/EpiModel/reference/netsim.md)
+  [`EpiModel::netsim`](https://epimodel.github.io/EpiModel/reference/netsim.html)
   function)
 
 - param:
@@ -84,7 +84,7 @@ a template function to be used by `add_workflow_step`
 
 This function takes care of editing `.checkpoint.dir` to create unique
 sub directories for each scenario. The
-[`EpiModel::control.net`](http://epimodel.github.io/EpiModel/reference/control.net.md)
+[`EpiModel::control.net`](https://epimodel.github.io/EpiModel/reference/control.net.html)
 way of setting up checkpoints can be used transparently.
 
 ## Step Template

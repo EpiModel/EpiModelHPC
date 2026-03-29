@@ -54,16 +54,154 @@
   <main id="main" class="col-md-9"><div class="section level1">
 <div class="page-header"><h1 id="epimodelhpc">EpiModelHPC<a class="anchor" aria-label="anchor" href="#epimodelhpc"></a>
 </h1></div>
-<p><!-- badges: start --> <a href="https://github.com/EpiModel/EpiModelHPC/actions" class="external-link"><img src="https://github.com/EpiModel/EpiModelHPC/workflows/R-CMD-check/badge.svg" alt="R-CMD-check"></a> <!-- badges: end --></p>
-<p>EpiModelHPC is an R package that provides extensions for simulating stochastic network models in EpiModel on high-performance computing (HPC) systems. Functionality provided to simulate models in parallel, with checkpointing functions to save and restore simulation work.</p>
-<p>While there are many potential HPCs systems, this software is developed with the standard within large-scale scientific computing: linux-based clusters that operate job scheduling software running Slurm. These types of system are not necessary for running EpiModelHPC: the functionality of this package may be useful in any system that supports parallelization, including desktop computers with multiple cores.</p>
-<div class="section level3">
-<h3 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
-</h3>
-<p>This software is currently hosted on Github only. Install it using the <code>remotes</code> package:</p>
+<!-- badges: start -->
+
+<p>EpiModelHPC extends the <a href="https://github.com/EpiModel/EpiModel" class="external-link">EpiModel</a> R package for running stochastic network epidemic models on high-performance computing (HPC) systems. If you are already using EpiModel’s <code>netsim</code> function to simulate epidemic dynamics on local hardware and need to scale up – running hundreds of simulations across parameter scenarios on a multi-node cluster – EpiModelHPC provides the tools to get there.</p>
+<div class="section level2">
+<h2 id="how-epimodelhpc-relates-to-epimodel">How EpiModelHPC Relates to EpiModel<a class="anchor" aria-label="anchor" href="#how-epimodelhpc-relates-to-epimodel"></a>
+</h2>
+<p><a href="https://www.epimodel.org/" class="external-link">EpiModel</a> is the core R package for simulating mathematical models of infectious disease dynamics using stochastic, individual-based network models based on exponential-family random graph models (ERGMs). EpiModel handles network estimation (<code>netest</code>), epidemic simulation (<code>netsim</code>), and analysis of results on a single machine.</p>
+<p>EpiModelHPC does not replace any of this. Instead, it wraps and extends EpiModel’s simulation engine with functionality needed when models become too computationally intensive for a single workstation:</p>
+<ul>
+<li>
+<strong>Parallelization</strong>: Distributes simulation replicates across multiple cores on an HPC node.</li>
+<li>
+<strong>Checkpointing</strong>: Automatically saves intermediate simulation state at configurable intervals, so that long-running jobs can resume from where they left off if interrupted (e.g., by a wall-time limit).</li>
+<li>
+<strong>Scenario Batching</strong>: Runs multiple parameter scenarios (defined via <code><a href="https://epimodel.github.io/EpiModel/reference/create_scenario_list.html" class="external-link">EpiModel::create_scenario_list</a></code>) in batched parallel jobs, with deterministic file naming for downstream merging.</li>
+<li>
+<strong>Result Merging</strong>: Merges outputs from distributed batch jobs back into single simulation objects or tidy data frames for analysis.</li>
+</ul>
+<p>If your simulations complete in reasonable time on a laptop, you likely do not need this package. EpiModelHPC is designed for the point at which you need to run large numbers of replicates, sweep across many scenarios, or your model’s per-replicate runtime exceeds what is practical without job scheduling and checkpointing.</p>
+</div>
+<div class="section level2">
+<h2 id="how-slurmworkflow-fits-in">How slurmworkflow Fits In<a class="anchor" aria-label="anchor" href="#how-slurmworkflow-fits-in"></a>
+</h2>
+<p><a href="https://github.com/EpiModel/slurmworkflow" class="external-link">slurmworkflow</a> is a companion R package that provides a general-purpose framework for defining and submitting multi-step Slurm job workflows from R. It handles the mechanics of writing sbatch scripts, managing job dependencies, and organizing output directories.</p>
+<p>EpiModelHPC builds directly on slurmworkflow by providing <strong>step templates</strong> – pre-built workflow steps tailored to common EpiModel tasks:</p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr class="header">
+<th>EpiModelHPC Step Template</th>
+<th>Purpose</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code><a href="reference/step_tmpl_netsim_scenarios.html">step_tmpl_netsim_scenarios()</a></code></td>
+<td>Submit scenario-based <code>netsim</code> simulations as a Slurm array job</td>
+</tr>
+<tr class="even">
+<td><code><a href="reference/step_tmpl_merge_netsim_scenarios.html">step_tmpl_merge_netsim_scenarios()</a></code></td>
+<td>Merge batched simulation files into one file per scenario</td>
+</tr>
+<tr class="odd">
+<td><code><a href="reference/step_tmpl_merge_netsim_scenarios_tibble.html">step_tmpl_merge_netsim_scenarios_tibble()</a></code></td>
+<td>Convert merged results to tidy tibble format</td>
+</tr>
+<tr class="even">
+<td><code><a href="reference/step_tmpl_netsim_swfcalib_output.html">step_tmpl_netsim_swfcalib_output()</a></code></td>
+<td>Run simulations using calibrated parameters from <a href="https://github.com/EpiModel/swfcalib" class="external-link">swfcalib</a>
+</td>
+</tr>
+<tr class="odd">
+<td><code><a href="reference/step_tmpl_renv_restore.html">step_tmpl_renv_restore()</a></code></td>
+<td>Ensure the HPC project environment is up to date via <code>renv</code>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Each step template has a corresponding standalone function (e.g., <code><a href="reference/netsim_scenarios.html">netsim_scenarios()</a></code>) that runs the same logic locally for testing before submitting to the cluster.</p>
+<p>A typical applied workflow looks like:</p>
+<ol style="list-style-type: decimal">
+<li>
+<strong>Estimate networks</strong> locally with <code><a href="https://epimodel.github.io/EpiModel/reference/netest.html" class="external-link">EpiModel::netest</a></code>.</li>
+<li>
+<strong>Test simulations</strong> locally with <code><a href="reference/netsim_scenarios.html">netsim_scenarios()</a></code> on a small number of replicates.</li>
+<li>
+<strong>Define a slurmworkflow</strong> using <code><a href="reference/step_tmpl_netsim_scenarios.html">step_tmpl_netsim_scenarios()</a></code> and <code><a href="reference/step_tmpl_merge_netsim_scenarios.html">step_tmpl_merge_netsim_scenarios()</a></code> to run at scale on the cluster.</li>
+<li>
+<strong>Merge and analyze</strong> results locally or on the cluster.</li>
+</ol>
+<p>EpiModelHPC also provides pre-configured cluster settings for specific HPC environments (<code><a href="reference/swf_configs_hyak.html">swf_configs_hyak()</a></code> for the University of Washington HYAK cluster, <code><a href="reference/swf_configs_rsph.html">swf_configs_rsph()</a></code> for the Emory RSPH cluster) that supply sensible default sbatch options and R module-loading commands.</p>
+</div>
+<div class="section level2">
+<h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
+</h2>
+<p>EpiModelHPC and its companion packages are hosted on GitHub. Install with:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://remotes.r-lib.org" class="external-link">"remotes"</a></span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"remotes"</span><span class="op">)</span></span>
 <span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"EpiModel/EpiModelHPC"</span><span class="op">)</span></span></code></pre></div>
+<p>This will also install <code>slurmworkflow</code> and <code>swfcalib</code> from their GitHub repositories.</p>
+</div>
+<div class="section level2">
+<h2 id="key-functions">Key Functions<a class="anchor" aria-label="anchor" href="#key-functions"></a>
+</h2>
+<div class="section level3">
+<h3 id="simulation">Simulation<a class="anchor" aria-label="anchor" href="#simulation"></a>
+</h3>
+<ul>
+<li>
+<strong><code><a href="reference/netsim_hpc.html">netsim_hpc()</a></code></strong> – Run <code>netsim</code> in parallel with automatic checkpointing. Best for single-scenario runs where checkpoint/resume is the primary need.</li>
+<li>
+<strong><code><a href="reference/netsim_scenarios.html">netsim_scenarios()</a></code></strong> – Run multiple scenarios locally with batched parallelization. Mirrors <code><a href="reference/step_tmpl_netsim_scenarios.html">step_tmpl_netsim_scenarios()</a></code> for local testing.</li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="checkpointing">Checkpointing<a class="anchor" aria-label="anchor" href="#checkpointing"></a>
+</h3>
+<ul>
+<li>
+<strong><code><a href="reference/check_cp.html">check_cp()</a></code></strong> / <strong><code><a href="reference/initialize_cp.html">initialize_cp()</a></code></strong> / <strong><code><a href="reference/save_cpdata.html">save_cpdata()</a></code></strong> – Low-level checkpointing utilities used internally by <code><a href="reference/netsim_hpc.html">netsim_hpc()</a></code>. Checkpoint data are saved to <code>data/sim&lt;N&gt;/</code> directories and cleaned up on successful completion.</li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="file-management">File Management<a class="anchor" aria-label="anchor" href="#file-management"></a>
+</h3>
+<ul>
+<li>
+<strong><code><a href="reference/merge_netsim_scenarios.html">merge_netsim_scenarios()</a></code></strong> – Merge per-batch simulation files into one <code>netsim</code> object per scenario.</li>
+<li>
+<strong><code><a href="reference/merge_netsim_scenarios_tibble.html">merge_netsim_scenarios_tibble()</a></code></strong> – Convert scenario results to a single tidy tibble per scenario with configurable column selection and time-step truncation.</li>
+<li>
+<strong><code><a href="reference/get_scenarios_batches_infos.html">get_scenarios_batches_infos()</a></code></strong> / <strong><code><a href="reference/get_scenarios_tibble_infos.html">get_scenarios_tibble_infos()</a></code></strong> – Inspect output directories to list available simulation files and their associated scenarios.</li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="hpc-configuration">HPC Configuration<a class="anchor" aria-label="anchor" href="#hpc-configuration"></a>
+</h3>
+<ul>
+<li>
+<strong><code><a href="reference/swf_configs_hyak.html">swf_configs_hyak()</a></code></strong> / <strong><code><a href="reference/swf_configs_rsph.html">swf_configs_rsph()</a></code></strong> – Return lists of sbatch options, renv build settings, and R module-loading commands for supported clusters.</li>
+<li>
+<strong><code><a href="reference/pull_env_vars.html">pull_env_vars()</a></code></strong> – Extract Slurm environment variables (e.g., <code>SLURM_ARRAY_TASK_ID</code>) into R’s global environment.</li>
+</ul>
+</div>
+</div>
+<div class="section level2">
+<h2 id="system-requirements">System Requirements<a class="anchor" aria-label="anchor" href="#system-requirements"></a>
+</h2>
+<p>While developed for Linux-based HPC clusters running the <a href="https://slurm.schedmd.com/" class="external-link">Slurm</a> workload manager, the core parallelization and checkpointing functionality works on any system with multiple cores, including macOS and Windows workstations. The slurmworkflow integration and step templates are specific to Slurm-managed clusters.</p>
+</div>
+<div class="section level2">
+<h2 id="resources">Resources<a class="anchor" aria-label="anchor" href="#resources"></a>
+</h2>
+<ul>
+<li>
+<strong>EpiModel website</strong>: <a href="https://www.epimodel.org/" class="external-link uri">https://www.epimodel.org/</a>
+</li>
+<li>
+<strong>EpiModelHPC documentation</strong>: <a href="https://epimodel.github.io/EpiModelHPC/" class="external-link uri">https://epimodel.github.io/EpiModelHPC/</a>
+</li>
+<li>
+<strong>slurmworkflow</strong>: <a href="https://github.com/EpiModel/slurmworkflow" class="external-link uri">https://github.com/EpiModel/slurmworkflow</a>
+</li>
+<li>
+<strong>Bug reports</strong>: <a href="https://github.com/EpiModel/EpiModelHPC/issues" class="external-link uri">https://github.com/EpiModel/EpiModelHPC/issues</a>
+</li>
+</ul>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">
@@ -96,7 +234,12 @@
 </ul>
 </div>
 
-
+<div class="dev-status">
+<h2 data-toc-skip>Dev status</h2>
+<ul class="list-unstyled">
+<li><a href="https://github.com/EpiModel/EpiModelHPC/actions" class="external-link"><img src="https://github.com/EpiModel/EpiModelHPC/workflows/R-CMD-check/badge.svg" alt="R-CMD-check"></a></li>
+</ul>
+</div>
 
   </aside>
 </div>
