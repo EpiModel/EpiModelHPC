@@ -30,9 +30,8 @@
 #'
 #' @name EpiModelHPC-package
 #' @aliases EpiModelHPC
-#' @import EpiModel doParallel foreach ergm tergm
+#' @import EpiModel
 #' @importFrom utils read.table read.csv write.csv
-#' @importFrom stringr str_pad
 #' @importFrom rlang .data
 #' @keywords package
 #'

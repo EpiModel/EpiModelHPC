@@ -1,121 +1,3 @@
-#' Preset of Configuration for the HYAK Cluster
-#'
-#' @param hpc Which HPC to use on HYAK (either "klone" or "mox")
-#' @param partition Which partition to use on HYAK (either "csde" or "ckpt")
-#' @param r_version Which version of R to load
-#' @param mail_user The mail address to send the messages to, default is NULL
-#'   (see 'sbatch --mail-type' argument)
-#'
-#' @return a list containing \code{default_sbatch_opts}, \code{renv_sbatch_opts}
-#'   and \code{r_loader} (see the "hpc_configs" section)
-#'
-#' @section hpc_configs:
-#' \enumerate{
-#'   \item \code{default_sbatch_opts} is a list of sbatch options to be passed to
-#'   \code{slurmworkflow::create_workflow}.
-#'   \item \code{renv_sbatch_opts} is a list of sbatch options to be passed to
-#'   \code{slurmworkflow::step_tmpl_renv_restore}. It provides sane defaults for
-#'   building the dependencies of an R project using \code{renv}
-#'   \item \code{r_loader} is a set of bash lines to make the R software available.
-#'   This is passed to the \code{setup_lines} arguments of the
-#'   \code{slurmworkflow::step_tmpl_} functions that requires it.
-#' }
-#'
-#' @export
-swf_configs_hyak <- function(hpc = "klone", partition = "csde",
-                             r_version = "4.2.2", mail_user = NULL) {
-  if (hpc == "klone") {
-    if (!partition %in% c("ckpt", "compute"))
-      stop("On ", hpc, ", partition must be one of \"compute\" or \"ckpt\"")
-  } else if (hpc == "mox") {
-    if (!partition %in% c("csde", "ckpt"))
-      stop("On ", hpc, ", partition must be one of \"csde\" or \"ckpt\"")
-  } else {
-    stop("On HYAK, `hpc` must be one of \"mox\" or \"klone\"")
-  }
-
-  hpc_configs <- list()
-  hpc_configs[["default_sbatch_opts"]] <-  list(
-    "account" = if (partition == "ckpt") "csde-ckpt" else "csde",
-    "partition" = partition,
-    "mail-type" = "FAIL"
-  )
-
-  if (!is.null(mail_user))
-    hpc_configs[["default_sbatch_opts"]][["mail-user"]] <- mail_user
-
-
-  hpc_configs[["renv_sbatch_opts"]] <- swf_renv_sbatch_opts()
-
-  if (hpc == "mox") {
-    hpc_configs[["renv_sbatch_opts"]][["partition"]] <- "build"
-    hpc_configs[["r_loader"]] <- c(
-      ". /gscratch/csde/spack/spack/share/spack/setup-env.sh",
-      "spack unload -a",
-      paste0("spack load r@", r_version),
-      "spack load git"
-    )
-  } else if (hpc == "klone") {
-    hpc_configs[["r_loader"]] <- c(
-      ". /gscratch/csde/spack/spack/share/spack/setup-env.sh",
-      "spack unload -a",
-      paste0("spack load r@", r_version),
-      "spack load git"
-    )
-  }
-
-  return(hpc_configs)
-}
-
-#' Preset of Configuration for the RSPH Cluster
-#'
-#' @param partition Which partition to use on RSPH (either "compute" or
-#'  "epimodel")
-#' @param git_version Which version of Git to load
-#'
-#' @inherit swf_configs_hyak return
-#' @inheritParams swf_configs_hyak
-#' @inheritSection swf_configs_hyak hpc_configs
-#'
-#' @export
-swf_configs_rsph <- function(partition = "preemptable",
-                             r_version = "4.2.1",
-                             git_version = "2.35.1",
-                             mail_user = NULL) {
-
-  if (!partition %in% c("preemptable", "epimodel"))
-    stop("On RSPH, partition must be one of \"preemptable\" or \"epimodel\"")
-
-  hpc_configs <- list()
-  hpc_configs[["default_sbatch_opts"]] <-  list(
-    "partition" = partition,
-    "mail-type" = "FAIL"
-  )
-
-  if (!is.null(mail_user))
-    hpc_configs[["default_sbatch_opts"]][["mail-user"]] <- mail_user
-
-  hpc_configs[["renv_sbatch_opts"]] <- swf_renv_sbatch_opts()
-
-  hpc_configs[["r_loader"]] <- c(
-    ". /projects/epimodel/spack/share/spack/setup-env.sh",
-    "spack unload -a",
-    paste0("spack load r@", r_version),
-    paste0("spack load git@", git_version)
-  )
-
-  return(hpc_configs)
-}
-
-#' @noRd
-swf_renv_sbatch_opts <- function() {
-  list(
-    "mem" = "16G",
-    "cpus-per-task" = 4,
-    "time" = 120
-  )
-}
-
 #' Step template to update a project \code{renv}
 #'
 #' This template makes the step run `git pull` and \code{renv::restore()}. This
@@ -132,7 +14,11 @@ swf_renv_sbatch_opts <- function() {
 #' @return a template function to be used by \code{add_workflow_step}
 #'
 #' @export
-step_tmpl_renv_restore <- function(git_branch, setup_lines = NULL, lockfile = NULL) {
+step_tmpl_renv_restore <- function(
+  git_branch,
+  setup_lines = NULL,
+  lockfile = NULL
+) {
   instructions <- c(
     "CUR_BRANCH=$(git rev-parse --abbrev-ref HEAD)",
     paste0("if [[ \"$CUR_BRANCH\" != \"", git_branch, "\" ]]; then"),
@@ -152,7 +38,190 @@ step_tmpl_renv_restore <- function(git_branch, setup_lines = NULL, lockfile = NU
     )
   }
 
-  instructions <- slurmworkflow::helper_use_setup_lines(instructions, setup_lines)
+  instructions <- slurmworkflow::helper_use_setup_lines(
+    instructions,
+    setup_lines
+  )
 
   slurmworkflow::step_tmpl_bash_lines(instructions)
+}
+
+#' Step template to run EpiModel network simulations with scenarios
+#'
+#' This step template is similar to `netsim_scenarios` but for the HPC. It uses
+#' `slurmworkflow::step_tmpl_map` internally and should be used as any
+#' `slurmworkflow` step. For details, see `netsim_scenarios` documentation.
+#' The inner parallelization is by default handled with
+#' `future::plan("multicore", workers = n_cores)`.
+#' Using `control$future.use.plan <- future::tweaked(<your plan>)` will bypass
+#' this setting.
+#'
+#' @inheritParams slurmworkflow::step_tmpl_map
+#' @inheritParams netsim_scenarios
+#'
+#' @inheritSection netsim_run_one_scenario Checkpointing
+#' @inherit slurmworkflow::step_tmpl_rscript return
+#' @inheritSection slurmworkflow::step_tmpl_bash_lines Step Template
+#'
+#' @export
+step_tmpl_netsim_scenarios <- function(
+  path_to_x,
+  param,
+  init,
+  control,
+  scenarios_list,
+  n_rep,
+  n_cores,
+  output_dir,
+  libraries = NULL,
+  setup_lines = NULL,
+  max_array_size = NULL,
+  ...
+) {
+  # Set a `multicore` plan with `n_cores` workers by default.
+  # Bypassed if `control$future.use.plan` is manually set
+  if (!inherits(control$future.use.plan, c("tweaked", "future"))) {
+    control$future.use.plan <- future::tweak("multicore", workers = n_cores)
+  }
+
+  p_list <- netsim_scenarios_setup(
+    path_to_x,
+    param,
+    init,
+    control,
+    scenarios_list,
+    n_rep,
+    n_cores,
+    output_dir,
+    libraries
+  )
+
+  message(
+    "Simulations for `step_tmpl_netsim_scenarios` will be saved in: \n",
+    "    \"",
+    output_dir,
+    "\""
+  )
+
+  slurmworkflow::step_tmpl_map(
+    FUN = netsim_run_one_scenario,
+    scenario = p_list$scenarios_list,
+    batch_num = p_list$batchs_list,
+    MoreArgs = p_list$MoreArgs,
+
+    max_array_size = max_array_size,
+    setup_lines = setup_lines
+  )
+}
+
+#' Step Template to Create a Single Sim File per Scenarios Using the Files From
+#' `netsim_scenarios`
+#'
+#' @param n_cores Parallelize the process over `n_cores` (default = 1)
+#'
+#' @inheritParams slurmworkflow::step_tmpl_map
+#' @inheritParams merge_netsim_scenarios
+#'
+#' @inherit slurmworkflow::step_tmpl_rscript return
+#' @inheritSection slurmworkflow::step_tmpl_bash_lines Step Template
+#'
+#' @export
+step_tmpl_merge_netsim_scenarios <- function(
+  sim_dir,
+  output_dir,
+  keep.transmat = TRUE,
+  keep.network = TRUE,
+  keep.nwstats = TRUE,
+  keep.other = TRUE,
+  param.error = FALSE,
+  keep.diss.stats = TRUE,
+  truncate.at = NULL,
+  n_cores = 1,
+  setup_lines = NULL
+) {
+  merge_fun <- function(
+    sim_dir,
+    output_dir,
+    keep.transmat,
+    keep.network,
+    keep.nwstats,
+    keep.other,
+    param.error,
+    keep.diss.stats,
+    truncate.at,
+    n_cores
+  ) {
+    future::plan("multicore", workers = n_cores)
+    EpiModelHPC::merge_netsim_scenarios(
+      sim_dir,
+      output_dir,
+      keep.transmat,
+      keep.network,
+      keep.nwstats,
+      keep.other,
+      keep.diss.stats,
+      param.error,
+      truncate.at
+    )
+  }
+
+  slurmworkflow::step_tmpl_do_call(
+    what = merge_fun,
+    args = list(
+      sim_dir,
+      output_dir,
+      keep.transmat,
+      keep.network,
+      keep.nwstats,
+      keep.other,
+      keep.diss.stats,
+      param.error,
+      truncate.at,
+      n_cores
+    ),
+    setup_lines = setup_lines
+  )
+}
+
+#' Step Template to Create a Single Sim File per Scenarios Using the Files From
+#' `netsim_scenarios`
+#'
+#' @param n_cores Parallelize the process over `n_cores` (default = 1)
+#'
+#' @inheritParams slurmworkflow::step_tmpl_map
+#' @inheritParams merge_netsim_scenarios_tibble
+#'
+#' @inherit slurmworkflow::step_tmpl_rscript return
+#' @inheritSection slurmworkflow::step_tmpl_bash_lines Step Template
+#'
+#' @export
+step_tmpl_merge_netsim_scenarios_tibble <- function(
+  sim_dir,
+  output_dir,
+  steps_to_keep,
+  cols = dplyr::everything(),
+  n_cores = 1,
+  setup_lines = NULL
+) {
+  merge_fun <- function(sim_dir, output_dir, steps_to_keep, cols, n_cores) {
+    future::plan("multicore", workers = n_cores)
+    EpiModelHPC::merge_netsim_scenarios_tibble(
+      sim_dir = sim_dir,
+      output_dir = output_dir,
+      steps_to_keep = steps_to_keep,
+      cols = {{ cols }}
+    )
+  }
+
+  slurmworkflow::step_tmpl_do_call(
+    what = merge_fun,
+    args = list(
+      sim_dir,
+      output_dir,
+      steps_to_keep,
+      rlang::enquo(cols),
+      n_cores
+    ),
+    setup_lines = setup_lines
+  )
 }

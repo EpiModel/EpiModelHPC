@@ -1,55 +1,3 @@
-#' Step template to run EpiModel network simulations with scenarios
-#'
-#' This step template is similar to `netsim_scenarios` but for the HPC. It uses
-#' `slurmworkflow::step_tmpl_map` internally and should be used as any
-#' `slurmworkflow` step. For details, see `netsim_scenarios` documentation.
-#' The inner parallelization is by default handled with
-#' `future::plan("multicore", workers = n_cores)`.
-#' Using `control$future.use.plan <- future::tweaked(<your plan>)` will bypass
-#' this setting.
-#'
-#' @inheritParams slurmworkflow::step_tmpl_map
-#' @inheritParams netsim_scenarios
-#'
-#' @inheritSection netsim_run_one_scenario Checkpointing
-#' @inherit slurmworkflow::step_tmpl_rscript return
-#' @inheritSection slurmworkflow::step_tmpl_bash_lines Step Template
-#'
-#' @export
-step_tmpl_netsim_scenarios <- function(path_to_x, param, init, control,
-                                       scenarios_list, n_rep, n_cores,
-                                       output_dir, libraries = NULL,
-                                       setup_lines = NULL,
-                                       max_array_size = NULL, ...) {
-
-  # Set a `multicore` plan with `n_cores` workers by default.
-  # Bypassed if `control$future.use.plan` is manually set
-  if (!inherits(control$future.use.plan, c("tweaked", "future"))) {
-    control$future.use.plan <- future::tweak("multicore", workers = n_cores)
-  }
-
-  p_list <- netsim_scenarios_setup(
-    path_to_x, param, init, control,
-    scenarios_list, n_rep, n_cores,
-    output_dir, libraries
-  )
-
-  message(
-    "Simulations for `step_tmpl_netsim_scenarios` will be saved in: \n",
-    "    \"", output_dir, "\""
-  )
-
-  slurmworkflow::step_tmpl_map(
-    FUN = netsim_run_one_scenario,
-    scenario = p_list$scenarios_list,
-    batch_num = p_list$batchs_list,
-    MoreArgs = p_list$MoreArgs,
-
-    max_array_size = max_array_size,
-    setup_lines = setup_lines
-  )
-}
-
 #' Function to run EpiModel network simulations with scenarios
 #'
 #' This function will run `n_rep` replications of each scenarios in
@@ -72,13 +20,28 @@ step_tmpl_netsim_scenarios <- function(path_to_x, param, init, control,
 #' @inheritSection netsim_run_one_scenario Checkpointing
 #'
 #' @export
-netsim_scenarios <- function(path_to_x, param, init, control,
-                             scenarios_list, n_rep, n_cores,
-                             output_dir, libraries = NULL, ...) {
+netsim_scenarios <- function(
+  path_to_x,
+  param,
+  init,
+  control,
+  scenarios_list,
+  n_rep,
+  n_cores,
+  output_dir,
+  libraries = NULL,
+  ...
+) {
   p_list <- netsim_scenarios_setup(
-    path_to_x, param, init, control,
-    scenarios_list, n_rep, n_cores,
-    output_dir, libraries
+    path_to_x,
+    param,
+    init,
+    control,
+    scenarios_list,
+    n_rep,
+    n_cores,
+    output_dir,
+    libraries
   )
 
   for (i in seq_along(p_list$scenarios_list)) {
@@ -93,9 +56,17 @@ netsim_scenarios <- function(path_to_x, param, init, control,
 #' @inheritParams netsim_scenarios
 #'
 #' @return a list of arguments for `netsim_run_one_scenario`
-netsim_scenarios_setup <- function(path_to_x, param, init, control,
-                                   scenarios_list, n_rep, n_cores,
-                                   output_dir, libraries) {
+netsim_scenarios_setup <- function(
+  path_to_x,
+  param,
+  init,
+  control,
+  scenarios_list,
+  n_rep,
+  n_cores,
+  output_dir,
+  libraries
+) {
   libraries <- c("slurmworkflow", "EpiModelHPC", libraries)
   if (is.null(scenarios_list)) {
     scenarios_list <- data.frame(.at = 0, .scenario.id = "empty_scenario")
@@ -153,20 +124,31 @@ netsim_scenarios_setup <- function(path_to_x, param, init, control,
 #' This function takes care of editing `.checkpoint.dir` to create unique sub
 #' directories for each scenario. The `EpiModel::control.net` way of setting up
 #' checkpoints can be used transparently.
-netsim_run_one_scenario <- function(scenario, batch_num,
-                                    path_to_x, param, init, control,
-                                    libraries, output_dir,
-                                    n_batch, n_rep, n_cores) {
+netsim_run_one_scenario <- function(
+  scenario,
+  batch_num,
+  path_to_x,
+  param,
+  init,
+  control,
+  libraries,
+  output_dir,
+  n_batch,
+  n_rep,
+  n_cores
+) {
   est <- readRDS(path_to_x)
   start_time <- Sys.time()
   lapply(libraries, function(l) library(l, character.only = TRUE))
 
-  if (!fs::dir_exists(output_dir))
+  if (!fs::dir_exists(output_dir)) {
     fs::dir_create(output_dir, recurse = TRUE)
+  }
 
   # On last batch, adjust the number of simulation to be run
-  if (batch_num == n_batch)
+  if (batch_num == n_batch) {
     n_cores <- n_rep - n_cores * (n_batch - 1)
+  }
 
   param_sc <- EpiModel::use_scenario(param, scenario)
   control$nsims <- n_cores
@@ -174,7 +156,11 @@ netsim_run_one_scenario <- function(scenario, batch_num,
 
   if (!is.null(control[[".checkpoint.dir"]])) {
     control[[".checkpoint.dir"]] <- paste0(
-      control[[".checkpoint.dir"]], "/sim__", scenario[["id"]], "__", batch_num
+      control[[".checkpoint.dir"]],
+      "/sim__",
+      scenario[["id"]],
+      "__",
+      batch_num
     )
   }
 
@@ -233,13 +219,20 @@ get_scenarios_batches_infos <- function(scenario_dir) {
 #' @inheritParams EpiModel::merge.netsim
 #'
 #' @export
-merge_netsim_scenarios <- function(sim_dir, output_dir,
-                                   keep.transmat = TRUE, keep.network = TRUE,
-                                   keep.nwstats = TRUE, keep.other = TRUE,
-                                   param.error = FALSE, keep.diss.stats = TRUE,
-                                   truncate.at = NULL) {
-
-  if (!fs::dir_exists(output_dir)) fs::dir_create(output_dir)
+merge_netsim_scenarios <- function(
+  sim_dir,
+  output_dir,
+  keep.transmat = TRUE,
+  keep.network = TRUE,
+  keep.nwstats = TRUE,
+  keep.other = TRUE,
+  param.error = FALSE,
+  keep.diss.stats = TRUE,
+  truncate.at = NULL
+) {
+  if (!fs::dir_exists(output_dir)) {
+    fs::dir_create(output_dir)
+  }
   batches_infos <- get_scenarios_batches_infos(sim_dir)
 
   oopts <- options(future.globals.maxSize = Inf)
@@ -262,7 +255,8 @@ merge_netsim_scenarios <- function(sim_dir, output_dir,
           merged <- current
         } else {
           merged <- merge(
-            merged, current,
+            merged,
+            current,
             keep.transmat = keep.transmat,
             keep.network = keep.network,
             keep.nwstats = keep.nwstats,
@@ -281,50 +275,6 @@ merge_netsim_scenarios <- function(sim_dir, output_dir,
   )
 }
 
-#' Step Template to Create a Single Sim File per Scenarios Using the Files From
-#' `netsim_scenarios`
-#'
-#' @param n_cores Parallelize the process over `n_cores` (default = 1)
-#'
-#' @inheritParams slurmworkflow::step_tmpl_map
-#' @inheritParams merge_netsim_scenarios
-#'
-#' @inherit slurmworkflow::step_tmpl_rscript return
-#' @inheritSection slurmworkflow::step_tmpl_bash_lines Step Template
-#'
-#' @export
-step_tmpl_merge_netsim_scenarios <- function(sim_dir, output_dir,
-                                             keep.transmat = TRUE,
-                                             keep.network = TRUE,
-                                             keep.nwstats = TRUE,
-                                             keep.other = TRUE,
-                                             param.error = FALSE,
-                                             keep.diss.stats = TRUE,
-                                             truncate.at = NULL, n_cores = 1,
-                                             setup_lines = NULL) {
-
-  merge_fun <- function(sim_dir, output_dir, keep.transmat, keep.network,
-                        keep.nwstats, keep.other, param.error, keep.diss.stats,
-                        truncate.at, n_cores) {
-    future::plan("multicore", workers = n_cores)
-    EpiModelHPC::merge_netsim_scenarios(
-      sim_dir, output_dir,
-      keep.transmat, keep.network, keep.nwstats, keep.other, keep.diss.stats,
-      param.error, truncate.at
-    )
-  }
-
-  slurmworkflow::step_tmpl_do_call(
-    what = merge_fun,
-    args = list(
-      sim_dir, output_dir,
-      keep.transmat, keep.network, keep.nwstats, keep.other, keep.diss.stats,
-      param.error, truncate.at, n_cores
-    ),
-    setup_lines = setup_lines
-  )
-}
-
 #' Create a Single Sim File per Scenarios Using the Files From
 #' `netsim_scenarios`
 #'
@@ -337,10 +287,16 @@ step_tmpl_merge_netsim_scenarios <- function(sim_dir, output_dir,
 #' @inheritParams merge_netsim_scenarios
 #'
 #' @export
-merge_netsim_scenarios_tibble <- function(sim_dir, output_dir, steps_to_keep,
-                                          cols = dplyr::everything()) {
+merge_netsim_scenarios_tibble <- function(
+  sim_dir,
+  output_dir,
+  steps_to_keep,
+  cols = dplyr::everything()
+) {
   expr <- rlang::enquo(cols)
-  if (!fs::dir_exists(output_dir)) fs::dir_create(output_dir)
+  if (!fs::dir_exists(output_dir)) {
+    fs::dir_create(output_dir)
+  }
   batches_infos <- get_scenarios_batches_infos(sim_dir)
 
   for (scenario in unique(batches_infos$scenario_name)) {
@@ -379,45 +335,6 @@ merge_netsim_scenarios_tibble <- function(sim_dir, output_dir, steps_to_keep,
       dplyr::select(-c("tmp_max_sim"))
     saveRDS(df_sc, fs::path(output_dir, paste0("df__", scenario, ".rds")))
   }
-}
-
-#' Step Template to Create a Single Sim File per Scenarios Using the Files From
-#' `netsim_scenarios`
-#'
-#' @param n_cores Parallelize the process over `n_cores` (default = 1)
-#'
-#' @inheritParams slurmworkflow::step_tmpl_map
-#' @inheritParams merge_netsim_scenarios_tibble
-#'
-#' @inherit slurmworkflow::step_tmpl_rscript return
-#' @inheritSection slurmworkflow::step_tmpl_bash_lines Step Template
-#'
-#' @export
-step_tmpl_merge_netsim_scenarios_tibble <- function(
-                      sim_dir, output_dir, steps_to_keep,
-                      cols = dplyr::everything(), n_cores = 1,
-                      setup_lines = NULL) {
-  merge_fun <- function(sim_dir, output_dir, steps_to_keep, cols, n_cores) {
-    future::plan("multicore", workers = n_cores)
-    EpiModelHPC::merge_netsim_scenarios_tibble(
-      sim_dir = sim_dir,
-      output_dir = output_dir,
-      steps_to_keep = steps_to_keep,
-      cols = {{ cols }}
-    )
-  }
-
-  slurmworkflow::step_tmpl_do_call(
-    what = merge_fun,
-    args = list(
-      sim_dir,
-      output_dir,
-      steps_to_keep,
-      rlang::enquo(cols),
-      n_cores
-    ),
-    setup_lines = setup_lines
-  )
 }
 
 #' Helper function to access the infos on merged scenarios `data.frame`
