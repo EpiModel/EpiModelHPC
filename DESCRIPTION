@@ -2,12 +2,11 @@ Package: EpiModelHPC
 Version: 2.7.0
 Date: 2026-04-17
 Title: EpiModel Extensions for High-Performance Computing
-Description: Extension package to EpiModel to run large-scale stochastic network
-    models on modern high-performance computing systems. Functionality provided to
-    simulate models in parallel using single-node, multiple-core setups. Check-pointing
-    functions that automatically save and restore simulation work, which may be
-    useful on HPC systems with Portable Batch System (PBS) job scheduling software
-    like OpenPBS, are also included.
+Description: Extension package to EpiModel for running batched scenario
+    simulations on Slurm-based high-performance computing systems. Provides
+    scenario orchestration with 'netsim_scenarios()', 'slurmworkflow' step
+    templates for HPC job pipelines, 'swfcalib' calibration helpers, and
+    utilities for merging and post-processing simulation output files.
 Maintainer: Samuel Jenness <samuel.m.jenness@emory.edu>
 Authors@R: c(person("Samuel", "Jenness",
     role=c("cre","aut"), email="samuel.m.jenness@emory.edu"))

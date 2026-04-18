@@ -158,17 +158,19 @@ setup. Here is the part that should be uncommented for using the RSPH cluster:
 ```{r wf_hpc_inputs, eval = FALSE}
 # Must be sourced **AFTER** "./R/utils-0_project_settings.R"
 
-hpc_configs <- EpiModelHPC::swf_configs_rsph(
-  partition = "epimodel",
-  r_version = "4.2.1",
-  mail_user = mail_user
+hpc_configs <- list(
+  default_sbatch_opts = list(
+    "partition" = "epimodel",
+    "mail-type" = "FAIL",
+    "mail-user" = mail_user
+  ),
+  r_loader = "module load R/4.2.1",
+  r_version = "4.2.1"
 )
 ```
 
-We use the `EpiModelHPC::swf_configs_rsph` helper function to create the
-`hpc_configs` objects that will holds some pre-defined configurations. We
-specify that we want to work on the "epimodel" partition and that e-mails
-telling us when the jobs are done should be sent to "user@emory.edu".
+The `hpc_configs` list holds the Slurm configuration for your cluster. Adapt
+the partition, R version, and mail settings to your environment.
 
 *Note*: the HPC is using the [Slurm workflow
 manager](https://slurm.schedmd.com/overview.html) to allocate tasks to
@@ -213,9 +215,8 @@ With this we have created the directory "workflows/networks_estimation" and
 stored a summary of it in the `wf` variable. For now our workflow has no steps.
 
 *notes*: SLURM configuration can vary, on [HYAK](https://hyak.uw.edu/) for instance
-  there is  an accounting module and we would have to specify the "account"
-  option). An equivalent
-  `swf_configs_hyak` function exists for the HYAK ecosystem.
+  there is an accounting module and we would have to specify the "account"
+  option. Adapt the `hpc_configs` list to match your cluster's requirements.
 - `default_sbatch_opts` and `sbatch_opts` parameters accept all the options for
   `sbatch` starting with "--". (e.g. "account" is valid but "A" is not, as it
   corresponds to the "-A" shorthand)
