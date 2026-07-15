@@ -6,9 +6,10 @@
 \usage{
 swf_configs_rsph(
   partition = "preemptable",
-  r_version = "4.2.1",
+  r_version = "4.5.1",
   git_version = "2.35.1",
-  mail_user = NULL
+  mail_user = NULL,
+  reap_orphans = TRUE
 )
 }
 \arguments{
@@ -21,6 +22,10 @@ swf_configs_rsph(
 
 \item{mail_user}{The mail address to send the messages to, default is NULL
 (see 'sbatch --mail-type' argument)}
+
+\item{reap_orphans}{Append a SIGTERM trap to \code{r_loader} that kills this
+job's R workers when the job is cancelled (default \code{TRUE}). See the
+"Orphaned workers" section.}
 }
 \value{
 a list containing \code{default_sbatch_opts}, \code{renv_sbatch_opts}
@@ -29,6 +34,26 @@ and \code{r_loader} (see the "hpc_configs" section)
 \description{
 Preset of Configuration for the RSPH Cluster
 }
+\section{Orphaned workers}{
+
+RSPH runs \code{ProctrackType = proctrack/linuxproc} with no cgroups. That
+tracks a job's processes by walking parent-PID chains. R's PSOCK workers (used
+by \code{future::plan("multisession")}, and therefore by \code{swfcalib}) are
+launched with \code{system(wait = FALSE)} and reparent to init immediately,
+severing the chain. \code{scancel} then kills the step and leaves the workers
+running at full CPU, invisible to SLURM, which schedules new work onto cores
+they are still using.
+
+\code{scancel} sends SIGTERM before SIGKILL (\code{KillWait = 30s}), so the
+trap reaps R processes whose environment carries this job's
+\code{SLURM_JOB_ID}. That variable is unique per array task, so a cancelled
+task never touches its siblings, and the trap is a no-op outside SLURM.
+
+It does not cover SIGKILL (node failure, OOM, \code{scancel -s KILL}). Cleaning
+up afterwards is a poor substitute: \code{/projects} is PanFS, and SIGKILL to a
+worker mid-write can wedge it unkillably in D state.
+}
+
 \section{hpc_configs}{
 
 \enumerate{
