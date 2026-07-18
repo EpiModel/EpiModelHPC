@@ -72,6 +72,11 @@ swf_configs_hyak <- function(hpc = "klone", partition = "csde",
 #' @param partition Which partition to use on RSPH (either "compute" or
 #'  "epimodel")
 #' @param git_version Which version of Git to load
+#' @param cleanup_workers If \code{TRUE} (the default), append
+#'   \code{\link{swf_cleanup_r_workers}} to \code{r_loader} so each step reaps
+#'   its own R workers on cancel or timeout. RSPH has no cgroup containment, so
+#'   without this, workers survive \code{scancel} and squat on cores SLURM has
+#'   re-allocated, starving later tasks. See \code{\link{swf_cleanup_r_workers}}.
 #'
 #' @inherit swf_configs_hyak return
 #' @inheritParams swf_configs_hyak
@@ -81,7 +86,8 @@ swf_configs_hyak <- function(hpc = "klone", partition = "csde",
 swf_configs_rsph <- function(partition = "preemptable",
                              r_version = "4.2.1",
                              git_version = "2.35.1",
-                             mail_user = NULL) {
+                             mail_user = NULL,
+                             cleanup_workers = TRUE) {
 
   if (!partition %in% c("preemptable", "epimodel"))
     stop("On RSPH, partition must be one of \"preemptable\" or \"epimodel\"")
@@ -103,6 +109,13 @@ swf_configs_rsph <- function(partition = "preemptable",
     paste0("spack load r@", r_version),
     paste0("spack load git@", git_version)
   )
+
+  if (isTRUE(cleanup_workers)) {
+    hpc_configs[["r_loader"]] <- c(
+      hpc_configs[["r_loader"]],
+      swf_cleanup_r_workers()
+    )
+  }
 
   return(hpc_configs)
 }
