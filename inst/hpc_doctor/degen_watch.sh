@@ -44,6 +44,8 @@ INT=${INT:-5}                  # sampling interval per probe
 MAX_RESTARTS=${MAX_RESTARTS:-3}
 MIN_PROC=${MIN_PROC:-2}       # below this the task is starting up or tearing down, not judgeable
 IO_RECHECK=${IO_RECHECK:-300}   # D-state (filesystem) stalls get this much longer to clear
+IO_MIN_FRAC=${IO_MIN_FRAC:-50}  # pct of a task's procs in D-state to call it a filesystem stall
+HUNG_CPU=${HUNG_CPU:-5}         # median cpu% at or below this, with few procs blocked, = hung
 
 to_min() {
   local t="$1" d=0 h=0 m=0 s=0 n
@@ -97,6 +99,7 @@ for s in $suspects; do
   if [ -z "$rest" ]; then echo "  $jid: gone (finished/moved) - nothing to do"; continue; fi
   med=$(sed -n 's/.*med_cpu=\([0-9]*\).*/\1/p' <<< "$rest")
   dst=$(sed -n 's/.*dstate=\([0-9]*\).*/\1/p' <<< "$rest")
+  npr=$(sed -n 's/.*nproc=\([0-9]*\).*/\1/p' <<< "$rest")
   if [ "${med:-100}" -ge "$CPU_FLOOR" ]; then
     echo "  $jid: recovered (${med}%) - transient, SPARED"; cleared=$((cleared+1)); continue
   fi
@@ -107,28 +110,53 @@ for s in $suspects; do
     echo "  $jid: starved (${med}%) but only ${age}m old (< ${MIN_AGE}m startup grace) - SPARED"; continue
   fi
   # Classify the failure: these are different problems needing different actions.
-  #   dstate == 0 -> CPU STARVATION. Orphaned workers are squatting on cores SLURM
-  #                  re-allocated. The NODE is implicated, so requeue AND exclude it.
-  #   dstate  > 0 -> FILESYSTEM (PanFS) STALL. The node is NOT at fault, and these
-  #                  commonly clear on their own (observed 2026-07-18: two node4
-  #                  tasks read 4-5% with every proc in D-state, then the node was
-  #                  back to 4 tasks at 99%/dstate=0 minutes later). Also, D-state
-  #                  procs may be unkillable, and SIGKILL mid-PanFS-write wedges
-  #                  them permanently. So wait much longer and NEVER blame the node.
+  # Weigh dstate against nproc rather than treating any D-state process as proof of
+  # a filesystem stall. A task is a master plus N workers, so one blocked process
+  # out of nine is a very different condition from seven out of nine.
+  #
+  #   dstate == 0                      -> CPU STARVATION. Orphaned workers squat on
+  #      cores SLURM re-allocated. The NODE is implicated: requeue AND exclude it.
+  #
+  #   dstate >= IO_MIN_FRAC% of nproc  -> FILESYSTEM (PanFS) STALL. The node is NOT
+  #      at fault and these commonly clear on their own (observed 2026-07-18: two
+  #      node4 tasks read 4-5% with every proc in D-state, then the node was back to
+  #      4 tasks at 99%/dstate=0 minutes later). D-state procs may also be
+  #      unkillable, and SIGKILL mid-PanFS-write wedges them permanently. So wait
+  #      much longer and never blame the node. Note that a requeue does not fix this
+  #      either: the task relocates but meets the same filesystem, so the long wait
+  #      is doing the real work and the requeue is a last resort.
+  #
+  #   dstate < IO_MIN_FRAC% and med <= HUNG_CPU -> HUNG TASK. Nearly every process
+  #      is idle rather than blocked, so this is not an I/O stall and waiting out
+  #      IO_RECHECK accomplishes nothing. Requeue promptly. Do not exclude the node:
+  #      a hang is not evidence of contention, which is what dstate == 0 detects.
+  #      (Observed 2026-07-19: nine procs, median 0%, one in D-state, requeued
+  #      correctly but only after being routed down the filesystem branch.)
   exclude_node=1
   if [ "${dst:-0}" -gt 0 ]; then
     exclude_node=0
-    echo "  $jid: IO-STALL ${med}% with ${dst} proc(s) in D-state (filesystem, not contention)"
-    echo "     waiting ${IO_RECHECK}s to let it clear before acting"
-    sleep "$IO_RECHECK"
-    rest3=$(ssh -o StrictHostKeyChecking=no -o ConnectTimeout=8 "$node" \
-            "bash $ROOT/probe_node_cpu.sh $INT" 2>/dev/null | grep "jobid=$jid" || true)
-    med3=$(sed -n 's/.*med_cpu=\([0-9]*\).*/\1/p' <<< "$rest3")
-    if [ -z "$rest3" ] || [ "${med3:-100}" -ge "$CPU_FLOOR" ]; then
-      echo "     cleared (${med3:-gone}%) - SPARED, filesystem recovered"
-      cleared=$((cleared+1)); continue
+    [ "${npr:-0}" -gt 0 ] || npr=1          # never divide by zero on a partial probe
+    io_pct=$(( dst * 100 / npr ))
+    if [ "$io_pct" -lt "$IO_MIN_FRAC" ] && [ "${med:-100}" -le "$HUNG_CPU" ]; then
+      echo "  $jid: HUNG ${med}% with only ${dst}/${npr} proc(s) in D-state (idle, not blocked)"
+      echo "     not a filesystem stall; skipping the ${IO_RECHECK}s wait"
+    else
+      echo "  $jid: IO-STALL ${med}% with ${dst}/${npr} proc(s) in D-state (filesystem, not contention)"
+      echo "     waiting ${IO_RECHECK}s to let it clear before acting"
+      sleep "$IO_RECHECK"
+      rest3=$(ssh -o StrictHostKeyChecking=no -o ConnectTimeout=8 "$node" \
+              "bash $ROOT/probe_node_cpu.sh $INT" 2>/dev/null | grep "jobid=$jid" || true)
+      med3=$(sed -n 's/.*med_cpu=\([0-9]*\).*/\1/p' <<< "$rest3")
+      if [ -z "$rest3" ]; then
+        echo "     task gone (finished during the wait) - SPARED"
+        cleared=$((cleared+1)); continue
+      fi
+      if [ "${med3:-100}" -ge "$CPU_FLOOR" ]; then
+        echo "     cleared (${med3}%) - SPARED, filesystem recovered"
+        cleared=$((cleared+1)); continue
+      fi
+      echo "     still stalled after ${IO_RECHECK}s -> requeue, but NOT excluding $node"
     fi
-    echo "     still stalled after ${IO_RECHECK}s -> requeue, but NOT excluding $node"
   fi
 
   restarts=$(scontrol show job "$jid" 2>/dev/null | grep -oE "Restarts=[0-9]+" | head -1 | cut -d= -f2)
