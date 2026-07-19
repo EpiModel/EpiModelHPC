@@ -46,6 +46,11 @@ MIN_PROC=${MIN_PROC:-2}       # below this the task is starting up or tearing do
 IO_RECHECK=${IO_RECHECK:-300}   # D-state (filesystem) stalls get this much longer to clear
 IO_MIN_FRAC=${IO_MIN_FRAC:-50}  # pct of a task's procs in D-state to call it a filesystem stall
 HUNG_CPU=${HUNG_CPU:-5}         # median cpu% at or below this, with few procs blocked, = hung
+NODE_OFFENSE_LIMIT=${NODE_OFFENSE_LIMIT:-3}   # confirmed degenerations on one node before it is a repeat offender
+# Campaign-scoped node offense ledger. Keyed to the doctor's own SLURM job so a
+# new campaign starts a clean ledger and concurrent doctors (e.g. two projects)
+# never share one. Append-only; one line per confirmed intervention.
+STATE_FILE=${STATE_FILE:-${TMPDIR:-/tmp}/doctor_offenses_${USER:-u}_${SLURM_JOB_ID:-manual}.tsv}
 
 to_min() {
   local t="$1" d=0 h=0 m=0 s=0 n
@@ -162,6 +167,26 @@ for s in $suspects; do
   restarts=$(scontrol show job "$jid" 2>/dev/null | grep -oE "Restarts=[0-9]+" | head -1 | cut -d= -f2)
   restarts=${restarts:-0}
   echo "  $jid: CONFIRMED STARVED ${med}% on $node (age ${age}m, restarts $restarts)"
+
+  # Node offense ledger. A single filesystem stall does not implicate the node,
+  # so the classifier above spares it (exclude_node=0). But repeated confirmed
+  # degenerations on the SAME node across the campaign do implicate it: a node
+  # with a genuinely bad mount produces stall after stall, and the per-symptom
+  # rule keeps letting fresh tasks land there. Count confirmed interventions per
+  # node and, past NODE_OFFENSE_LIMIT, exclude the node on this requeue whatever
+  # the proximate symptom. Counting happens even in report-only mode so a dry run
+  # still surfaces the pattern. State is campaign-scoped (see STATE_FILE), so this
+  # is not a persistent blocklist: the ledger resets with the next campaign.
+  echo "$node" >> "$STATE_FILE" 2>/dev/null || true
+  offenses=$(grep -cxF "$node" "$STATE_FILE" 2>/dev/null || echo 1)
+  if [ "${offenses:-1}" -ge "$NODE_OFFENSE_LIMIT" ]; then
+    echo "     REPEAT OFFENDER: $node has now degenerated $offenses task(s) this campaign (limit $NODE_OFFENSE_LIMIT)"
+    if [ "$exclude_node" != "1" ]; then
+      echo "     escalating: excluding $node on this requeue despite the ${dst:+filesystem-stall }symptom (node is the common factor)"
+      exclude_node=1
+    fi
+  fi
+
   [ "$REQUEUE" = "1" ] || continue
   if [ "$restarts" -ge "$MAX_RESTARTS" ]; then echo "     restarts exhausted; leaving it"; continue; fi
   scontrol requeue "$jid" >/dev/null 2>&1 || { echo "     !! requeue failed"; continue; }
