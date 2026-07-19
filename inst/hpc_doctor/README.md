@@ -27,7 +27,9 @@ Read `dstate=` as a count of processes in uninterruptible sleep, not a flag. `ds
 
 ## Field evidence, first production campaign
 
-An 5,856-task, eight-family campaign on RSPH, roughly 143 concurrent tasks over a saturated cluster. Two requeues in the first six hours, both on the same node, both genuine in the sense that neither task was making progress. Worth recording because **neither was the orphan-contention mode this tooling was built for.** That mode presents as a full process footprint at roughly 50% CPU with `dstate=0`. It has not yet been observed in the wild here.
+An 5,856-task, eight-family campaign on RSPH, roughly 143 concurrent tasks over a saturated cluster. Several requeues over the run, all but one on a single node (node4). Most were filesystem stalls, and one was a hung task (the case that motivated the classifier fix, below). One, at roughly the six-hour mark, was **the orphan-contention mode this tooling was built for**: a full nine-process footprint at 51% CPU with `dstate=0`. The doctor requeued it and added node4 to its `ExcNodeList`, which is the designed response. That was the first in-the-wild sighting here; the mode is real but, at least on this cluster in this window, rarer than the filesystem stalls that dominate the log.
+
+That node4 produced nearly every intervention in the campaign is itself a signal. A node that degrades repeatedly, rather than once, is the one case the static-exclusion argument (below) is reserved for.
 
 **Case 1: a real filesystem stall.** Nine processes, median 43%, with four then seven of them in D-state, persisting past the 300s `IO_RECHECK`. The classification was right. The action is questionable, and self-defeatingly so: the doctor's own conclusion, "filesystem, node not at fault", is the reason a requeue does not help. The task lands on a different node and meets the same filesystem. It discarded 24 minutes of completed work to retry against an unchanged bottleneck. Consider waiting a genuine filesystem stall out for longer, or several `IO_RECHECK` cycles, rather than requeuing on the first one.
 
