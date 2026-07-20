@@ -39,15 +39,30 @@ That was the substantive finding, and it is now fixed. The classifier previously
 
 | condition | verdict | action |
 |---|---|---|
-| `dstate == 0`, CPU below floor | CPU starvation | requeue and exclude the node |
-| `dstate >= IO_MIN_FRAC%` of `nproc` | filesystem stall | wait `IO_RECHECK`, requeue only if it persists, never exclude |
+| `dstate == 0`, CPU below floor | CPU starvation | requeue; exclude the node after `NODE_OFFENSE_LIMIT` repeats |
+| `dstate >= IO_MIN_FRAC%` of `nproc` | filesystem stall | wait up to `IO_MAX_CYCLES` x `IO_RECHECK`, requeue only if still stalled, never exclude |
 | `dstate < IO_MIN_FRAC%` and CPU `<= HUNG_CPU` | hung task | requeue promptly, skip the wait, never exclude |
 
 `IO_MIN_FRAC` defaults to 50 and `HUNG_CPU` to 5. The ambiguous middle (few processes blocked but CPU well above `HUNG_CPU`) deliberately keeps the old behaviour and takes the wait path, so the change only affects the clearly-hung case. A hang does not exclude the node, because a hang is not evidence of contention; `dstate == 0` is what detects that.
 
 **Requeue cost scales with queue depth.** A requeued array task receives a new `SubmitTime` and re-enters the queue behind everything submitted earlier. On this campaign that put both tasks behind a 3,072-task array, so two stragglers that would have finished in 20 minutes instead gated their family's merge step for the whole run. Requeuing is close to free on an empty cluster and expensive on a full one. Being conservative is particularly warranted when a family is nearly complete and a single task gates a barrier or a merge.
 
-Minor: a task that finishes during the `IO_RECHECK` window logs `cleared (gone%)`, where the substitution intends a percentage.
+## Field evidence, second campaign (overnight, 2026-07-20)
+
+An 11-hour overnight run of a 9-family, 6,240-task campaign, 45 sweeps. **Every one of the four interventions was a filesystem (D-state) stall; not one was the orphan-contention mode the doctor was built for.** Across the two campaigns now, the `dstate=0` CPU-starvation signature has appeared exactly once and PanFS filesystem stalls about seven times. The doctor was designed around orphaned PSOCK workers, but empirically it earns its keep on filesystem stalls. Tune `IO_RECHECK`/`IO_MAX_CYCLES` first; the exclusion logic is the rare path.
+
+Two patterns drove the changes below:
+
+- **Filesystem stalls are transient, so requeuing them on the first recheck is too eager.** Every overnight requeue had a sibling task on the same node that recovered to 98-99% in the same window, and one suspect finished during the wait. A requeue barely helps (PanFS is cluster-wide) and re-queues the task behind the whole array. `degen_watch.sh` now gives a D-state stall `IO_MAX_CYCLES` recheck cycles (default 3) before requeuing, sparing it if it recovers at any cycle.
+- **The offense ledger contradicted the classifier.** node3 filesystem-stalled twice overnight (and was suspected four times), approaching the exclusion threshold, yet its siblings recovered each time, so excluding it would have been wrong. Escalation-to-exclusion is now **gated by classification**: only repeated CPU-starvation events (a node genuinely harbouring orphans) escalate; filesystem-stall events are logged for visibility but never drive exclusion.
+
+What was validated and left unchanged: the two-strike sparing logic (zero false requeues across both campaigns; every dip that recovered was spared) and the hung-vs-stall split (zero misclassifications overnight). The core detection is sound; the gap was purely in the response to a confirmed filesystem stall.
+
+## Node-level view (open)
+
+Every overnight stall event had two tasks on the same node go D-state simultaneously, which is a node-level filesystem event rather than independent per-task failures, yet the doctor judges each task in isolation. Aggregating D-state across a node's tasks (most/all blocked at once = node event to wait out; a lone blocked task judged on its own) could implement the patience and the ledger gating more directly. This needs more cross-cluster data before committing to a heuristic and is tracked as a GitHub issue.
+
+Minor fixed: a task that finished during the recheck window logged `cleared (gone%)`, where the substitution intended a percentage.
 
 ## Node offense ledger
 

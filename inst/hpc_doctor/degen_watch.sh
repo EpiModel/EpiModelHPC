@@ -43,10 +43,11 @@ RECHECK=${RECHECK:-45}         # seconds between strike 1 and strike 2
 INT=${INT:-5}                  # sampling interval per probe
 MAX_RESTARTS=${MAX_RESTARTS:-3}
 MIN_PROC=${MIN_PROC:-2}       # below this the task is starting up or tearing down, not judgeable
-IO_RECHECK=${IO_RECHECK:-300}   # D-state (filesystem) stalls get this much longer to clear
+IO_RECHECK=${IO_RECHECK:-300}   # seconds per D-state (filesystem) stall recheck cycle
+IO_MAX_CYCLES=${IO_MAX_CYCLES:-3}  # recheck cycles a filesystem stall gets before requeue (they usually clear)
 IO_MIN_FRAC=${IO_MIN_FRAC:-50}  # pct of a task's procs in D-state to call it a filesystem stall
 HUNG_CPU=${HUNG_CPU:-5}         # median cpu% at or below this, with few procs blocked, = hung
-NODE_OFFENSE_LIMIT=${NODE_OFFENSE_LIMIT:-3}   # confirmed degenerations on one node before it is a repeat offender
+NODE_OFFENSE_LIMIT=${NODE_OFFENSE_LIMIT:-3}   # confirmed CPU-STARVATION events on one node before it is a repeat offender
 # Campaign-scoped node offense ledger. Keyed to the doctor's own SLURM job so a
 # new campaign starts a clean ledger and concurrent doctors (e.g. two projects)
 # never share one. Append-only; one line per confirmed intervention.
@@ -137,30 +138,40 @@ for s in $suspects; do
   #      a hang is not evidence of contention, which is what dstate == 0 detects.
   #      (Observed 2026-07-19: nine procs, median 0%, one in D-state, requeued
   #      correctly but only after being routed down the filesystem branch.)
-  exclude_node=1
+  exclude_node=1; kind=cpustarv
   if [ "${dst:-0}" -gt 0 ]; then
     exclude_node=0
     [ "${npr:-0}" -gt 0 ] || npr=1          # never divide by zero on a partial probe
     io_pct=$(( dst * 100 / npr ))
     if [ "$io_pct" -lt "$IO_MIN_FRAC" ] && [ "${med:-100}" -le "$HUNG_CPU" ]; then
+      kind=hung
       echo "  $jid: HUNG ${med}% with only ${dst}/${npr} proc(s) in D-state (idle, not blocked)"
       echo "     not a filesystem stall; skipping the ${IO_RECHECK}s wait"
     else
+      kind=iostall
       echo "  $jid: IO-STALL ${med}% with ${dst}/${npr} proc(s) in D-state (filesystem, not contention)"
-      echo "     waiting ${IO_RECHECK}s to let it clear before acting"
-      sleep "$IO_RECHECK"
-      rest3=$(ssh -o StrictHostKeyChecking=no -o ConnectTimeout=8 "$node" \
-              "bash $ROOT/probe_node_cpu.sh $INT" 2>/dev/null | grep "jobid=$jid" || true)
-      med3=$(sed -n 's/.*med_cpu=\([0-9]*\).*/\1/p' <<< "$rest3")
-      if [ -z "$rest3" ]; then
-        echo "     task gone (finished during the wait) - SPARED"
-        cleared=$((cleared+1)); continue
-      fi
-      if [ "${med3:-100}" -ge "$CPU_FLOOR" ]; then
-        echo "     cleared (${med3}%) - SPARED, filesystem recovered"
-        cleared=$((cleared+1)); continue
-      fi
-      echo "     still stalled after ${IO_RECHECK}s -> requeue, but NOT excluding $node"
+      # Filesystem stalls are usually transient: while this task is judged, its
+      # siblings on the same node recover (observed 2026-07-20: every overnight
+      # requeue had a sibling that came back to 98-99%, and one suspect finished
+      # during the wait). A requeue barely helps (PanFS is cluster-wide, the task
+      # relocates but meets the same filesystem) and re-queues behind the whole
+      # array, so give the stall several recheck cycles before treating it as real.
+      cleared_io=0
+      for c in $(seq 1 "$IO_MAX_CYCLES"); do
+        echo "     IO recheck $c/$IO_MAX_CYCLES: waiting ${IO_RECHECK}s to let it clear"
+        sleep "$IO_RECHECK"
+        rest3=$(ssh -o StrictHostKeyChecking=no -o ConnectTimeout=8 "$node" \
+                "bash $ROOT/probe_node_cpu.sh $INT" 2>/dev/null | grep "jobid=$jid" || true)
+        if [ -z "$rest3" ]; then
+          echo "     task gone (finished during the wait) - SPARED"; cleared_io=1; break
+        fi
+        med3=$(sed -n 's/.*med_cpu=\([0-9]*\).*/\1/p' <<< "$rest3")
+        if [ "${med3:-100}" -ge "$CPU_FLOOR" ]; then
+          echo "     cleared (${med3}%) - SPARED, filesystem recovered"; cleared_io=1; break
+        fi
+      done
+      if [ "$cleared_io" = 1 ]; then cleared=$((cleared+1)); continue; fi
+      echo "     still stalled after ${IO_MAX_CYCLES}x${IO_RECHECK}s -> requeue (last resort), NOT excluding $node"
     fi
   fi
 
@@ -168,23 +179,28 @@ for s in $suspects; do
   restarts=${restarts:-0}
   echo "  $jid: CONFIRMED STARVED ${med}% on $node (age ${age}m, restarts $restarts)"
 
-  # Node offense ledger. A single filesystem stall does not implicate the node,
-  # so the classifier above spares it (exclude_node=0). But repeated confirmed
-  # degenerations on the SAME node across the campaign do implicate it: a node
-  # with a genuinely bad mount produces stall after stall, and the per-symptom
-  # rule keeps letting fresh tasks land there. Count confirmed interventions per
-  # node and, past NODE_OFFENSE_LIMIT, exclude the node on this requeue whatever
-  # the proximate symptom. Counting happens even in report-only mode so a dry run
-  # still surfaces the pattern. State is campaign-scoped (see STATE_FILE), so this
-  # is not a persistent blocklist: the ledger resets with the next campaign.
-  echo "$node" >> "$STATE_FILE" 2>/dev/null || true
-  offenses=$(grep -cxF "$node" "$STATE_FILE" 2>/dev/null || echo 1)
-  if [ "${offenses:-1}" -ge "$NODE_OFFENSE_LIMIT" ]; then
-    echo "     REPEAT OFFENDER: $node has now degenerated $offenses task(s) this campaign (limit $NODE_OFFENSE_LIMIT)"
+  # Node offense ledger, gated by CLASSIFICATION. Escalation-to-exclusion only
+  # counts CPU-STARVATION events (dstate==0), where the node genuinely harbours
+  # orphaned workers squatting on its cores: a node that keeps CPU-starving fresh
+  # tasks is at fault and should be avoided. Filesystem stalls are logged too (for
+  # visibility) but do NOT drive exclusion, because the classifier already ruled
+  # the node not-at-fault and the field data show these are transient and
+  # cluster-wide, not node-specific (observed 2026-07-20: node3 filesystem-stalled
+  # twice overnight, yet its sibling tasks recovered each time; excluding it would
+  # have been wrong). Escalating on filesystem stalls contradicted the classifier.
+  # Counting happens even in report-only mode. State is campaign-scoped (see
+  # STATE_FILE), so this is not a persistent blocklist; it resets each campaign.
+  echo "$node $kind" >> "$STATE_FILE" 2>/dev/null || true
+  cpu_offenses=$(grep -cE "^$node cpustarv$" "$STATE_FILE" 2>/dev/null || echo 0)
+  all_offenses=$(grep -cE "^$node " "$STATE_FILE" 2>/dev/null || echo 1)
+  if [ "${cpu_offenses:-0}" -ge "$NODE_OFFENSE_LIMIT" ]; then
+    echo "     REPEAT OFFENDER: $node has $cpu_offenses CPU-starvation event(s) this campaign (limit $NODE_OFFENSE_LIMIT; $all_offenses total)"
     if [ "$exclude_node" != "1" ]; then
-      echo "     escalating: excluding $node on this requeue despite the ${dst:+filesystem-stall }symptom (node is the common factor)"
+      echo "     escalating: excluding $node on this requeue (repeated CPU starvation implicates the node)"
       exclude_node=1
     fi
+  elif [ "${all_offenses:-1}" -ge "$NODE_OFFENSE_LIMIT" ]; then
+    echo "     note: $node has $all_offenses confirmed events this campaign ($cpu_offenses CPU-starvation); not excluding (filesystem stalls are transient/cluster-wide)"
   fi
 
   [ "$REQUEUE" = "1" ] || continue
