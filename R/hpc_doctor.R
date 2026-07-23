@@ -128,3 +128,143 @@ hpc_doctor_script <- function(name = c("deploy_doctor.sh", "degen_watch.sh",
   }
   path
 }
+
+# Bash lines that register a campaign in the watch list. Not exported; the
+# public entry point is `add_doctor_register_step`.
+doctor_register_lines <- function(wf_name, watch_dir) {
+  c(
+    "# deploy-doctor watch-list registration (EpiModelHPC::add_doctor_register_step)",
+    "# Mark this campaign live so the shared deploy doctor is kept running until the",
+    "# campaign's teardown step deregisters it. See ?add_doctor_teardown_step.",
+    paste0("swf_watch_dir=\"", watch_dir, "\""),
+    "mkdir -p \"${swf_watch_dir}\"",
+    paste0("touch \"${swf_watch_dir}/", wf_name, "\""),
+    ":"
+  )
+}
+
+# Bash lines that deregister a campaign and, when it was the last one, stop the
+# doctor. Not exported; the public entry point is `add_doctor_teardown_step`.
+# The `rm` MUST precede the emptiness test: that ordering is what makes the
+# decision race-free when two campaigns finish at once (whichever removes its
+# marker last observes an empty directory). The `${USER:-$(whoami)}` fallback
+# covers a step environment started with `--export=NONE` where USER is unset,
+# and the `|| :` plus trailing `:` keep the step's `set -e` from failing on a
+# no-op scancel.
+doctor_teardown_lines <- function(wf_name, watch_dir, job_name) {
+  c(
+    "# deploy-doctor teardown (EpiModelHPC::add_doctor_teardown_step)",
+    "# Deregister this campaign and, if it was the last one the shared doctor was",
+    "# watching, stop the doctor. Race-free: each campaign removes its own marker",
+    "# before testing emptiness, so whichever finishes last always sees an empty",
+    "# dir and no concurrent sibling is left unmonitored.",
+    paste0("swf_watch_dir=\"", watch_dir, "\""),
+    paste0("rm -f \"${swf_watch_dir}/", wf_name, "\""),
+    "if [ ! -d \"${swf_watch_dir}\" ] || [ -z \"$(ls -A \"${swf_watch_dir}\" 2>/dev/null)\" ]; then",
+    paste0("  scancel -u \"${USER:-$(whoami)}\" --name=", job_name, " 2>/dev/null || :"),
+    "fi",
+    ":"
+  )
+}
+
+# Small, cheap sbatch resources for a watch-list step, overridable per call.
+doctor_step_sbatch_opts <- function(sbatch_opts) {
+  utils::modifyList(
+    list(
+      "mail-type"     = "FAIL",
+      "cpus-per-task" = 1,
+      "time"          = "00:05:00",
+      "mem-per-cpu"   = "1G"
+    ),
+    sbatch_opts
+  )
+}
+
+#' Deploy-Doctor Watch-List Workflow Steps
+#'
+#' @description
+#' \code{add_doctor_register_step} and \code{add_doctor_teardown_step} add the
+#' two halves of the deploy-doctor watch list to a \code{slurmworkflow}
+#' workflow. Together they stop the shared deploy doctor
+#' (\code{\link{hpc_doctor_script}}) automatically once the last campaign it is
+#' watching has finished, so it no longer runs to its walltime or needs a manual
+#' \code{scancel}.
+#'
+#' @details
+#' The deploy doctor is one standalone SLURM job, launched once per deploy and
+#' shared across every concurrent campaign whose job name matches its
+#' \code{PATTERN}. It therefore must not be stopped when any single workflow
+#' finishes, only when the last one does. The watch list is a directory holding
+#' one empty marker file per live campaign. Add the register step near the start
+#' of a workflow (right after the workflow is created) and the teardown step as
+#' the final step:
+#'
+#' \enumerate{
+#'   \item the register step creates the marker for this campaign;
+#'   \item the teardown step removes this campaign's marker and, only if the
+#'   directory is then empty, stops the doctor.
+#' }
+#'
+#' Because each campaign removes its own marker before testing emptiness,
+#' whichever campaign finishes last always observes an empty directory. No
+#' concurrent sibling is ever left unmonitored, and there is no interleaving in
+#' which two simultaneous finishes both leave the doctor running. \code{slurmworkflow}
+#' chains steps with \code{afterany}, so the teardown runs even when an earlier
+#' step fails. Register and teardown are a matched pair: a workflow that registers
+#' but never tears down leaves a stale marker that blocks teardown for other
+#' campaigns, and a teardown with no matching doctor is a harmless no-op.
+#'
+#' @param wf a \code{slurmworkflow} workflow summary (e.g. from
+#'   \code{slurmworkflow::create_workflow}).
+#' @param wf_name the campaign name, used as the marker file name. It must be
+#'   identical in the register and teardown calls and unique per concurrent
+#'   campaign; the workflow name is the natural choice.
+#' @param watch_dir the watch-list directory, relative to the HPC repository
+#'   root (the working directory of a workflow step job). Defaults to
+#'   \code{data/run/.doctor_watch}, which is gitignored in the standard EpiModel
+#'   project layout.
+#' @param job_name the SLURM job name of the deploy doctor to stop. Defaults to
+#'   \code{deploy_doctor}, matching the bundled \code{deploy_doctor.sbatch}.
+#' @param sbatch_opts a named list of sbatch options, merged over the step
+#'   defaults (1 CPU, 5 minutes, 1G, mail on FAIL).
+#'
+#' @return the updated workflow summary, with one step appended.
+#'
+#' @seealso \code{\link{hpc_doctor_script}} for the doctor itself.
+#'
+#' @examples
+#' \dontrun{
+#' wf <- make_em_workflow("my_campaign", override = TRUE)
+#' wf <- add_doctor_register_step(wf, "my_campaign")
+#' # ... netsim / merge / process steps ...
+#' wf <- add_doctor_teardown_step(wf, "my_campaign")
+#' }
+#'
+#' @name doctor_watch_steps
+#' @export
+add_doctor_register_step <- function(wf, wf_name,
+                                     watch_dir = "data/run/.doctor_watch",
+                                     sbatch_opts = list()) {
+  slurmworkflow::add_workflow_step(
+    wf_summary  = wf,
+    step_tmpl   = slurmworkflow::step_tmpl_bash_lines(
+      doctor_register_lines(wf_name, watch_dir)
+    ),
+    sbatch_opts = doctor_step_sbatch_opts(sbatch_opts)
+  )
+}
+
+#' @rdname doctor_watch_steps
+#' @export
+add_doctor_teardown_step <- function(wf, wf_name,
+                                     watch_dir = "data/run/.doctor_watch",
+                                     job_name = "deploy_doctor",
+                                     sbatch_opts = list()) {
+  slurmworkflow::add_workflow_step(
+    wf_summary  = wf,
+    step_tmpl   = slurmworkflow::step_tmpl_bash_lines(
+      doctor_teardown_lines(wf_name, watch_dir, job_name)
+    ),
+    sbatch_opts = doctor_step_sbatch_opts(sbatch_opts)
+  )
+}
