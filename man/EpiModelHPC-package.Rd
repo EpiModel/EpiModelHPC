@@ -6,14 +6,7 @@
 \alias{EpiModelHPC}
 \title{EpiModel Extensions for High-Performance Computing}
 \description{
-\tabular{ll}{
-Package: \tab EpiModelHPC\cr
-Type: \tab Package\cr
-Version: \tab 2.2.0\cr
-Date: \tab 2022-11-29\cr
-License: \tab GPL-3\cr
-LazyLoad: \tab yes\cr
-}
+Extension package to EpiModel to run large-scale stochastic network models on modern high-performance computing systems. Provides scenario-based batch simulation, helpers for building 'slurmworkflow' job workflows and 'swfcalib' calibrations, cluster configuration presets, and shell tooling for detecting and recovering degenerate SLURM tasks.
 }
 \details{
 EpiModel provides tools for the mathematical modeling of infectious diseases.
@@ -29,22 +22,27 @@ framework for extending EpiModel to run on modern high-performance computing
 (HPC) systems.
 }
 \references{
-The main website for EpiModel is at \url{http://epimodel.org/}.
-The source code for this extension package is hosted on Github
-at \url{http://github.com/statnet/EpiModelHPC}. Bug reports and
+The main website for EpiModel is at \url{https://www.epimodel.org/}.
+The source code for this extension package is hosted on GitHub
+at \url{https://github.com/EpiModel/EpiModelHPC}. Bug reports and
 feature requests may be filed there.
 }
 \seealso{
 Useful links:
 \itemize{
-  \item \url{http://epimodel.org/}
-  \item \url{http://epimodel.github.io/EpiModelHPC/}
+  \item \url{https://www.epimodel.org/}
+  \item \url{https://epimodel.github.io/EpiModelHPC/}
   \item Report bugs at \url{https://github.com/EpiModel/EpiModelHPC/issues}
 }
 
 }
 \author{
 \strong{Maintainer}: Samuel Jenness \email{samuel.m.jenness@emory.edu}
+
+Authors:
+\itemize{
+  \item Samuel Jenness \email{samuel.m.jenness@emory.edu}
+}
 
 }
 \keyword{package}

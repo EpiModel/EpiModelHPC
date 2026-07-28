@@ -1,15 +1,6 @@
 
 #' EpiModel Extensions for High-Performance Computing
 #'
-#' \tabular{ll}{
-#'    Package: \tab EpiModelHPC\cr
-#'    Type: \tab Package\cr
-#'    Version: \tab 2.2.0\cr
-#'    Date: \tab 2022-11-29\cr
-#'    License: \tab GPL-3\cr
-#'    LazyLoad: \tab yes\cr
-#' }
-#'
 #' @details
 #' EpiModel provides tools for the mathematical modeling of infectious diseases.
 #' Supported model classes include stochastic network models, which rely on the
@@ -23,16 +14,14 @@
 #' framework for extending EpiModel to run on modern high-performance computing
 #' (HPC) systems.
 #'
-#' @references The main website for EpiModel is at \url{http://epimodel.org/}.
-#'             The source code for this extension package is hosted on Github
-#'             at \url{http://github.com/statnet/EpiModelHPC}. Bug reports and
+#' @references The main website for EpiModel is at \url{https://www.epimodel.org/}.
+#'             The source code for this extension package is hosted on GitHub
+#'             at \url{https://github.com/EpiModel/EpiModelHPC}. Bug reports and
 #'             feature requests may be filed there.
 #'
 #' @name EpiModelHPC-package
 #' @aliases EpiModelHPC
-#' @import EpiModel doParallel foreach ergm tergm
-#' @importFrom utils read.table read.csv write.csv
-#' @importFrom stringr str_pad
+#' @import EpiModel
 #' @importFrom rlang .data
 #' @keywords package
 #'

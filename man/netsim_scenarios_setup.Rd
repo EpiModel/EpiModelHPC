@@ -20,12 +20,23 @@ netsim_scenarios_setup(
 \item{path_to_x}{Path to a Fitted network model object saved with \code{saveRDS}.
 (See the \code{x} argument to the \code{EpiModel::netsim} function)}
 
-\item{param}{Model parameters, as an object of class \code{param.net}.}
+\item{param}{Model parameters, as an object of class \code{\link[EpiModel]{param.net}}.
+Includes transmission probability (\code{inf.prob}), act rate
+(\code{act.rate}), recovery rate (\code{rec.rate}), and demographic rates
+for models with vital dynamics. Custom parameters for extended
+models may also be passed through \code{param.net}.}
 
-\item{init}{Initial conditions, as an object of class \code{init.net}.}
+\item{init}{Initial conditions, as an object of class \code{\link[EpiModel]{init.net}}.
+Specifies the initial number of infected nodes (\code{i.num}) and,
+for SIR models, recovered nodes (\code{r.num}). For two-group models,
+the corresponding \code{.g2} parameters are also required.}
 
-\item{control}{Control settings, as an object of class
-\code{control.net}.}
+\item{control}{Control settings, as an object of class \code{\link[EpiModel]{control.net}}.
+Key settings include \code{type} (disease model: \code{"SI"}, \code{"SIR"}, or
+\code{"SIS"}), \code{nsteps} (number of time steps), \code{nsims} (number of
+simulations), \code{tergmLite} (lightweight mode for performance), and
+\code{resimulate.network} (required for models with vital dynamics).
+For extended models, custom module functions are also passed here.}
 
 \item{scenarios_list}{A list of scenarios to be run. Produced by the
 \code{EpiModel::create_scenario_list} function}
