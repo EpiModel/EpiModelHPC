@@ -29,10 +29,9 @@ Imports:
     tidyselect,
     utils
 Suggests:
+    knitr,
     rmarkdown,
-    testthat,
-    network,
-    knitr
+    testthat
 Remotes:
  github::EpiModel/slurmworkflow,
  github::EpiModel/swfcalib
