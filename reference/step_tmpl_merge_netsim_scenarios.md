@@ -45,21 +45,21 @@ step_tmpl_merge_netsim_scenarios(
 - keep.nwstats:
 
   If `TRUE`, keep the network statistics (as set by the
-  `nwstats.formula` parameter in `control.netsim`) from the original `x`
+  `nwstats.formula` parameter in `control.net`) from the original `x`
   and `y` elements.
 
 - keep.other:
 
   If `TRUE`, keep the other simulation elements (as set by the
-  `save.other` parameter in `control.netsim`) from the original `x` and
-  `y` elements.
+  `save.other` parameter in `control.net`) from the original `x` and `y`
+  elements.
 
 - param.error:
 
   If `TRUE`, if `x` and `y` have different params (in
-  [`param.net`](https://epimodel.github.io/EpiModel/reference/param.net.html))
+  [`param.net()`](https://epimodel.github.io/EpiModel/reference/param.net.html))
   or controls (passed in
-  [`control.net`](https://epimodel.github.io/EpiModel/reference/control.net.html))
+  [`control.net()`](https://epimodel.github.io/EpiModel/reference/control.net.html))
   an error will prevent the merge. Use `FALSE` to override that check.
 
 - keep.diss.stats:

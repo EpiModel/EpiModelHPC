@@ -28,8 +28,7 @@ Slurm-based job scheduling.
 
 ## Key Functions
 
-- [`netsim_hpc()`](http://epimodel.github.io/EpiModelHPC/reference/netsim_hpc.md) -
-  parallel netsim with checkpointing
+- `netsim_hpc()` - parallel netsim with checkpointing
 - [`netsim_scenarios()`](http://epimodel.github.io/EpiModelHPC/reference/netsim_scenarios.md)
   /
   [`step_tmpl_netsim_scenarios()`](http://epimodel.github.io/EpiModelHPC/reference/step_tmpl_netsim_scenarios.md) -

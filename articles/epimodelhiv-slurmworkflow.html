@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">EpiModelHPC</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.7.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.8.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -76,9 +76,9 @@ to a set of tasks to be executed on the HPC, one after the other.</p>
 the <a href="https://github.com/EpiModel/EpiModelHIV-Template" class="external-link">EpiModel/EpiModelHIV-Template</a>
 project.</p>
 <p>This project uses <a href="https://rstudio.github.io/renv/index.html" class="external-link">renv</a> and requires
-access to the <a href="https://github.com/EpiModelHIV-p" class="external-link">EpiModelHIV-p</a> private
-repository. This vignette assumes that your project is hosted on a git
-repository checked out on your local computer and on the HPC.</p>
+access to the <a href="https://github.com/EpiModel/EpiModelHIV-p" class="external-link">EpiModelHIV-p</a>
+private repository. This vignette assumes that your project is hosted on
+a git repository checked out on your local computer and on the HPC.</p>
 <p>This vignette will use the Rollins School of Public Health (RSPH)
 High Performance Computing cluster (HPC) from <a href="https://www.sph.emory.edu/" class="external-link">Emory University</a> as an
 example.</p>
@@ -194,7 +194,7 @@ called “networks_estimation” and will live in
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Libraries --------------------------------------------------------------------</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://epimodel.github.io/slurmworkflow/" class="external-link">"slurmworkflow"</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="http://epimodel.org/" class="external-link">"EpiModelHPC"</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://www.epimodel.org/" class="external-link">"EpiModelHPC"</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Settings ---------------------------------------------------------------------</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="st">"./R/utils-0_project_settings.R"</span><span class="op">)</span></span></code></pre></div>
@@ -570,7 +570,7 @@ the creation of this <em>workflow</em>.</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Libraries --------------------------------------------------------------------</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://epimodel.github.io/slurmworkflow/" class="external-link">"slurmworkflow"</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="http://epimodel.org/" class="external-link">"EpiModelHPC"</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://www.epimodel.org/" class="external-link">"EpiModelHPC"</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st">"EpiModelHIV"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Settings ---------------------------------------------------------------------</span></span>

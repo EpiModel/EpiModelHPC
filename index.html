@@ -11,8 +11,8 @@
 <script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="EpiModel Extensions for High-Performance Computing">
-<meta name="description" content="Extension package to EpiModel to run large-scale stochastic network models on modern high-performance computing systems. Functionality provided to simulate models in parallel using single-node, multiple-core setups. Check-pointing functions that automatically save and restore simulation work, which may be useful on HPC systems with Portable Batch System (PBS) job scheduling software like OpenPBS, are also included.">
-<meta property="og:description" content="Extension package to EpiModel to run large-scale stochastic network models on modern high-performance computing systems. Functionality provided to simulate models in parallel using single-node, multiple-core setups. Check-pointing functions that automatically save and restore simulation work, which may be useful on HPC systems with Portable Batch System (PBS) job scheduling software like OpenPBS, are also included.">
+<meta name="description" content="Extension package to EpiModel to run large-scale stochastic network models on modern high-performance computing systems. Provides scenario-based batch simulation, helpers for building slurmworkflow job workflows and swfcalib calibrations, cluster configuration presets, and shell tooling for detecting and recovering degenerate SLURM tasks.">
+<meta property="og:description" content="Extension package to EpiModel to run large-scale stochastic network models on modern high-performance computing systems. Provides scenario-based batch simulation, helpers for building slurmworkflow job workflows and swfcalib calibrations, cluster configuration presets, and shell tooling for detecting and recovering degenerate SLURM tasks.">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">EpiModelHPC</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.7.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.8.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,7 +72,7 @@
 <li>
 <strong>Result Merging</strong>: Merges outputs from distributed batch jobs back into single simulation objects or tidy data frames for analysis.</li>
 </ul>
-<p>If your simulations complete in reasonable time on a laptop, you likely do not need this package. EpiModelHPC is designed for the point at which you need to run large numbers of replicates, sweep across many scenarios, or your model’s per-replicate runtime exceeds what is practical without job scheduling and checkpointing.</p>
+<p>If your simulations complete in reasonable time on a laptop, you likely do not need this package. EpiModelHPC is designed for the point at which you need to run large numbers of replicates, sweep across many scenarios, or your model’s per-replicate runtime exceeds what is practical without job scheduling.</p>
 </div>
 <div class="section level2">
 <h2 id="how-slurmworkflow-fits-in">How slurmworkflow Fits In<a class="anchor" aria-label="anchor" href="#how-slurmworkflow-fits-in"></a>
@@ -144,17 +144,9 @@
 </h3>
 <ul>
 <li>
-<strong><code><a href="reference/netsim_hpc.html">netsim_hpc()</a></code></strong> – Run <code>netsim</code> in parallel with automatic checkpointing. Best for single-scenario runs where checkpoint/resume is the primary need.</li>
-<li>
 <strong><code><a href="reference/netsim_scenarios.html">netsim_scenarios()</a></code></strong> – Run multiple scenarios locally with batched parallelization. Mirrors <code><a href="reference/step_tmpl_netsim_scenarios.html">step_tmpl_netsim_scenarios()</a></code> for local testing.</li>
-</ul>
-</div>
-<div class="section level3">
-<h3 id="checkpointing">Checkpointing<a class="anchor" aria-label="anchor" href="#checkpointing"></a>
-</h3>
-<ul>
 <li>
-<strong><code><a href="reference/check_cp.html">check_cp()</a></code></strong> / <strong><code><a href="reference/initialize_cp.html">initialize_cp()</a></code></strong> / <strong><code><a href="reference/save_cpdata.html">save_cpdata()</a></code></strong> – Low-level checkpointing utilities used internally by <code><a href="reference/netsim_hpc.html">netsim_hpc()</a></code>. Checkpoint data are saved to <code>data/sim&lt;N&gt;/</code> directories and cleaned up on successful completion.</li>
+<strong><code><a href="reference/netsim_swfcalib_output.html">netsim_swfcalib_output()</a></code></strong> – Run scenarios built from the result of an <code>swfcalib</code> calibration.</li>
 </ul>
 </div>
 <div class="section level3">
@@ -176,14 +168,18 @@
 <li>
 <strong><code><a href="reference/swf_configs_hyak.html">swf_configs_hyak()</a></code></strong> / <strong><code><a href="reference/swf_configs_rsph.html">swf_configs_rsph()</a></code></strong> – Return lists of sbatch options, renv build settings, and R module-loading commands for supported clusters.</li>
 <li>
-<strong><code><a href="reference/pull_env_vars.html">pull_env_vars()</a></code></strong> – Extract Slurm environment variables (e.g., <code>SLURM_ARRAY_TASK_ID</code>) into R’s global environment.</li>
+<strong><code><a href="reference/swf_cleanup_r_workers.html">swf_cleanup_r_workers()</a></code></strong> – Bash lines trapping <code>TERM</code>/<code>EXIT</code> to reap a job’s own R workers, so cancelled jobs do not leave orphans squatting on cores. Included in <code><a href="reference/swf_configs_rsph.html">swf_configs_rsph()</a></code> by default.</li>
+<li>
+<strong><code><a href="reference/hpc_doctor_script.html">hpc_doctor_script()</a></code></strong> – Path to the bundled shell tools that detect and requeue CPU-starved SLURM tasks. See <code>inst/hpc_doctor/README.md</code>.</li>
+<li>
+<strong><code><a href="reference/doctor_watch_steps.html">add_doctor_register_step()</a></code></strong> / <strong><code><a href="reference/doctor_watch_steps.html">add_doctor_teardown_step()</a></code></strong> – Workflow steps that keep a shared deploy doctor running until the last campaign watching it finishes.</li>
 </ul>
 </div>
 </div>
 <div class="section level2">
 <h2 id="system-requirements">System Requirements<a class="anchor" aria-label="anchor" href="#system-requirements"></a>
 </h2>
-<p>While developed for Linux-based HPC clusters running the <a href="https://slurm.schedmd.com/" class="external-link">Slurm</a> workload manager, the core parallelization and checkpointing functionality works on any system with multiple cores, including macOS and Windows workstations. The slurmworkflow integration and step templates are specific to Slurm-managed clusters.</p>
+<p>While developed for Linux-based HPC clusters running the <a href="https://slurm.schedmd.com/" class="external-link">Slurm</a> workload manager, the local scenario functions work on any system with multiple cores, including macOS and Windows workstations. The slurmworkflow integration, the step templates, and the HPC doctor tooling are specific to Slurm-managed clusters.</p>
 </div>
 <div class="section level2">
 <h2 id="resources">Resources<a class="anchor" aria-label="anchor" href="#resources"></a>

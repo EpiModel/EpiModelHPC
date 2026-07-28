@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">EpiModelHPC</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.7.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.8.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -65,16 +65,27 @@
 
 
 <dt id="arg-param">param<a class="anchor" aria-label="anchor" href="#arg-param"></a></dt>
-<dd><p>Model parameters, as an object of class <code>param.net</code>.</p></dd>
+<dd><p>Model parameters, as an object of class <code><a href="https://epimodel.github.io/EpiModel/reference/param.net.html" class="external-link">param.net</a></code>.
+Includes transmission probability (<code>inf.prob</code>), act rate
+(<code>act.rate</code>), recovery rate (<code>rec.rate</code>), and demographic rates
+for models with vital dynamics. Custom parameters for extended
+models may also be passed through <code>param.net</code>.</p></dd>
 
 
 <dt id="arg-init">init<a class="anchor" aria-label="anchor" href="#arg-init"></a></dt>
-<dd><p>Initial conditions, as an object of class <code>init.net</code>.</p></dd>
+<dd><p>Initial conditions, as an object of class <code><a href="https://epimodel.github.io/EpiModel/reference/init.net.html" class="external-link">init.net</a></code>.
+Specifies the initial number of infected nodes (<code>i.num</code>) and,
+for SIR models, recovered nodes (<code>r.num</code>). For two-group models,
+the corresponding <code>.g2</code> parameters are also required.</p></dd>
 
 
 <dt id="arg-control">control<a class="anchor" aria-label="anchor" href="#arg-control"></a></dt>
-<dd><p>Control settings, as an object of class
-<code>control.net</code>.</p></dd>
+<dd><p>Control settings, as an object of class <code><a href="https://epimodel.github.io/EpiModel/reference/control.net.html" class="external-link">control.net</a></code>.
+Key settings include <code>type</code> (disease model: <code>"SI"</code>, <code>"SIR"</code>, or
+<code>"SIS"</code>), <code>nsteps</code> (number of time steps), <code>nsims</code> (number of
+simulations), <code>tergmLite</code> (lightweight mode for performance), and
+<code>resimulate.network</code> (required for models with vital dynamics).
+For extended models, custom module functions are also passed here.</p></dd>
 
 
 <dt id="arg-calib-object">calib_object<a class="anchor" aria-label="anchor" href="#arg-calib-object"></a></dt>

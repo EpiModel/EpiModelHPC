@@ -1,13 +1,11 @@
 # EpiModel Extensions for High-Performance Computing
 
-|           |             |
-|-----------|-------------|
-| Package:  | EpiModelHPC |
-| Type:     | Package     |
-| Version:  | 2.2.0       |
-| Date:     | 2022-11-29  |
-| License:  | GPL-3       |
-| LazyLoad: | yes         |
+Extension package to EpiModel to run large-scale stochastic network
+models on modern high-performance computing systems. Provides
+scenario-based batch simulation, helpers for building 'slurmworkflow'
+job workflows and 'swfcalib' calibrations, cluster configuration
+presets, and shell tooling for detecting and recovering degenerate SLURM
+tasks.
 
 ## Details
 
@@ -26,21 +24,25 @@ high-performance computing (HPC) systems.
 
 ## References
 
-The main website for EpiModel is at <http://epimodel.org/>. The source
-code for this extension package is hosted on Github at
-<http://github.com/statnet/EpiModelHPC>. Bug reports and feature
+The main website for EpiModel is at <https://www.epimodel.org/>. The
+source code for this extension package is hosted on GitHub at
+<https://github.com/EpiModel/EpiModelHPC>. Bug reports and feature
 requests may be filed there.
 
 ## See also
 
 Useful links:
 
-- <http://epimodel.org/>
+- <https://www.epimodel.org/>
 
-- <http://epimodel.github.io/EpiModelHPC/>
+- <https://epimodel.github.io/EpiModelHPC/>
 
 - Report bugs at <https://github.com/EpiModel/EpiModelHPC/issues>
 
 ## Author
 
 **Maintainer**: Samuel Jenness <samuel.m.jenness@emory.edu>
+
+Authors:
+
+- Samuel Jenness <samuel.m.jenness@emory.edu>

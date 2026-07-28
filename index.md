@@ -37,7 +37,7 @@ If your simulations complete in reasonable time on a laptop, you likely
 do not need this package. EpiModelHPC is designed for the point at which
 you need to run large numbers of replicates, sweep across many
 scenarios, or your model’s per-replicate runtime exceeds what is
-practical without job scheduling and checkpointing.
+practical without job scheduling.
 
 ## How slurmworkflow Fits In
 
@@ -104,25 +104,12 @@ repositories.
 
 ### Simulation
 
-- **[`netsim_hpc()`](http://epimodel.github.io/EpiModelHPC/reference/netsim_hpc.md)**
-  – Run `netsim` in parallel with automatic checkpointing. Best for
-  single-scenario runs where checkpoint/resume is the primary need.
 - **[`netsim_scenarios()`](http://epimodel.github.io/EpiModelHPC/reference/netsim_scenarios.md)**
   – Run multiple scenarios locally with batched parallelization. Mirrors
   [`step_tmpl_netsim_scenarios()`](http://epimodel.github.io/EpiModelHPC/reference/step_tmpl_netsim_scenarios.md)
   for local testing.
-
-### Checkpointing
-
-- **[`check_cp()`](http://epimodel.github.io/EpiModelHPC/reference/check_cp.md)**
-  /
-  **[`initialize_cp()`](http://epimodel.github.io/EpiModelHPC/reference/initialize_cp.md)**
-  /
-  **[`save_cpdata()`](http://epimodel.github.io/EpiModelHPC/reference/save_cpdata.md)**
-  – Low-level checkpointing utilities used internally by
-  [`netsim_hpc()`](http://epimodel.github.io/EpiModelHPC/reference/netsim_hpc.md).
-  Checkpoint data are saved to `data/sim<N>/` directories and cleaned up
-  on successful completion.
+- **[`netsim_swfcalib_output()`](http://epimodel.github.io/EpiModelHPC/reference/netsim_swfcalib_output.md)**
+  – Run scenarios built from the result of an `swfcalib` calibration.
 
 ### File Management
 
@@ -145,18 +132,27 @@ repositories.
   **[`swf_configs_rsph()`](http://epimodel.github.io/EpiModelHPC/reference/swf_configs_rsph.md)**
   – Return lists of sbatch options, renv build settings, and R
   module-loading commands for supported clusters.
-- **[`pull_env_vars()`](http://epimodel.github.io/EpiModelHPC/reference/pull_env_vars.md)**
-  – Extract Slurm environment variables (e.g., `SLURM_ARRAY_TASK_ID`)
-  into R’s global environment.
+- **[`swf_cleanup_r_workers()`](http://epimodel.github.io/EpiModelHPC/reference/swf_cleanup_r_workers.md)**
+  – Bash lines trapping `TERM`/`EXIT` to reap a job’s own R workers, so
+  cancelled jobs do not leave orphans squatting on cores. Included in
+  [`swf_configs_rsph()`](http://epimodel.github.io/EpiModelHPC/reference/swf_configs_rsph.md)
+  by default.
+- **[`hpc_doctor_script()`](http://epimodel.github.io/EpiModelHPC/reference/hpc_doctor_script.md)**
+  – Path to the bundled shell tools that detect and requeue CPU-starved
+  SLURM tasks. See `inst/hpc_doctor/README.md`.
+- **[`add_doctor_register_step()`](http://epimodel.github.io/EpiModelHPC/reference/doctor_watch_steps.md)**
+  /
+  **[`add_doctor_teardown_step()`](http://epimodel.github.io/EpiModelHPC/reference/doctor_watch_steps.md)**
+  – Workflow steps that keep a shared deploy doctor running until the
+  last campaign watching it finishes.
 
 ## System Requirements
 
 While developed for Linux-based HPC clusters running the
-[Slurm](https://slurm.schedmd.com/) workload manager, the core
-parallelization and checkpointing functionality works on any system with
-multiple cores, including macOS and Windows workstations. The
-slurmworkflow integration and step templates are specific to
-Slurm-managed clusters.
+[Slurm](https://slurm.schedmd.com/) workload manager, the local scenario
+functions work on any system with multiple cores, including macOS and
+Windows workstations. The slurmworkflow integration, the step templates,
+and the HPC doctor tooling are specific to Slurm-managed clusters.
 
 ## Resources
 

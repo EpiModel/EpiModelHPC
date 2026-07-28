@@ -12,9 +12,10 @@ We will describe how to construct and use *workflows* using the
 project.
 
 This project uses [renv](https://rstudio.github.io/renv/index.html) and
-requires access to the [EpiModelHIV-p](https://github.com/EpiModelHIV-p)
-private repository. This vignette assumes that your project is hosted on
-a git repository checked out on your local computer and on the HPC.
+requires access to the
+[EpiModelHIV-p](https://github.com/EpiModel/EpiModelHIV-p) private
+repository. This vignette assumes that your project is hosted on a git
+repository checked out on your local computer and on the HPC.
 
 This vignette will use the Rollins School of Public Health (RSPH) High
 Performance Computing cluster (HPC) from [Emory

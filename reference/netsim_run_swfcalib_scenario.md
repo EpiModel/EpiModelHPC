@@ -40,15 +40,30 @@ netsim_run_swfcalib_scenario(
 
 - param:
 
-  Model parameters, as an object of class `param.net`.
+  Model parameters, as an object of class
+  [`param.net`](https://epimodel.github.io/EpiModel/reference/param.net.html).
+  Includes transmission probability (`inf.prob`), act rate (`act.rate`),
+  recovery rate (`rec.rate`), and demographic rates for models with
+  vital dynamics. Custom parameters for extended models may also be
+  passed through `param.net`.
 
 - init:
 
-  Initial conditions, as an object of class `init.net`.
+  Initial conditions, as an object of class
+  [`init.net`](https://epimodel.github.io/EpiModel/reference/init.net.html).
+  Specifies the initial number of infected nodes (`i.num`) and, for SIR
+  models, recovered nodes (`r.num`). For two-group models, the
+  corresponding `.g2` parameters are also required.
 
 - control:
 
-  Control settings, as an object of class `control.net`.
+  Control settings, as an object of class
+  [`control.net`](https://epimodel.github.io/EpiModel/reference/control.net.html).
+  Key settings include `type` (disease model: `"SI"`, `"SIR"`, or
+  `"SIS"`), `nsteps` (number of time steps), `nsims` (number of
+  simulations), `tergmLite` (lightweight mode for performance), and
+  `resimulate.network` (required for models with vital dynamics). For
+  extended models, custom module functions are also passed here.
 
 - libraries:
 

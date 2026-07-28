@@ -6,9 +6,6 @@
   [`EpiModelHPC`](http://epimodel.github.io/EpiModelHPC/reference/EpiModelHPC-package.md)
   : EpiModel Extensions for High-Performance Computing
 
-- [`check_cp()`](http://epimodel.github.io/EpiModelHPC/reference/check_cp.md)
-  : Checks for Checkpointed Rdata Files
-
 - [`add_doctor_register_step()`](http://epimodel.github.io/EpiModelHPC/reference/doctor_watch_steps.md)
   [`add_doctor_teardown_step()`](http://epimodel.github.io/EpiModelHPC/reference/doctor_watch_steps.md)
   : Deploy-Doctor Watch-List Workflow Steps
@@ -23,9 +20,6 @@
 
 - [`hpc_doctor_script()`](http://epimodel.github.io/EpiModelHPC/reference/hpc_doctor_script.md)
   : Path to a Bundled HPC Doctor Script
-
-- [`initialize_cp()`](http://epimodel.github.io/EpiModelHPC/reference/initialize_cp.md)
-  : Initializes Network Model after Checkpointing
 
 - [`make_calibrated_scenario()`](http://epimodel.github.io/EpiModelHPC/reference/make_calibrated_scenario.md)
   :
@@ -44,12 +38,6 @@
 
   Create a Single Sim File per Scenarios Using the Files From
   `netsim_scenarios`
-
-- [`merge_simfiles()`](http://epimodel.github.io/EpiModelHPC/reference/merge_simfiles.md)
-  : Save Simulation Data from Stochastic Network Models
-
-- [`netsim_hpc()`](http://epimodel.github.io/EpiModelHPC/reference/netsim_hpc.md)
-  : Stochastic Network Models on High-Performance Computing Systems
 
 - [`netsim_run_one_scenario()`](http://epimodel.github.io/EpiModelHPC/reference/netsim_run_one_scenario.md)
   :
@@ -81,21 +69,6 @@
 
   Helper function to create the parameters for
   `netsim_run_swfcalib_scenario`
-
-- [`process_simfiles()`](http://epimodel.github.io/EpiModelHPC/reference/process_simfiles.md)
-  : Process sub-job simulation files saved as a series of Rdata files.
-
-- [`pull_env_vars()`](http://epimodel.github.io/EpiModelHPC/reference/pull_env_vars.md)
-  : Pull Standard Environmental Variables in Slurm Jobs
-
-- [`save_cpdata()`](http://epimodel.github.io/EpiModelHPC/reference/save_cpdata.md)
-  : Saves for Network Simulation Rdata Files for Checkpointing
-
-- [`savesim()`](http://epimodel.github.io/EpiModelHPC/reference/savesim.md)
-  : Save Simulation Data from Stochastic Network Models
-
-- [`sbatch_master()`](http://epimodel.github.io/EpiModelHPC/reference/sbatch_master.md)
-  : Create sbatch Bash Shell Script with Parameter Combination
 
 - [`step_tmpl_merge_netsim_scenarios()`](http://epimodel.github.io/EpiModelHPC/reference/step_tmpl_merge_netsim_scenarios.md)
   :
