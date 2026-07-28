@@ -17,7 +17,7 @@ scancel."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">EpiModelHPC</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.6.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.7.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -124,7 +124,16 @@ the final step:</p>
 <ol><li><p>the register step creates the marker for this campaign;</p></li>
 <li><p>the teardown step removes this campaign's marker and, only if the
 directory is then empty, stops the doctor.</p></li>
-</ol><p>Because each campaign removes its own marker before testing emptiness,
+</ol><p>Pass the same directory to the doctor itself as <code>WATCH_DIR</code> when you
+submit it. The teardown step is the primary stop signal and is immediate, but
+the doctor also self-terminates after a run of empty sweeps, and <code>WATCH_DIR</code>
+is what tells it which kind of empty queue it is looking at. With a campaign
+still registered it waits the full <code>IDLE_EXIT</code>, treating an empty queue as
+a lull between steps; with nothing registered it exits after the shorter
+<code>IDLE_FAST</code>. The watch list only ever makes it more patient, and
+<code>IDLE_EXIT</code> still caps the wait, so a stale marker left by a workflow that
+died before its teardown ran cannot hold the doctor open to its walltime.</p>
+<p>Because each campaign removes its own marker before testing emptiness,
 whichever campaign finishes last always observes an empty directory. No
 concurrent sibling is ever left unmonitored, and there is no interleaving in
 which two simultaneous finishes both leave the doctor running. <code>slurmworkflow</code>
