@@ -9,7 +9,7 @@ The detector measures CPU utilisation rather than elapsed time. Healthy workers 
 | script | role |
 |---|---|
 | `probe_node_cpu.sh` | node-side; samples `/proc/<pid>/stat` twice and differences it. One ssh per node covers every task on it. Prints `jobid= taskid= nproc= med_cpu= dstate=` per task. |
-| `degen_watch.sh` | per-task verdict; report-only by default, `--requeue` acts |
+| `degen_watch.sh` | per-task verdict; report-only by default, `--requeue` acts. `PATTERN` scopes both the nodes probed and the tasks judged. |
 | `deploy_doctor.sh` | sweep loop for the life of a campaign, self-terminating |
 | `term_orphans.sh` | SIGTERMs genuinely orphaned workers, safe on shared nodes |
 
@@ -27,6 +27,7 @@ Read `jobid=` and `taskid=` as two different things. `jobid` is `SLURM_JOB_ID`, 
 - Requeue, never cancel. A requeued task re-runs its own unit and leaves no gap.
 - `ExcNodeList` can only be set on a pending task. The working sequence is requeue, hold, update, release.
 - Address array tasks as `<ArrayJobId>_<TaskId>`. A bare `ArrayJobId` given to `scontrol requeue` restarts every task in the array.
+- Apply `PATTERN` to tasks, not only to nodes. The probe reports every R process the user owns on a probed node, so a node shared with another of the user's campaigns yields that campaign's tasks too.
 
 ## Field evidence, first production campaign
 
@@ -82,6 +83,16 @@ Only `MAX_RESTARTS` stopped it: after three rounds the tasks reached their resta
 The probe now reads `SLURM_ARRAY_JOB_ID` and `SLURM_ARRAY_TASK_ID` from the same environment block and emits `taskid=`, and every `squeue`/`scontrol` call in `degen_watch.sh` addresses the task by it. Taking the id from the task's own environment rather than resolving it later is the point: PSOCK workers inherit it from their master, so every process of a task agrees, and nothing has to be inferred from a `squeue` line that may describe a sibling. Verified against the successor array while it ran: `jobid=41746875 taskid=41746874_0`, where the raw `SLURM_JOB_ID` and the array id differ by one and neither is guessable from the other. A guard before the destructive call refuses any unqualified id that `scontrol` reports as an array, so the failure mode cannot return by another route.
 
 Two smaller consequences worth keeping in mind. The probe match was a bare `grep jobid=$jid`, which substring-matches any longer id sharing the prefix; it is now anchored on the field boundary, because acting on the wrong task is the one mistake this script must not make. And `Restarts=`, the age lookup, and the `ExcNodeList` read all went through the same unqualified id, so on an array they were reading whichever task `scontrol` or `squeue` happened to list first rather than the one under judgement.
+
+### PATTERN scoped nodes but not tasks
+
+Confirming the fix surfaced a second, independent defect in the same sweep. `PATTERN` selected the nodes to probe, and nothing after that re-checked it. `probe_node_cpu.sh` reports every R process the user owns on a node, so on a shared cluster where one account runs several campaigns, the doctor was classifying, and would have requeued, tasks belonging to a project it was never pointed at. It was visible in the log all along: a `prep-mi` task from a second concurrent campaign appearing in a `/doxy-/` sweep, spared only by the unrelated `nproc < 2` rule.
+
+`degen_watch.sh` now takes the node list and the set of in-scope task ids from a single `squeue` pass and skips anything outside it, before any classification. Out-of-scope tasks are reported when they are themselves below the floor and never otherwise, because a starving co-tenant is the evidence that the node is oversubscribed, which is the context wanted when one of our own tasks on it is starving too.
+
+Verified by inverting the scope against two live campaigns sharing nodes. Pointed at the second project with the floor forced to 100%, the three nine-process tasks of the first on the same node are logged `co-tenant ... (outside /prep-d3/: not judged)` and the sweep ends with zero suspects; pointed back at the first, the second project's tasks get the same treatment. Nothing outside `PATTERN` can now reach the action path from either direction.
+
+The match is also now against the job name field alone rather than the whole `squeue` line. `deploy_doctor.sh` counts against `squeue -o "%j"` while `degen_watch.sh` grepped `%N %j`, so an anchored pattern such as `^doxy-` matched in the wrapper and silently found nothing in the worker: the doctor reported tasks to sweep and then swept nothing, on every sweep, for as long as it ran. Both now match on the name, so anchored and unanchored patterns behave identically in the two scripts.
 
 ## Node-level view (open)
 

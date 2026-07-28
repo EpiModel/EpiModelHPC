@@ -32,8 +32,14 @@
 ## Every scontrol/squeue call addresses the task by its ARRAY-QUALIFIED id
 ## (`taskid=` from the probe, <ArrayJobId>_<TaskId>), never by the raw
 ## SLURM_JOB_ID. Given a bare ArrayJobId, `scontrol requeue` restarts EVERY task
-## in the array, and the array's first task reports its SLURM_JOB_ID as exactly
-## that bare id. See "Field evidence, third campaign" in README.md.
+## in the array, and one task per array reports its SLURM_JOB_ID as exactly that
+## bare id. See "Field evidence, third campaign" in README.md.
+##
+## PATTERN scopes which TASKS are judged, not merely which nodes are probed. The
+## probe reports every R process this user owns on a node, so a node shared with
+## another of the user's campaigns yields that campaign's tasks too. They are
+## reported when starving, as evidence the node is oversubscribed, and never
+## acted on.
 ##
 ## Usage:
 ##   bash degen_watch.sh                 # report only (default, safe)
@@ -67,9 +73,24 @@ to_min() {
   echo $(( 10#${d:-0}*1440 + 10#${h:-0}*60 + 10#${m:-0} ))
 }
 
-nodes=$(squeue -u "$USER" -h -t RUNNING -o "%N %j" | grep -E "$PATTERN" | awk '{print $1}' | sort -u)
-[ -n "$nodes" ] || { echo "no running tasks matching /$PATTERN/"; exit 0; }
-echo "probing $(wc -w <<< "$nodes") node(s) hosting tasks matching /$PATTERN/  (floor=${CPU_FLOOR}% min_age=${MIN_AGE}m)"
+# One squeue pass yields both the nodes to probe and the tasks we may judge.
+# PATTERN has to scope BOTH. It selects the nodes, but a node hosting one of our
+# tasks routinely hosts another project's as well, and `probe_node_cpu.sh`
+# reports every R process this user owns on the node regardless of job name. So
+# without the second filter this doctor judges, and requeues, a campaign it was
+# never pointed at. See README.md.
+#
+# Matched against the job NAME field alone, not the whole line, so an anchored
+# PATTERN behaves the same here as in `deploy_doctor.sh` (which counts against
+# `squeue -o "%j"`). `-r` expands array elements so every running task is its own
+# row, and `%i` is already the array-qualified id the probe reports as `taskid=`.
+mine=$(squeue -u "$USER" -h -r -t RUNNING -o "%i|%N|%j" 2>/dev/null \
+       | awk -F'|' -v pat="$PATTERN" '$3 ~ pat { print $1" "$2 }')
+[ -n "$mine" ] || { echo "no running tasks matching /$PATTERN/"; exit 0; }
+nodes=$(awk '{print $2}' <<< "$mine" | sort -u)
+# Space-delimited membership set, tested with a glob rather than a loop.
+owned=" $(awk '{print $1}' <<< "$mine" | tr '\n' ' ')"
+echo "probing $(wc -w <<< "$nodes") node(s) hosting $(wc -l <<< "$mine") task(s) matching /$PATTERN/  (floor=${CPU_FLOOR}% min_age=${MIN_AGE}m)"
 
 probe_all() {  # -> "<node> jobid=.. nproc=.. med_cpu=.. dstate=.."
   for n in $nodes; do
@@ -88,6 +109,17 @@ while read -r node rest; do
   # Falls back to jid only for a probe old enough to predate `taskid=`; a
   # same-vintage probe always supplies it.
   tid=$(sed -n 's/.*taskid=\([0-9_]*\).*/\1/p' <<< "$rest"); tid=${tid:-$jid}
+  # Not ours: another campaign sharing this node. Never judged, never acted on.
+  # Reported only when it is itself below the floor, because a starving co-tenant
+  # is the evidence that the node is oversubscribed, which is exactly the context
+  # wanted when one of our own tasks on it is starving too.
+  case "$owned" in
+    *" $tid "*) ;;
+    *)  if [ "$med" -lt "$CPU_FLOOR" ]; then
+          printf "  co-tenant %-10s %-8s %s (outside /%s/: not judged)\n" "$jid" "$node" "$rest" "$PATTERN"
+        fi
+        continue;;
+  esac
   np=$(sed -n 's/.*nproc=\([0-9]*\).*/\1/p' <<< "$rest")
   if [ "${np:-0}" -lt "$MIN_PROC" ]; then
     printf "  startup   %-10s %-8s %s (nproc<$MIN_PROC: master-only, not judged)\n" "$jid" "$node" "$rest"; continue

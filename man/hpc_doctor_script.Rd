@@ -33,7 +33,9 @@ id \code{scontrol} may be given).}
 \item{\code{degen_watch.sh}}{Classifies each running task and requeues the
 degenerate ones. Addresses every task by its array-qualified id: a bare
 \code{ArrayJobId} passed to \code{scontrol requeue} restarts the whole
-array. Set \code{PATTERN} to match your job names.}
+array. Set \code{PATTERN} to match your job names; it is matched against
+the job name and scopes both the nodes probed and the tasks judged, so a
+node shared with another of your campaigns is safe.}
 \item{\code{deploy_doctor.sh}}{A one-CPU companion job that sweeps for the
 life of a campaign and self-terminates when it drains.}
 \item{\code{term_orphans.sh}}{SIGTERMs genuinely orphaned R workers on a
