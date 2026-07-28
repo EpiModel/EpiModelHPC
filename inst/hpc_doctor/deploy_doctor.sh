@@ -102,22 +102,40 @@ watch_list_live() {
 }
 
 # --- locate the sibling scripts -------------------------------------------
-# `sbatch` COPIES the submitted script into the node's spool directory and runs
-# it from there, so plain `BASH_SOURCE` self-location puts ROOT at
-# /var/spool/slurmd/job<ID>/, where degen_watch.sh is not. `scontrol show job`
-# still reports the ORIGINAL submitted path, so ask SLURM first and fall back to
-# self-location only when running outside a job. An explicit ROOT always wins.
+# Two launch styles have to work, and they need opposite answers.
+#
+#   sbatch deploy_doctor.sh          `sbatch` COPIES the script into the node's
+#                                    spool directory and runs it there, so
+#                                    BASH_SOURCE is /var/spool/slurmd/job<ID>/
+#                                    and the siblings are NOT there. `scontrol
+#                                    show job` still reports the ORIGINAL
+#                                    submitted path, which is right.
+#
+#   bash "$(hpc_doctor_script(...))" A project wrapper submits itself and runs
+#   from inside a wrapper job         the installed doctor by full path. Here
+#                                     BASH_SOURCE is the package's hpc_doctor
+#                                     directory and is right, while `scontrol`
+#                                     reports the WRAPPER, which is wrong.
+#
+# Neither source is trustworthy on its own, so test each candidate for the
+# siblings rather than ranking them blind. An explicit ROOT always wins.
+has_siblings() { [ -r "$1/degen_watch.sh" ] && [ -r "$1/probe_node_cpu.sh" ]; }
+
 resolve_root() {
-  local cmd
+  local self cmd
   if [ -n "${ROOT:-}" ]; then printf '%s\n' "$ROOT"; return; fi
+  self=$(dirname "${BASH_SOURCE[0]:-$0}")
+  if has_siblings "$self"; then printf '%s\n' "$self"; return; fi
   if [ -n "${SLURM_JOB_ID:-}" ] && command -v scontrol >/dev/null 2>&1; then
     cmd=$(scontrol show job "$SLURM_JOB_ID" 2>/dev/null \
           | tr ' ' '\n' | sed -n 's/^Command=//p' | head -1)
-    if [ -n "$cmd" ] && [ -d "$(dirname "$cmd")" ]; then
+    if [ -n "$cmd" ] && has_siblings "$(dirname "$cmd")"; then
       printf '%s\n' "$(dirname "$cmd")"; return
     fi
   fi
-  printf '%s\n' "$(dirname "${BASH_SOURCE[0]:-$0}")"
+  # Nothing resolved. Return the self-location so the failure message below
+  # names the most likely place the user meant.
+  printf '%s\n' "$self"
 }
 ROOT=$(resolve_root)
 # Canonicalise to absolute BEFORE the cd. A relative ROOT would otherwise
