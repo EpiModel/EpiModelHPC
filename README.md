@@ -17,7 +17,7 @@ EpiModelHPC does not replace any of this. Instead, it wraps and extends EpiModel
 - **Scenario Batching**: Runs multiple parameter scenarios (defined via `EpiModel::create_scenario_list`) in batched parallel jobs, with deterministic file naming for downstream merging.
 - **Result Merging**: Merges outputs from distributed batch jobs back into single simulation objects or tidy data frames for analysis.
 
-If your simulations complete in reasonable time on a laptop, you likely do not need this package. EpiModelHPC is designed for the point at which you need to run large numbers of replicates, sweep across many scenarios, or your model's per-replicate runtime exceeds what is practical without job scheduling and checkpointing.
+If your simulations complete in reasonable time on a laptop, you likely do not need this package. EpiModelHPC is designed for the point at which you need to run large numbers of replicates, sweep across many scenarios, or your model's per-replicate runtime exceeds what is practical without job scheduling.
 
 ## How slurmworkflow Fits In
 
@@ -58,11 +58,8 @@ This will also install `slurmworkflow` and `swfcalib` from their GitHub reposito
 ## Key Functions
 
 ### Simulation
-- **`netsim_hpc()`** -- Run `netsim` in parallel with automatic checkpointing. Best for single-scenario runs where checkpoint/resume is the primary need.
 - **`netsim_scenarios()`** -- Run multiple scenarios locally with batched parallelization. Mirrors `step_tmpl_netsim_scenarios()` for local testing.
-
-### Checkpointing
-- **`check_cp()`** / **`initialize_cp()`** / **`save_cpdata()`** -- Low-level checkpointing utilities used internally by `netsim_hpc()`. Checkpoint data are saved to `data/sim<N>/` directories and cleaned up on successful completion.
+- **`netsim_swfcalib_output()`** -- Run scenarios built from the result of an `swfcalib` calibration.
 
 ### File Management
 - **`merge_netsim_scenarios()`** -- Merge per-batch simulation files into one `netsim` object per scenario.
@@ -71,11 +68,13 @@ This will also install `slurmworkflow` and `swfcalib` from their GitHub reposito
 
 ### HPC Configuration
 - **`swf_configs_hyak()`** / **`swf_configs_rsph()`** -- Return lists of sbatch options, renv build settings, and R module-loading commands for supported clusters.
-- **`pull_env_vars()`** -- Extract Slurm environment variables (e.g., `SLURM_ARRAY_TASK_ID`) into R's global environment.
+- **`swf_cleanup_r_workers()`** -- Bash lines trapping `TERM`/`EXIT` to reap a job's own R workers, so cancelled jobs do not leave orphans squatting on cores. Included in `swf_configs_rsph()` by default.
+- **`hpc_doctor_script()`** -- Path to the bundled shell tools that detect and requeue CPU-starved SLURM tasks. See `inst/hpc_doctor/README.md`.
+- **`add_doctor_register_step()`** / **`add_doctor_teardown_step()`** -- Workflow steps that keep a shared deploy doctor running until the last campaign watching it finishes.
 
 ## System Requirements
 
-While developed for Linux-based HPC clusters running the [Slurm](https://slurm.schedmd.com/) workload manager, the core parallelization and checkpointing functionality works on any system with multiple cores, including macOS and Windows workstations. The slurmworkflow integration and step templates are specific to Slurm-managed clusters.
+While developed for Linux-based HPC clusters running the [Slurm](https://slurm.schedmd.com/) workload manager, the local scenario functions work on any system with multiple cores, including macOS and Windows workstations. The slurmworkflow integration, the step templates, and the HPC doctor tooling are specific to Slurm-managed clusters.
 
 ## Resources
 

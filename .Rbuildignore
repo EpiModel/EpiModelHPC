@@ -10,3 +10,6 @@ inst/shiny/epiicm/rsconnect/
 ^doc$
 ^Meta$
 .lintr
+^CLAUDE\.md$
+^_pkgdown\.yml$
+^pkgdown$

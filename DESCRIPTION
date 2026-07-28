@@ -1,43 +1,37 @@
 Package: EpiModelHPC
-Version: 2.7.0
-Date: 2024-10-18
+Version: 2.8.0
+Date: 2026-07-28
 Title: EpiModel Extensions for High-Performance Computing
 Description: Extension package to EpiModel to run large-scale stochastic network
-    models on modern high-performance computing systems. Functionality provided to
-    simulate models in parallel using single-node, multiple-core setups. Check-pointing
-    functions that automatically save and restore simulation work, which may be
-    useful on HPC systems with Portable Batch System (PBS) job scheduling software
-    like OpenPBS, are also included.
+    models on modern high-performance computing systems. Provides scenario-based
+    batch simulation, helpers for building 'slurmworkflow' job workflows and
+    'swfcalib' calibrations, cluster configuration presets, and shell tooling for
+    detecting and recovering degenerate SLURM tasks.
 Maintainer: Samuel Jenness <samuel.m.jenness@emory.edu>
 Authors@R: c(person("Samuel", "Jenness",
     role=c("cre","aut"), email="samuel.m.jenness@emory.edu"))
 License: GPL-3
-URL: http://epimodel.org/, http://epimodel.github.io/EpiModelHPC/
+URL: https://www.epimodel.org/, https://epimodel.github.io/EpiModelHPC/
 BugReports: https://github.com/EpiModel/EpiModelHPC/issues
 Depends:
     R (>= 4.1),
     EpiModel (>= 2.5.0)
 Imports:
+    callr,
     dplyr,
-    tidyr,
-    doParallel,
-    foreach,
-    ergm,
     fs,
     future,
     future.apply,
     rlang,
-    tidyselect,
-    tergm,
-    stringr,
     slurmworkflow,
+    stringr,
     swfcalib,
-    callr
+    tidyselect,
+    utils
 Suggests:
+    knitr,
     rmarkdown,
-    testthat,
-    network,
-    knitr
+    testthat
 Remotes:
  github::EpiModel/slurmworkflow,
  github::EpiModel/swfcalib
