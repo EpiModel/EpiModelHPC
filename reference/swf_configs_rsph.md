@@ -7,8 +7,7 @@ Preset of Configuration for the RSPH Cluster
 ``` r
 swf_configs_rsph(
   partition = "preemptable",
-  r_version = "4.2.1",
-  git_version = "2.35.1",
+  r_version = "4.5.1",
   mail_user = NULL,
   cleanup_workers = TRUE
 )
@@ -23,10 +22,6 @@ swf_configs_rsph(
 - r_version:
 
   Which version of R to load
-
-- git_version:
-
-  Which version of Git to load
 
 - mail_user:
 
@@ -47,6 +42,13 @@ swf_configs_rsph(
 
 a list containing `default_sbatch_opts`, `renv_sbatch_opts` and
 `r_loader` (see the "hpc_configs" section)
+
+## Node setup
+
+`r_loader` sources the shared spack environment, unloads everything, and
+loads R. It deliberately does not load git: git is on the default path
+on RSPH, and the project template has not loaded it for some time. The
+`git_version` argument was removed accordingly.
 
 ## hpc_configs
 

@@ -15,7 +15,7 @@ swf_configs_rsph."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">EpiModelHPC</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.6.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.6.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -106,7 +106,11 @@ kill every task in the array.</p>
 <p>This is containment, not protection. It stops a dying job from leaving
 orphans; it does nothing to protect a job from orphans already squatting on
 the cores it was handed. It also does not cover <code>SIGKILL</code> (node failure,
-OOM, <code>scancel -s KILL</code>) or, reliably, preemption. The root fix is
+OOM, <code>scancel -s KILL</code>) or, reliably, preemption. Sweeping up afterwards
+is a poor substitute for trapping the SIGTERM: <code>/projects</code> is PanFS, and
+a <code>SIGKILL</code> delivered to a worker mid-write can wedge it unkillably in D
+state, which is the same condition <code>degen_watch.sh</code> classifies as a
+filesystem stall. The root fix is
 cgroup containment (<code>ProctrackType=proctrack/cgroup</code> plus
 <code>TaskPlugin=task/cgroup</code> with <code>ConstrainCores=yes</code>), which is an
 administrative change.</p>

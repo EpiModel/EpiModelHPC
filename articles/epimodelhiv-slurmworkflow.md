@@ -154,7 +154,7 @@ RSPH cluster:
 
 hpc_configs <- EpiModelHPC::swf_configs_rsph(
   partition = "epimodel",
-  r_version = "4.2.1",
+  r_version = "4.5.1",
   mail_user = mail_user
 )
 ```
