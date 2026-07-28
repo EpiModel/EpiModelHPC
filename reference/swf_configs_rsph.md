@@ -9,7 +9,8 @@ swf_configs_rsph(
   partition = "preemptable",
   r_version = "4.2.1",
   git_version = "2.35.1",
-  mail_user = NULL
+  mail_user = NULL,
+  cleanup_workers = TRUE
 )
 ```
 
@@ -31,6 +32,16 @@ swf_configs_rsph(
 
   The mail address to send the messages to, default is NULL (see 'sbatch
   –mail-type' argument)
+
+- cleanup_workers:
+
+  If `TRUE` (the default), append
+  [`swf_cleanup_r_workers`](http://epimodel.github.io/EpiModelHPC/reference/swf_cleanup_r_workers.md)
+  to `r_loader` so each step reaps its own R workers on cancel or
+  timeout. RSPH has no cgroup containment, so without this, workers
+  survive `scancel` and squat on cores SLURM has re-allocated, starving
+  later tasks. See
+  [`swf_cleanup_r_workers`](http://epimodel.github.io/EpiModelHPC/reference/swf_cleanup_r_workers.md).
 
 ## Value
 

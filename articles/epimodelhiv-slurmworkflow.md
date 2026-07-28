@@ -121,6 +121,7 @@ First we load the required libraries and source the
 “R/utils-0_project_settings.R”.
 
 ``` r
+
 # Libraries --------------------------------------------------------------------
 library("slurmworkflow")
 library("EpiModelHPC")
@@ -138,6 +139,7 @@ Then we set a `max_cores` variable to 10. This will be the number of CPU
 cores to be used for the network estimations. 10 usually works fine.
 
 ``` r
+
 max_cores <- 10
 source("./R/utils-hpc_configs.R") # creates `hpc_configs`
 ```
@@ -147,6 +149,7 @@ the HPC setup. Here is the part that should be uncommented for using the
 RSPH cluster:
 
 ``` r
+
 # Must be sourced **AFTER** "./R/utils-0_project_settings.R"
 
 hpc_configs <- EpiModelHPC::swf_configs_rsph(
@@ -182,6 +185,7 @@ function takes 2 mandatory arguments:
     be shared among all steps.
 
 ``` r
+
 # Workflow creation ------------------------------------------------------------
 wf <- create_workflow(
   wf_name = "networks_estimation",
@@ -193,6 +197,7 @@ Here we created a *workflow* called “networks_estimation” and use the
 sbatch options stored in `hpc_configs$default_sbatch_opts`.
 
 ``` r
+
 hpc_configs$default_sbatch_opts
 #> list(
 #>   "partition" = "epimodel",
@@ -238,6 +243,7 @@ Here we will also use the optional `sbatch_opts` arguments to override
 some of the default options defined above.
 
 ``` r
+
 # Update RENV on the HPC -------------------------------------------------------
 wf <- add_workflow_step(
   wf_summary = wf,
@@ -268,6 +274,7 @@ For this specific task we need to change some of the `sbatch` options
 using `hpc_configs$renv_sbatch_opts`.
 
 ``` r
+
 hpc_configs$renv_sbatch_opts
 #> list(
 #> "mem" = "16G",
@@ -298,6 +305,7 @@ To do this we add another step with
 but with a different *step template*.
 
 ``` r
+
 # Estimate the networks --------------------------------------------------------
 wf <- add_workflow_step(
   wf_summary = wf,
@@ -364,6 +372,7 @@ Finally we want to generate diagnostics for these networks with
 “R/02-networks_diagnostics.R”.
 
 ``` r
+
 # Generate the diagnostics data ------------------------------------------------
 wf <- add_workflow_step(
   wf_summary = wf,
@@ -534,6 +543,7 @@ creation of this *workflow*.
 #### Setup, Creation and `renv::restore`
 
 ``` r
+
 # Libraries --------------------------------------------------------------------
 library("slurmworkflow")
 library("EpiModelHPC")
@@ -591,6 +601,7 @@ The `control` object differs from it’s usual form as the `nsims` and
 `ncores` argument will be overridden by the *workflow*.
 
 ``` r
+
 # Controls
 source("./R/utils-targets.R")
 control <- control_msm(
@@ -618,6 +629,7 @@ We then load a `tibble` of 2 scenarios found in
 “data/input/scenarios.csv” and transform it into a scenario list.
 
 ``` r
+
 scenarios_df <- readr::read_csv("./data/input/scenarios.csv")
 scenarios_list <- EpiModel::create_scenario_list(scenarios_df)
 ```
@@ -649,6 +661,7 @@ It takes as arguments:
 - `setup_lines`: same as before.
 
 ``` r
+
 wf <- add_workflow_step(
   wf_summary = wf,
   step_tmpl = step_tmpl_netsim_scenarios(
@@ -696,6 +709,7 @@ small summary `tibble` to be downloaded and evaluated locally.
 We return to `step_tmpl_do_call_script` for this steps.
 
 ``` r
+
 # Process calibrations
 #
 # produce a data frame with the calibration targets for each scenario

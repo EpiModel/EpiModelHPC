@@ -9,6 +9,10 @@
 - [`check_cp()`](http://epimodel.github.io/EpiModelHPC/reference/check_cp.md)
   : Checks for Checkpointed Rdata Files
 
+- [`add_doctor_register_step()`](http://epimodel.github.io/EpiModelHPC/reference/doctor_watch_steps.md)
+  [`add_doctor_teardown_step()`](http://epimodel.github.io/EpiModelHPC/reference/doctor_watch_steps.md)
+  : Deploy-Doctor Watch-List Workflow Steps
+
 - [`get_scenarios_batches_infos()`](http://epimodel.github.io/EpiModelHPC/reference/get_scenarios_batches_infos.md)
   : Helper function to access the file name elements of scenarios
 
@@ -16,6 +20,9 @@
   :
 
   Helper function to access the infos on merged scenarios `data.frame`
+
+- [`hpc_doctor_script()`](http://epimodel.github.io/EpiModelHPC/reference/hpc_doctor_script.md)
+  : Path to a Bundled HPC Doctor Script
 
 - [`initialize_cp()`](http://epimodel.github.io/EpiModelHPC/reference/initialize_cp.md)
   : Initializes Network Model after Checkpointing
@@ -114,6 +121,9 @@
   :
 
   Step template to update a project `renv`
+
+- [`swf_cleanup_r_workers()`](http://epimodel.github.io/EpiModelHPC/reference/swf_cleanup_r_workers.md)
+  : Bash Lines to Reap a Job's Own R Workers on Cancel or Timeout
 
 - [`swf_configs_hyak()`](http://epimodel.github.io/EpiModelHPC/reference/swf_configs_hyak.md)
   : Preset of Configuration for the HYAK Cluster

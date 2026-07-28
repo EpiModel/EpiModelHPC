@@ -51,13 +51,13 @@ EpiModelHPC builds directly on slurmworkflow by providing **step
 templates** – pre-built workflow steps tailored to common EpiModel
 tasks:
 
-| EpiModelHPC Step Template                                                                                                                 | Purpose                                                                                           |
-|-------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
-| [`step_tmpl_netsim_scenarios()`](http://epimodel.github.io/EpiModelHPC/reference/step_tmpl_netsim_scenarios.md)                           | Submit scenario-based `netsim` simulations as a Slurm array job                                   |
-| [`step_tmpl_merge_netsim_scenarios()`](http://epimodel.github.io/EpiModelHPC/reference/step_tmpl_merge_netsim_scenarios.md)               | Merge batched simulation files into one file per scenario                                         |
-| [`step_tmpl_merge_netsim_scenarios_tibble()`](http://epimodel.github.io/EpiModelHPC/reference/step_tmpl_merge_netsim_scenarios_tibble.md) | Convert merged results to tidy tibble format                                                      |
-| [`step_tmpl_netsim_swfcalib_output()`](http://epimodel.github.io/EpiModelHPC/reference/step_tmpl_netsim_swfcalib_output.md)               | Run simulations using calibrated parameters from [swfcalib](https://github.com/EpiModel/swfcalib) |
-| [`step_tmpl_renv_restore()`](http://epimodel.github.io/EpiModelHPC/reference/step_tmpl_renv_restore.md)                                   | Ensure the HPC project environment is up to date via `renv`                                       |
+| EpiModelHPC Step Template | Purpose |
+|----|----|
+| [`step_tmpl_netsim_scenarios()`](http://epimodel.github.io/EpiModelHPC/reference/step_tmpl_netsim_scenarios.md) | Submit scenario-based `netsim` simulations as a Slurm array job |
+| [`step_tmpl_merge_netsim_scenarios()`](http://epimodel.github.io/EpiModelHPC/reference/step_tmpl_merge_netsim_scenarios.md) | Merge batched simulation files into one file per scenario |
+| [`step_tmpl_merge_netsim_scenarios_tibble()`](http://epimodel.github.io/EpiModelHPC/reference/step_tmpl_merge_netsim_scenarios_tibble.md) | Convert merged results to tidy tibble format |
+| [`step_tmpl_netsim_swfcalib_output()`](http://epimodel.github.io/EpiModelHPC/reference/step_tmpl_netsim_swfcalib_output.md) | Run simulations using calibrated parameters from [swfcalib](https://github.com/EpiModel/swfcalib) |
+| [`step_tmpl_renv_restore()`](http://epimodel.github.io/EpiModelHPC/reference/step_tmpl_renv_restore.md) | Ensure the HPC project environment is up to date via `renv` |
 
 Each step template has a corresponding standalone function (e.g.,
 [`netsim_scenarios()`](http://epimodel.github.io/EpiModelHPC/reference/netsim_scenarios.md))
@@ -92,6 +92,7 @@ EpiModelHPC and its companion packages are hosted on GitHub. Install
 with:
 
 ``` r
+
 if (!require("remotes")) install.packages("remotes")
 remotes::install_github("EpiModel/EpiModelHPC")
 ```
