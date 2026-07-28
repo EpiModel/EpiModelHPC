@@ -62,7 +62,11 @@ kill every task in the array.
 This is containment, not protection. It stops a dying job from leaving
 orphans; it does nothing to protect a job from orphans already squatting on
 the cores it was handed. It also does not cover \code{SIGKILL} (node failure,
-OOM, \code{scancel -s KILL}) or, reliably, preemption. The root fix is
+OOM, \code{scancel -s KILL}) or, reliably, preemption. Sweeping up afterwards
+is a poor substitute for trapping the SIGTERM: \code{/projects} is PanFS, and
+a \code{SIGKILL} delivered to a worker mid-write can wedge it unkillably in D
+state, which is the same condition \code{degen_watch.sh} classifies as a
+filesystem stall. The root fix is
 cgroup containment (\code{ProctrackType=proctrack/cgroup} plus
 \code{TaskPlugin=task/cgroup} with \code{ConstrainCores=yes}), which is an
 administrative change.

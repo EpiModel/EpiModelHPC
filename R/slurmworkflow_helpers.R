@@ -71,7 +71,6 @@ swf_configs_hyak <- function(hpc = "klone", partition = "csde",
 #'
 #' @param partition Which partition to use on RSPH (either "compute" or
 #'  "epimodel")
-#' @param git_version Which version of Git to load
 #' @param cleanup_workers If \code{TRUE} (the default), append
 #'   \code{\link{swf_cleanup_r_workers}} to \code{r_loader} so each step reaps
 #'   its own R workers on cancel or timeout. RSPH has no cgroup containment, so
@@ -82,10 +81,15 @@ swf_configs_hyak <- function(hpc = "klone", partition = "csde",
 #' @inheritParams swf_configs_hyak
 #' @inheritSection swf_configs_hyak hpc_configs
 #'
+#' @section Node setup:
+#' \code{r_loader} sources the shared spack environment, unloads everything, and
+#' loads R. It deliberately does not load git: git is on the default path on
+#' RSPH, and the project template has not loaded it for some time. The
+#' \code{git_version} argument was removed accordingly.
+#'
 #' @export
 swf_configs_rsph <- function(partition = "preemptable",
-                             r_version = "4.2.1",
-                             git_version = "2.35.1",
+                             r_version = "4.5.1",
                              mail_user = NULL,
                              cleanup_workers = TRUE) {
 
@@ -106,8 +110,7 @@ swf_configs_rsph <- function(partition = "preemptable",
   hpc_configs[["r_loader"]] <- c(
     ". /projects/epimodel/spack/share/spack/setup-env.sh",
     "spack unload -a",
-    paste0("spack load r@", r_version),
-    paste0("spack load git@", git_version)
+    paste0("spack load r@", r_version)
   )
 
   if (isTRUE(cleanup_workers)) {

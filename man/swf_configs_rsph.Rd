@@ -6,8 +6,7 @@
 \usage{
 swf_configs_rsph(
   partition = "preemptable",
-  r_version = "4.2.1",
-  git_version = "2.35.1",
+  r_version = "4.5.1",
   mail_user = NULL,
   cleanup_workers = TRUE
 )
@@ -17,8 +16,6 @@ swf_configs_rsph(
 "epimodel")}
 
 \item{r_version}{Which version of R to load}
-
-\item{git_version}{Which version of Git to load}
 
 \item{mail_user}{The mail address to send the messages to, default is NULL
 (see 'sbatch --mail-type' argument)}
@@ -36,6 +33,14 @@ and \code{r_loader} (see the "hpc_configs" section)
 \description{
 Preset of Configuration for the RSPH Cluster
 }
+\section{Node setup}{
+
+\code{r_loader} sources the shared spack environment, unloads everything, and
+loads R. It deliberately does not load git: git is on the default path on
+RSPH, and the project template has not loaded it for some time. The
+\code{git_version} argument was removed accordingly.
+}
+
 \section{hpc_configs}{
 
 \enumerate{
