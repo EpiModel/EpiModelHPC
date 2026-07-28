@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">EpiModelHPC</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.8.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.8.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,6 +36,14 @@
       <small>Source: <a href="https://github.com/EpiModel/EpiModelHPC/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="2.8.1" id="epimodelhpc-281">EpiModelHPC 2.8.1<a class="anchor" aria-label="anchor" href="#epimodelhpc-281"></a></h2>
+<div class="section level3">
+<h3 id="bug-fixes-2-8-1">BUG FIXES<a class="anchor" aria-label="anchor" href="#bug-fixes-2-8-1"></a></h3>
+<ul><li>
+<code>deploy_doctor.sh</code> locates its sibling scripts correctly when a project wrapper submits itself and then runs the installed doctor by full path. 2.6.3 made <code>scontrol show job</code> outrank <code>$BASH_SOURCE</code>, which is right for <code>sbatch deploy_doctor.sh</code> but wrong here: <code>scontrol</code> reports the wrapper, not the doctor. The startup guard caught it, so the job failed loudly rather than sweeping nothing, but it failed. Each candidate is now tested for the siblings instead of being ranked blind, so both launch styles work with no <code>ROOT</code> set.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="2.8.0" id="epimodelhpc-280">EpiModelHPC 2.8.0<a class="anchor" aria-label="anchor" href="#epimodelhpc-280"></a></h2>
 <div class="section level3">

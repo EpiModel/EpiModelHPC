@@ -1,5 +1,18 @@
 # Changelog
 
+## EpiModelHPC 2.8.1
+
+### BUG FIXES
+
+- `deploy_doctor.sh` locates its sibling scripts correctly when a
+  project wrapper submits itself and then runs the installed doctor by
+  full path. 2.6.3 made `scontrol show job` outrank `$BASH_SOURCE`,
+  which is right for `sbatch deploy_doctor.sh` but wrong here:
+  `scontrol` reports the wrapper, not the doctor. The startup guard
+  caught it, so the job failed loudly rather than sweeping nothing, but
+  it failed. Each candidate is now tested for the siblings instead of
+  being ranked blind, so both launch styles work with no `ROOT` set.
+
 ## EpiModelHPC 2.8.0
 
 ### BREAKING CHANGES
