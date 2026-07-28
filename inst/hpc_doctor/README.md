@@ -46,6 +46,35 @@ The guards are therefore all fail-loud, and all fire before the first sweep rath
 - `degen_watch.sh` exits non-zero if `probe_node_cpu.sh` is not readable under `ROOT`.
 - `degen_watch.sh` treats a sweep in which no node returned any probe output as a broken probe rather than a healthy campaign. Remote stderr is discarded, so a probe that could not run anywhere previously yielded zero suspects and a confident `all tasks healthy`. That is the most dangerous member of this class, because the doctor actively asserts the campaign is fine.
 
+## When the doctor stops
+
+Three signals, in decreasing order of authority.
+
+`add_doctor_teardown_step()` scancels the doctor when the last registered campaign finishes. This is the normal path and it is immediate. Everything below is fallback for when it does not fire: a doctor launched without the watch-list steps, or a workflow that died before reaching its teardown.
+
+`WATCH_DIR`, the same watch list the teardown maintains, passed to the doctor at submit time. It tells the doctor which kind of empty queue it is looking at. With a campaign still registered, an empty queue is a lull between steps, so the doctor waits the full `IDLE_EXIT` (6 sweeps, an hour at the default interval). With nothing registered it exits after `IDLE_FAST` (2 sweeps, 20 minutes). Give it the same path passed to `add_doctor_register_step()`; a relative path is resolved against the submission directory, not against `ROOT`.
+
+The queue itself, which is the backstop. The watch list can only make the doctor more patient, never less, and `IDLE_EXIT` still caps the wait either way. That is deliberate: a workflow killed before its teardown step leaves a marker behind forever, and without the cap that stale marker would hold a doctor open until its three-day walltime, which is worse than the hour this was meant to fix.
+
+The `seen` gate is unchanged and still comes first. A doctor launched at campaign start, before its netsim array exists, never exits on an empty queue no matter what the watch list says, because step 1's renv restore can run 180 minutes.
+
+Measured on a live campaign, 2026-07-27 to 28: 103 sweeps over 20.5 hours, and the matching-task count never once reached zero. Empty-queue states during a running campaign are rare, which is why `IDLE_FAST` can be as small as 2.
+
+## Pending-side barriers
+
+The detector reasons about running tasks. A task that is slow but running reads healthy CPU and is correctly spared; a stalled one reads low CPU or D-state and is caught. A task that is PENDING has neither signal, and it can still be the thing gating everything: slurmworkflow only submits the next slice when the last task of the current one finishes, so one queued straggler stops all netsim progress.
+
+The doctor cannot fix this, and deliberately does not try. Submitting the next slice early is the double-write corruption risk described in `deploy_doctor.sh`'s header. What it now does is stop hiding it. Sweeps with tasks pending and none running are counted, and past `BARRIER_WARN` (3) each one reports the barrier's duration and every pending task's SLURM reason:
+
+```
+sweep=57 !! BARRIER matching_tasks=1 (0 running, 1 pending) for 90m -- no netsim progress
+    pending 41746874_33     reason=Resources
+```
+
+The reason field is what separates a scheduler-starved task from one blocked for another cause, including a task the doctor itself requeued to the back of a deep queue. That last case is real: a requeued array task gets a new `SubmitTime` and re-enters behind everything submitted earlier, so a requeue meant to rescue a slice can become the slice barrier. In the India rollout this ran for nine hours across 55 consecutive sweeps, each logging an ordinary-looking `sweeping` line followed by `no running tasks`.
+
+Counting now uses `squeue -r`, so a collapsed pending range such as `41746874_[46-63]` contributes the 18 tasks it really holds rather than 1. On a live campaign that changed the reported count from 26 to 43. Expect `matching_tasks` to read higher than it used to for the same queue.
+
 ## Guardrails, each of which was a bug first
 
 - Sample `/proc/<pid>/stat` twice and difference it. `ps %cpu` is a lifetime average and would hide a task that ran healthy and then got starved, which is the transition being hunted.

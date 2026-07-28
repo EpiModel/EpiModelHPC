@@ -221,6 +221,16 @@ doctor_step_sbatch_opts <- function(sbatch_opts) {
 #'   directory is then empty, stops the doctor.
 #' }
 #'
+#' Pass the same directory to the doctor itself as \code{WATCH_DIR} when you
+#' submit it. The teardown step is the primary stop signal and is immediate, but
+#' the doctor also self-terminates after a run of empty sweeps, and \code{WATCH_DIR}
+#' is what tells it which kind of empty queue it is looking at. With a campaign
+#' still registered it waits the full \code{IDLE_EXIT}, treating an empty queue as
+#' a lull between steps; with nothing registered it exits after the shorter
+#' \code{IDLE_FAST}. The watch list only ever makes it more patient, and
+#' \code{IDLE_EXIT} still caps the wait, so a stale marker left by a workflow that
+#' died before its teardown ran cannot hold the doctor open to its walltime.
+#'
 #' Because each campaign removes its own marker before testing emptiness,
 #' whichever campaign finishes last always observes an empty directory. No
 #' concurrent sibling is ever left unmonitored, and there is no interleaving in
