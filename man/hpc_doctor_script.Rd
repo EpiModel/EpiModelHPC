@@ -37,7 +37,12 @@ array. Set \code{PATTERN} to match your job names; it is matched against
 the job name and scopes both the nodes probed and the tasks judged, so a
 node shared with another of your campaigns is safe.}
 \item{\code{deploy_doctor.sh}}{A one-CPU companion job that sweeps for the
-life of a campaign and self-terminates when it drains.}
+life of a campaign and self-terminates when it drains. Submit it with
+\code{sbatch}; it carries its own \code{#SBATCH} defaults (1 CPU, 2G, 3
+days, job name \code{deploy_doctor}) and locates its sibling scripts via
+\code{scontrol}, since \code{sbatch} runs a spool copy of the script from a
+directory the siblings are not in. Add \code{--partition} yourself, and
+\code{--time} longer than the campaign.}
 \item{\code{term_orphans.sh}}{SIGTERMs genuinely orphaned R workers on a
 node. Safe on nodes shared with other users.}
 }

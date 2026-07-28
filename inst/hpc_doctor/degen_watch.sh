@@ -46,7 +46,16 @@
 ##   bash degen_watch.sh --requeue       # act on confirmed starvation
 ##   PATTERN='swfcalib_step' bash degen_watch.sh    # other projects
 set -u
-ROOT=${ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)}   # self-locating; override to point elsewhere
+ROOT=${ROOT:-$(dirname "${BASH_SOURCE[0]:-$0}")}   # self-locating; override to point elsewhere
+# Canonicalise to absolute. `probe_node_cpu.sh` is invoked as "$ROOT/..." inside
+# an ssh command line, so a relative ROOT resolves against the REMOTE node's home
+# directory and silently probes nothing.
+ROOT=$(cd "$ROOT" 2>/dev/null && pwd) || { echo "ROOT is not a readable directory" >&2; exit 1; }
+[ -r "$ROOT/probe_node_cpu.sh" ] || {
+  echo "probe_node_cpu.sh not readable under ROOT=$ROOT" >&2
+  echo "ROOT must be an absolute path on a filesystem the compute nodes share." >&2
+  exit 1
+}
 PATTERN=${PATTERN:?set PATTERN to a regex matching your job names, e.g. 'swfcalib_step'}
 REQUEUE=0; [ "${1:-}" = "--requeue" ] && REQUEUE=1
 CPU_FLOOR=${CPU_FLOOR:-70}     # median worker cpu% below this = starved
@@ -100,6 +109,20 @@ probe_all() {  # -> "<node> jobid=.. nproc=.. med_cpu=.. dstate=.."
   done
 }
 
+# Capture the sweep rather than streaming it, so an ENTIRELY empty probe can be
+# told apart from a healthy campaign. `probe_all` discards remote stderr, so a
+# probe that cannot run anywhere (ROOT not visible from the compute nodes, ssh
+# refused) returns no lines, yields no suspects, and reports a confident "all
+# tasks healthy" on every sweep. That is the same silent-green failure class as
+# the launch-path defects in #56, and the more dangerous one, because here the
+# doctor actively asserts the campaign is fine.
+probe_out=$(probe_all)
+if [ -z "$probe_out" ]; then
+  echo "!! probe returned nothing from any of $(wc -w <<< "$nodes") node(s) hosting $(wc -l <<< "$mine") running task(s)" >&2
+  echo "!! broken probe, NOT a healthy campaign: check that $ROOT/probe_node_cpu.sh is readable from the compute nodes and that ssh to them works" >&2
+  exit 1
+fi
+
 suspects=""
 while read -r node rest; do
   [ -n "${node:-}" ] || continue
@@ -130,7 +153,7 @@ while read -r node rest; do
     printf "  SUSPECT   %-10s %-8s %s\n" "$jid" "$node" "$rest"
     suspects="$suspects $jid:$node:$tid"
   fi
-done < <(probe_all)
+done <<< "$probe_out"
 
 suspects=$(echo $suspects)
 [ -n "$suspects" ] || { echo "---"; echo "all tasks healthy (median CPU >= ${CPU_FLOOR}%)"; exit 0; }

@@ -97,7 +97,12 @@ swf_cleanup_r_workers <- function() {
 #'   the job name and scopes both the nodes probed and the tasks judged, so a
 #'   node shared with another of your campaigns is safe.}
 #'   \item{\code{deploy_doctor.sh}}{A one-CPU companion job that sweeps for the
-#'   life of a campaign and self-terminates when it drains.}
+#'   life of a campaign and self-terminates when it drains. Submit it with
+#'   \code{sbatch}; it carries its own \code{#SBATCH} defaults (1 CPU, 2G, 3
+#'   days, job name \code{deploy_doctor}) and locates its sibling scripts via
+#'   \code{scontrol}, since \code{sbatch} runs a spool copy of the script from a
+#'   directory the siblings are not in. Add \code{--partition} yourself, and
+#'   \code{--time} longer than the campaign.}
 #'   \item{\code{term_orphans.sh}}{SIGTERMs genuinely orphaned R workers on a
 #'   node. Safe on nodes shared with other users.}
 #' }
@@ -231,7 +236,10 @@ doctor_step_sbatch_opts <- function(sbatch_opts) {
 #'   \code{data/run/.doctor_watch}, which is gitignored in the standard EpiModel
 #'   project layout.
 #' @param job_name the SLURM job name of the deploy doctor to stop. Defaults to
-#'   \code{deploy_doctor}, matching the bundled \code{deploy_doctor.sbatch}.
+#'   \code{deploy_doctor}, matching the \code{#SBATCH --job-name} default in the
+#'   bundled \code{deploy_doctor.sh}. If you rename the doctor's job at submit
+#'   time to scope it to one project, pass the same name here or the teardown
+#'   will not find it.
 #' @param sbatch_opts a named list of sbatch options, merged over the step
 #'   defaults (1 CPU, 5 minutes, 1G, mail on FAIL).
 #'

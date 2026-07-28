@@ -1,4 +1,9 @@
 #!/bin/bash
+#SBATCH --job-name=deploy_doctor
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=2G
+#SBATCH --time=3-00:00:00
+#SBATCH --output=deploy_doctor-%j.out
 ## "Deploy doctor": a tiny long-running companion job that watches a campaign's
 ## array tasks for CPU starvation and requeues degenerate ones, for the whole
 ## life of the workflow. One CPU, mostly asleep.
@@ -23,17 +28,70 @@
 ## concurrently and CORRUPT it, not merely waste compute. Prototype that on a
 ## throwaway workflow first.
 ##
+## The #SBATCH defaults above are deliberate. Submitted with no directives this
+## job inherits the partition default walltime, which on RSPH killed it at ~8h
+## against campaigns running one to five days (issue #56). Set --time longer
+## than the campaign, and add --partition yourself: partition names are
+## cluster-specific and there is no safe default to bake in.
+##
+## --job-name matches the `job_name` default of EpiModelHPC's
+## `add_doctor_teardown_step()`, which stops the doctor with
+## `scancel --name=deploy_doctor`. If you rename the job to scope it to one
+## project, pass the same name to that function or teardown will not find it.
+##
 ## Usage (standalone, alongside any campaign):
-##   sbatch deploy_doctor.sbatch
-##   PATTERN='swfcalib_step' sbatch deploy_doctor.sbatch     # other projects
+##   PATTERN='doxy-' sbatch --partition=<yours> deploy_doctor.sh
+##   PATTERN='swfcalib_step' sbatch --partition=<yours> deploy_doctor.sh
+## From R, to get the installed path:
+##   EpiModelHPC::hpc_doctor_script("deploy_doctor.sh")
+## Output lands in deploy_doctor-<jobid>.out in the submission directory.
 set -u
-ROOT=${ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)}   # self-locating; override to point elsewhere
 PATTERN=${PATTERN:?set PATTERN to a regex matching your job names, e.g. 'swfcalib_step'}
 INTERVAL=${INTERVAL:-600}      # seconds between sweeps
 IDLE_EXIT=${IDLE_EXIT:-6}      # consecutive empty sweeps before self-terminating
 ACT=${ACT---requeue}          # set ACT='' for report-only
 
+# --- locate the sibling scripts -------------------------------------------
+# `sbatch` COPIES the submitted script into the node's spool directory and runs
+# it from there, so plain `BASH_SOURCE` self-location puts ROOT at
+# /var/spool/slurmd/job<ID>/, where degen_watch.sh is not. `scontrol show job`
+# still reports the ORIGINAL submitted path, so ask SLURM first and fall back to
+# self-location only when running outside a job. An explicit ROOT always wins.
+resolve_root() {
+  local cmd
+  if [ -n "${ROOT:-}" ]; then printf '%s\n' "$ROOT"; return; fi
+  if [ -n "${SLURM_JOB_ID:-}" ] && command -v scontrol >/dev/null 2>&1; then
+    cmd=$(scontrol show job "$SLURM_JOB_ID" 2>/dev/null \
+          | tr ' ' '\n' | sed -n 's/^Command=//p' | head -1)
+    if [ -n "$cmd" ] && [ -d "$(dirname "$cmd")" ]; then
+      printf '%s\n' "$(dirname "$cmd")"; return
+    fi
+  fi
+  printf '%s\n' "$(dirname "${BASH_SOURCE[0]:-$0}")"
+}
+ROOT=$(resolve_root)
+# Canonicalise to absolute BEFORE the cd. A relative ROOT would otherwise
+# resolve twice, once here and again in "$ROOT/degen_watch.sh" after the cd has
+# moved us, and fail in a second, more confusing way.
+ROOT=$(cd "$ROOT" 2>/dev/null && pwd) || {
+  echo "[doctor] FATAL: ROOT is not a readable directory" >&2; exit 1; }
 cd "$ROOT" || exit 1
+
+# Fail LOUDLY, before the first sweep, if the workers are not where we think.
+# Every failure in this launch path is otherwise silent: the loop keeps its
+# schedule, the job stays RUNNING and green in `squeue`, and the campaign runs
+# unprotected for the doctor's whole walltime while the log fills with sweeps
+# that did nothing. Issue #56 is ten hours of exactly that. Exiting non-zero
+# here makes SLURM report FAILED instead.
+for dep in degen_watch.sh probe_node_cpu.sh; do
+  [ -r "$ROOT/$dep" ] || {
+    echo "[doctor] FATAL: $dep not readable under ROOT=$ROOT" >&2
+    echo "[doctor] Point ROOT at the installed hpc_doctor directory, e.g." >&2
+    echo "[doctor]   ROOT=\$(Rscript -e 'cat(dirname(EpiModelHPC::hpc_doctor_script(\"deploy_doctor.sh\")))')" >&2
+    echo "[doctor] It must be an absolute path on a filesystem the compute nodes share." >&2
+    exit 1
+  }
+done
 echo "[doctor] start $(date -Is) host=$(hostname) pattern=/$PATTERN/ interval=${INTERVAL}s act=${ACT:-report-only}"
 idle=0; sweep=0; seen=0
 while :; do

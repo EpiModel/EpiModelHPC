@@ -38,7 +38,10 @@ project layout.}
 defaults (1 CPU, 5 minutes, 1G, mail on FAIL).}
 
 \item{job_name}{the SLURM job name of the deploy doctor to stop. Defaults to
-\code{deploy_doctor}, matching the bundled \code{deploy_doctor.sbatch}.}
+\code{deploy_doctor}, matching the \code{#SBATCH --job-name} default in the
+bundled \code{deploy_doctor.sh}. If you rename the doctor's job at submit
+time to scope it to one project, pass the same name here or the teardown
+will not find it.}
 }
 \value{
 the updated workflow summary, with one step appended.

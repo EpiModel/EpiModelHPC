@@ -10,12 +10,41 @@ The detector measures CPU utilisation rather than elapsed time. Healthy workers 
 |---|---|
 | `probe_node_cpu.sh` | node-side; samples `/proc/<pid>/stat` twice and differences it. One ssh per node covers every task on it. Prints `jobid= taskid= nproc= med_cpu= dstate=` per task. |
 | `degen_watch.sh` | per-task verdict; report-only by default, `--requeue` acts. `PATTERN` scopes both the nodes probed and the tasks judged. |
-| `deploy_doctor.sh` | sweep loop for the life of a campaign, self-terminating |
+| `deploy_doctor.sh` | entry point, `sbatch` this. Sweep loop for the life of a campaign, self-terminating. Carries its own `#SBATCH` defaults. |
 | `term_orphans.sh` | SIGTERMs genuinely orphaned workers, safe on shared nodes |
 
 Read `dstate=` as a count of processes in uninterruptible sleep, not a flag. `dstate=1` on a nine-process task means one process is blocked, not that the task has one process. That distinction matters for the classifier, below.
 
 Read `jobid=` and `taskid=` as two different things. `jobid` is `SLURM_JOB_ID`, unique per task and the key for matching a task between probes. `taskid` is the array-qualified `<ArrayJobId>_<TaskId>`, and it is the only id `scontrol` may be given. They differ for exactly one task per array, which is enough to lose an entire iteration; see the third campaign below.
+
+## Running the doctor
+
+`deploy_doctor.sh` is the entry point. It is submitted directly and carries its own `#SBATCH` defaults: 1 CPU, 2G, 3 days, job name `deploy_doctor`, output to `deploy_doctor-<jobid>.out`.
+
+```bash
+ROOT=$(Rscript -e 'cat(dirname(EpiModelHPC::hpc_doctor_script("deploy_doctor.sh")))')
+PATTERN='doxy-' sbatch --partition=epimodel,week-long-cpu "$ROOT/deploy_doctor.sh"
+```
+
+Four things are worth knowing before the first run. The first three each cost a campaign's worth of unprotected runtime to learn.
+
+**`--time` must outlast the campaign, and `--partition` is yours to set.** Submitted with no directives the doctor inherited the partition default and was killed at about 8 hours, against campaigns running one to five days. The bundled default is 3 days; override it if yours run longer. Partition names are cluster-specific, so there is no safe default to ship.
+
+**`ROOT` is where the sibling scripts live, and it must be absolute.** `sbatch` copies the submitted script into the node's spool directory and runs it from there, so self-locating from `$BASH_SOURCE` lands at `/var/spool/slurmd/job<ID>/`, where `degen_watch.sh` is not. `deploy_doctor.sh` now recovers the original submitted path from `scontrol show job`, so the invocation above needs no `ROOT`; set it explicitly only if the scripts have been copied elsewhere. It has to be on a filesystem the compute nodes share, because `degen_watch.sh` runs `$ROOT/probe_node_cpu.sh` over ssh on every probed node.
+
+**Output goes to the submission directory** as `deploy_doctor-<jobid>.out`, not to a project log directory. A monitoring hint pointing at one will find nothing.
+
+**`PATTERN` is matched against the SLURM job name field** in both scripts, and scopes both the nodes probed and the tasks judged. Anchored (`^doxy-`) and unanchored (`doxy-`) patterns behave identically.
+
+### Every failure in this path used to be silent
+
+The launch-path defects above shared one property: they failed without changing the job's state. The sweep loop kept its schedule, `squeue` showed RUNNING, and the campaign ran unprotected while the log filled with sweeps that did nothing. Four production runs went out believing they had starvation protection they did not have.
+
+The guards are therefore all fail-loud, and all fire before the first sweep rather than during it:
+
+- `deploy_doctor.sh` exits non-zero if `degen_watch.sh` or `probe_node_cpu.sh` is not readable under `ROOT`, so SLURM reports FAILED immediately instead of ten hours of green no-ops.
+- `degen_watch.sh` exits non-zero if `probe_node_cpu.sh` is not readable under `ROOT`.
+- `degen_watch.sh` treats a sweep in which no node returned any probe output as a broken probe rather than a healthy campaign. Remote stderr is discarded, so a probe that could not run anywhere previously yielded zero suspects and a confident `all tasks healthy`. That is the most dangerous member of this class, because the doctor actively asserts the campaign is fine.
 
 ## Guardrails, each of which was a bug first
 
