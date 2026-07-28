@@ -29,6 +29,12 @@
 ## left behind. We then hold it, add the node it degenerated on to that task's
 ## ExcNodeList, and release -- a bare requeue landed straight back on node7.
 ##
+## Every scontrol/squeue call addresses the task by its ARRAY-QUALIFIED id
+## (`taskid=` from the probe, <ArrayJobId>_<TaskId>), never by the raw
+## SLURM_JOB_ID. Given a bare ArrayJobId, `scontrol requeue` restarts EVERY task
+## in the array, and the array's first task reports its SLURM_JOB_ID as exactly
+## that bare id. See "Field evidence, third campaign" in README.md.
+##
 ## Usage:
 ##   bash degen_watch.sh                 # report only (default, safe)
 ##   bash degen_watch.sh --requeue       # act on confirmed starvation
@@ -79,6 +85,9 @@ while read -r node rest; do
   jid=$(sed -n 's/.*jobid=\([0-9]*\).*/\1/p' <<< "$rest")
   med=$(sed -n 's/.*med_cpu=\([0-9]*\).*/\1/p' <<< "$rest")
   [ -n "${jid:-}" ] && [ -n "${med:-}" ] || continue
+  # Falls back to jid only for a probe old enough to predate `taskid=`; a
+  # same-vintage probe always supplies it.
+  tid=$(sed -n 's/.*taskid=\([0-9_]*\).*/\1/p' <<< "$rest"); tid=${tid:-$jid}
   np=$(sed -n 's/.*nproc=\([0-9]*\).*/\1/p' <<< "$rest")
   if [ "${np:-0}" -lt "$MIN_PROC" ]; then
     printf "  startup   %-10s %-8s %s (nproc<$MIN_PROC: master-only, not judged)\n" "$jid" "$node" "$rest"; continue
@@ -87,7 +96,7 @@ while read -r node rest; do
     printf "  ok        %-10s %-8s %s\n" "$jid" "$node" "$rest"
   else
     printf "  SUSPECT   %-10s %-8s %s\n" "$jid" "$node" "$rest"
-    suspects="$suspects $jid:$node"
+    suspects="$suspects $jid:$node:$tid"
   fi
 done < <(probe_all)
 
@@ -99,21 +108,25 @@ sleep "$RECHECK"
 
 acted=0; cleared=0
 for s in $suspects; do
-  jid="${s%%:*}"; node="${s##*:}"
+  IFS=: read -r jid node tid <<< "$s"
+  tid=${tid:-$jid}
+  # Anchor the match on the field boundary: a bare `jobid=$jid` substring-matches
+  # any longer id sharing that prefix, and acting on the wrong task is the one
+  # mistake this script must not make.
   rest=$(ssh -o StrictHostKeyChecking=no -o ConnectTimeout=8 "$node" \
-         "bash $ROOT/probe_node_cpu.sh $INT" 2>/dev/null | grep "jobid=$jid" || true)
-  if [ -z "$rest" ]; then echo "  $jid: gone (finished/moved) - nothing to do"; continue; fi
+         "bash $ROOT/probe_node_cpu.sh $INT" 2>/dev/null | grep -E "jobid=$jid( |$)" || true)
+  if [ -z "$rest" ]; then echo "  $tid: gone (finished/moved) - nothing to do"; continue; fi
   med=$(sed -n 's/.*med_cpu=\([0-9]*\).*/\1/p' <<< "$rest")
   dst=$(sed -n 's/.*dstate=\([0-9]*\).*/\1/p' <<< "$rest")
   npr=$(sed -n 's/.*nproc=\([0-9]*\).*/\1/p' <<< "$rest")
   if [ "${med:-100}" -ge "$CPU_FLOOR" ]; then
-    echo "  $jid: recovered (${med}%) - transient, SPARED"; cleared=$((cleared+1)); continue
+    echo "  $tid: recovered (${med}%) - transient, SPARED"; cleared=$((cleared+1)); continue
   fi
 
-  age_raw=$(squeue -j "$jid" -h -o "%M" 2>/dev/null | head -1)
+  age_raw=$(squeue -j "$tid" -h -o "%M" 2>/dev/null | head -1)
   age=$( [ -n "${age_raw:-}" ] && to_min "$age_raw" || echo 0 )
   if [ "$age" -lt "$MIN_AGE" ]; then
-    echo "  $jid: starved (${med}%) but only ${age}m old (< ${MIN_AGE}m startup grace) - SPARED"; continue
+    echo "  $tid: starved (${med}%) but only ${age}m old (< ${MIN_AGE}m startup grace) - SPARED"; continue
   fi
   # Classify the failure: these are different problems needing different actions.
   # Weigh dstate against nproc rather than treating any D-state process as proof of
@@ -145,11 +158,11 @@ for s in $suspects; do
     io_pct=$(( dst * 100 / npr ))
     if [ "$io_pct" -lt "$IO_MIN_FRAC" ] && [ "${med:-100}" -le "$HUNG_CPU" ]; then
       kind=hung
-      echo "  $jid: HUNG ${med}% with only ${dst}/${npr} proc(s) in D-state (idle, not blocked)"
+      echo "  $tid: HUNG ${med}% with only ${dst}/${npr} proc(s) in D-state (idle, not blocked)"
       echo "     not a filesystem stall; skipping the ${IO_RECHECK}s wait"
     else
       kind=iostall
-      echo "  $jid: IO-STALL ${med}% with ${dst}/${npr} proc(s) in D-state (filesystem, not contention)"
+      echo "  $tid: IO-STALL ${med}% with ${dst}/${npr} proc(s) in D-state (filesystem, not contention)"
       # Filesystem stalls are usually transient: while this task is judged, its
       # siblings on the same node recover (observed 2026-07-20: every overnight
       # requeue had a sibling that came back to 98-99%, and one suspect finished
@@ -161,7 +174,7 @@ for s in $suspects; do
         echo "     IO recheck $c/$IO_MAX_CYCLES: waiting ${IO_RECHECK}s to let it clear"
         sleep "$IO_RECHECK"
         rest3=$(ssh -o StrictHostKeyChecking=no -o ConnectTimeout=8 "$node" \
-                "bash $ROOT/probe_node_cpu.sh $INT" 2>/dev/null | grep "jobid=$jid" || true)
+                "bash $ROOT/probe_node_cpu.sh $INT" 2>/dev/null | grep -E "jobid=$jid( |$)" || true)
         if [ -z "$rest3" ]; then
           echo "     task gone (finished during the wait) - SPARED"; cleared_io=1; break
         fi
@@ -175,9 +188,9 @@ for s in $suspects; do
     fi
   fi
 
-  restarts=$(scontrol show job "$jid" 2>/dev/null | grep -oE "Restarts=[0-9]+" | head -1 | cut -d= -f2)
+  restarts=$(scontrol show job "$tid" 2>/dev/null | grep -oE "Restarts=[0-9]+" | head -1 | cut -d= -f2)
   restarts=${restarts:-0}
-  echo "  $jid: CONFIRMED STARVED ${med}% on $node (age ${age}m, restarts $restarts)"
+  echo "  $tid: CONFIRMED STARVED ${med}% on $node (age ${age}m, restarts $restarts)"
 
   # Node offense ledger, gated by CLASSIFICATION. Escalation-to-exclusion only
   # counts CPU-STARVATION events (dstate==0), where the node genuinely harbours
@@ -205,17 +218,27 @@ for s in $suspects; do
 
   [ "$REQUEUE" = "1" ] || continue
   if [ "$restarts" -ge "$MAX_RESTARTS" ]; then echo "     restarts exhausted; leaving it"; continue; fi
-  scontrol requeue "$jid" >/dev/null 2>&1 || { echo "     !! requeue failed"; continue; }
-  sleep 3; scontrol hold "$jid" >/dev/null 2>&1; sleep 2
+  # Last line of defence before the destructive call. An unqualified ArrayJobId
+  # would requeue the whole array, and the failure is silent: the sibling tasks
+  # simply vanish from the next probe and get logged as "gone (finished/moved)".
+  case "$tid" in
+    *_*) ;;
+    *) if scontrol show job "$tid" 2>/dev/null | grep -q "ArrayTaskId="; then
+         echo "     !! $tid is an unqualified array job id; refusing to requeue (would restart the whole array)"
+         continue
+       fi;;
+  esac
+  scontrol requeue "$tid" >/dev/null 2>&1 || { echo "     !! requeue failed"; continue; }
+  sleep 3; scontrol hold "$tid" >/dev/null 2>&1; sleep 2
   if [ "$exclude_node" = "1" ]; then
-    prev=$(scontrol show job "$jid" 2>/dev/null | grep -oE "ExcNodeList=[^ ]*" | head -1 | cut -d= -f2)
+    prev=$(scontrol show job "$tid" 2>/dev/null | grep -oE "ExcNodeList=[^ ]*" | head -1 | cut -d= -f2)
     case "$prev" in ""|"(null)") newexc="$node";; *) newexc="$prev,$node";; esac
-    scontrol update jobid="$jid" ExcNodeList="$newexc" >/dev/null 2>&1
-    got=$(scontrol show job "$jid" 2>/dev/null | grep -oE "ExcNodeList=[^ ]*" | head -1)
+    scontrol update jobid="$tid" ExcNodeList="$newexc" >/dev/null 2>&1
+    got=$(scontrol show job "$tid" 2>/dev/null | grep -oE "ExcNodeList=[^ ]*" | head -1)
   else
     got="(node not excluded: filesystem stall, node not at fault)"
   fi
-  scontrol release "$jid" >/dev/null 2>&1
+  scontrol release "$tid" >/dev/null 2>&1
   echo "     requeued + $got + released"
   acted=$((acted+1))
 done

@@ -8,12 +8,14 @@ The detector measures CPU utilisation rather than elapsed time. Healthy workers 
 
 | script | role |
 |---|---|
-| `probe_node_cpu.sh` | node-side; samples `/proc/<pid>/stat` twice and differences it. One ssh per node covers every task on it. Prints `jobid= nproc= med_cpu= dstate=` per task. |
+| `probe_node_cpu.sh` | node-side; samples `/proc/<pid>/stat` twice and differences it. One ssh per node covers every task on it. Prints `jobid= taskid= nproc= med_cpu= dstate=` per task. |
 | `degen_watch.sh` | per-task verdict; report-only by default, `--requeue` acts |
 | `deploy_doctor.sh` | sweep loop for the life of a campaign, self-terminating |
 | `term_orphans.sh` | SIGTERMs genuinely orphaned workers, safe on shared nodes |
 
 Read `dstate=` as a count of processes in uninterruptible sleep, not a flag. `dstate=1` on a nine-process task means one process is blocked, not that the task has one process. That distinction matters for the classifier, below.
+
+Read `jobid=` and `taskid=` as two different things. `jobid` is `SLURM_JOB_ID`, unique per task and the key for matching a task between probes. `taskid` is the array-qualified `<ArrayJobId>_<TaskId>`, and it is the only id `scontrol` may be given. They differ for exactly one task per array, which is enough to lose an entire iteration; see the third campaign below.
 
 ## Guardrails, each of which was a bug first
 
@@ -24,6 +26,7 @@ Read `dstate=` as a count of processes in uninterruptible sleep, not a flag. `ds
 - Require two strikes separated by `RECHECK`. Transient dips recover and must be spared.
 - Requeue, never cancel. A requeued task re-runs its own unit and leaves no gap.
 - `ExcNodeList` can only be set on a pending task. The working sequence is requeue, hold, update, release.
+- Address array tasks as `<ArrayJobId>_<TaskId>`. A bare `ArrayJobId` given to `scontrol requeue` restarts every task in the array.
 
 ## Field evidence, first production campaign
 
@@ -57,6 +60,28 @@ Two patterns drove the changes below:
 - **The offense ledger contradicted the classifier.** node3 filesystem-stalled three times over the campaign (suspected more), and on the third the pre-fix ledger escalated and excluded the node (`ExcNodeList=node3`), overriding its own per-stall "NOT excluding node3" verdict. All three were filesystem stalls the classifier had ruled node-not-at-fault, and node3's siblings recovered each time, so the exclusion was wrong. Escalation-to-exclusion is now **gated by classification**: only repeated CPU-starvation events (a node genuinely harbouring orphans) escalate; filesystem-stall events are logged for visibility but never drive exclusion.
 
 What was validated and left unchanged: the two-strike sparing logic (zero false requeues across both campaigns; every dip that recovered was spared) and the hung-vs-stall split (zero misclassifications overnight). The core detection is sound; the gap was purely in the response to a confirmed filesystem stall.
+
+## Field evidence, third campaign (swfcalib, 2026-07-28)
+
+A seven-wave `swfcalib` calibration on RSPH, 64-task step-2 arrays of eight workers each, running alongside a second project's 50-task, 16-CPU campaign on the same partition. Two things separate this campaign from the first two.
+
+**The orphan-contention mode finally dominated.** 109 confirmed CPU-starvation events across 92 sweeps, against one in the first campaign and none in the second. The signature was the designed one, a full nine-process footprint with `dstate=0` at a median of 51%, alongside a harder variant at 0-2% that the classifier correctly routed to CPU starvation rather than to the filesystem branch. Contention with a concurrent campaign is the obvious difference; the two earlier campaigns had the cluster largely to themselves.
+
+**A requeue restarted the whole array, three times, and the log said otherwise.** `scontrol requeue` given a bare `ArrayJobId` acts on every task in the array. Exactly one task per array reports its `SLURM_JOB_ID` as that bare id (SLURM allocates fresh ids to tasks as they are split off the array record, and one of them inherits the original), and the probe reads `SLURM_JOB_ID` out of `/proc/<pid>/environ`. So whenever that one task was the confirmed-starved one, the doctor discarded all 64.
+
+The 07:18:32 sweep is the clean case. The doctor confirmed and requeued a single job, reported `confirmed_starved_requeued=1`, and then logged its other ten suspects as `gone (finished/moved)`. They were not gone. 62 task logs carry `CANCELLED AT 2026-07-28T07:18:32 DUE TO JOB REQUEUE`, to the second. The same thing had happened at 05:05:09 (63 tasks) and 06:12:18 (57 tasks), so one iteration was restarted from zero three times: each round discarded roughly 60 tasks at about an hour each, some 480 core-hours, and the iteration took 8.4 hours against a measured task time of 54 to 58 minutes.
+
+Three properties made it hard to see, and each is now addressed:
+
+- **The doctor's own accounting understated the blast radius about sixtyfold.** It counts the requeues it issues, not the tasks that stop, and there is no reason those should differ.
+- **`gone (finished/moved)` is where the collateral damage went.** The recheck cannot distinguish a task that finished from one the previous requeue just killed, so every victim was logged as a normal, healthy outcome.
+- **`scontrol requeue` returned nonzero while still acting.** At 06:12 the doctor logged `!! requeue failed` for the array id and skipped its own follow-up, and the array restarted anyway. A partial-failure exit code on a whole-array operation is not a signal that nothing happened.
+
+Only `MAX_RESTARTS` stopped it: after three rounds the tasks reached their restart cap, the doctor logged `restarts exhausted; leaving it`, and the array was finally allowed to finish. That cap was doing work it was never meant to do.
+
+The probe now reads `SLURM_ARRAY_JOB_ID` and `SLURM_ARRAY_TASK_ID` from the same environment block and emits `taskid=`, and every `squeue`/`scontrol` call in `degen_watch.sh` addresses the task by it. Taking the id from the task's own environment rather than resolving it later is the point: PSOCK workers inherit it from their master, so every process of a task agrees, and nothing has to be inferred from a `squeue` line that may describe a sibling. Verified against the successor array while it ran: `jobid=41746875 taskid=41746874_0`, where the raw `SLURM_JOB_ID` and the array id differ by one and neither is guessable from the other. A guard before the destructive call refuses any unqualified id that `scontrol` reports as an array, so the failure mode cannot return by another route.
+
+Two smaller consequences worth keeping in mind. The probe match was a bare `grep jobid=$jid`, which substring-matches any longer id sharing the prefix; it is now anchored on the field boundary, because acting on the wrong task is the one mistake this script must not make. And `Restarts=`, the age lookup, and the `ExcNodeList` read all went through the same unqualified id, so on an array they were reading whichever task `scontrol` or `squeue` happened to list first rather than the one under judgement.
 
 ## Node-level view (open)
 

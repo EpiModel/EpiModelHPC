@@ -26,9 +26,14 @@ to the cluster, or reference it directly from a deploy script.
 \describe{
 \item{\code{probe_node_cpu.sh}}{Node-side. Reports instantaneous CPU
 utilisation per SLURM task for every R process the user has on that node.
-One ssh per node covers all tasks on it.}
+One ssh per node covers all tasks on it. Reports both \code{jobid=}
+(\code{SLURM_JOB_ID}, the key for matching a task between probes) and
+\code{taskid=} (the array-qualified \code{<ArrayJobId>_<TaskId>}, the only
+id \code{scontrol} may be given).}
 \item{\code{degen_watch.sh}}{Classifies each running task and requeues the
-degenerate ones. Set \code{PATTERN} to match your job names.}
+degenerate ones. Addresses every task by its array-qualified id: a bare
+\code{ArrayJobId} passed to \code{scontrol requeue} restarts the whole
+array. Set \code{PATTERN} to match your job names.}
 \item{\code{deploy_doctor.sh}}{A one-CPU companion job that sweeps for the
 life of a campaign and self-terminates when it drains.}
 \item{\code{term_orphans.sh}}{SIGTERMs genuinely orphaned R workers on a
