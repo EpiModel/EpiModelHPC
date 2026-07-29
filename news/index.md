@@ -1,5 +1,19 @@
 # Changelog
 
+## EpiModelHPC 2.8.2
+
+### OTHER
+
+- [`make_calibrated_scenario()`](http://epimodel.github.io/EpiModelHPC/reference/make_calibrated_scenario.md)
+  calls
+  [`swfcalib::load_calib_object()`](https://epimodel.github.io/swfcalib/reference/load_calib_object.html)
+  and
+  [`swfcalib::get_default_proposal()`](https://epimodel.github.io/swfcalib/reference/get_default_proposal.html)
+  with `::` now that both are exported (EpiModel/swfcalib#34), clearing
+  the `:::` NOTE from `R CMD check`. Requires a swfcalib built from
+  `main` at or after that merge; the version there is unchanged at
+  0.0.0.9000, so `DESCRIPTION` cannot state the requirement.
+
 ## EpiModelHPC 2.8.1
 
 ### BUG FIXES

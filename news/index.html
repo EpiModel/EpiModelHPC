@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">EpiModelHPC</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.8.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.8.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,6 +36,14 @@
       <small>Source: <a href="https://github.com/EpiModel/EpiModelHPC/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="2.8.2" id="epimodelhpc-282">EpiModelHPC 2.8.2<a class="anchor" aria-label="anchor" href="#epimodelhpc-282"></a></h2>
+<div class="section level3">
+<h3 id="other-2-8-2">OTHER<a class="anchor" aria-label="anchor" href="#other-2-8-2"></a></h3>
+<ul><li>
+<code><a href="../reference/make_calibrated_scenario.html">make_calibrated_scenario()</a></code> calls <code><a href="https://epimodel.github.io/swfcalib/reference/load_calib_object.html" class="external-link">swfcalib::load_calib_object()</a></code> and <code><a href="https://epimodel.github.io/swfcalib/reference/get_default_proposal.html" class="external-link">swfcalib::get_default_proposal()</a></code> with <code>::</code> now that both are exported (EpiModel/swfcalib#34), clearing the <code>:::</code> NOTE from <code>R CMD check</code>. Requires a swfcalib built from <code>main</code> at or after that merge; the version there is unchanged at 0.0.0.9000, so <code>DESCRIPTION</code> cannot state the requirement.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="2.8.1" id="epimodelhpc-281">EpiModelHPC 2.8.1<a class="anchor" aria-label="anchor" href="#epimodelhpc-281"></a></h2>
 <div class="section level3">
