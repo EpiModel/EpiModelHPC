@@ -141,6 +141,16 @@ while read -r node rest; do
   jid=$(sed -n 's/.*jobid=\([0-9]*\).*/\1/p' <<< "$rest")
   med=$(sed -n 's/.*med_cpu=\([0-9]*\).*/\1/p' <<< "$rest")
   [ -n "${jid:-}" ] && [ -n "${med:-}" ] || continue
+  # Never judge the job this sweep is running inside. The doctor's own job name
+  # necessarily matches PATTERN (that is how it is scoped to a campaign), so it
+  # is inside its own `owned` set, and since the scan widened past `pgrep -x R`
+  # its own `sleep` and ssh processes are visible too. That reads as a task at
+  # 0% CPU with nothing in D-state, which is precisely the `hung` signature, and
+  # the doctor would requeue ITSELF once per sweep. Seen in production the first
+  # time this shipped: ten consecutive confirmations of jobid 41750366, which
+  # was the doctor, spared only by its restart counter already sitting at
+  # MAX_RESTARTS.
+  if [ -n "${SLURM_JOB_ID:-}" ] && [ "$jid" = "$SLURM_JOB_ID" ]; then continue; fi
   # Falls back to jid only for a probe old enough to predate `taskid=`; a
   # same-vintage probe always supplies it.
   tid=$(sed -n 's/.*taskid=\([0-9_]*\).*/\1/p' <<< "$rest"); tid=${tid:-$jid}
