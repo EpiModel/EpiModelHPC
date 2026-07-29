@@ -68,6 +68,11 @@ IO_RECHECK=${IO_RECHECK:-300}   # seconds per D-state (filesystem) stall recheck
 IO_MAX_CYCLES=${IO_MAX_CYCLES:-3}  # recheck cycles a filesystem stall gets before requeue (they usually clear)
 IO_MIN_FRAC=${IO_MIN_FRAC:-50}  # pct of a task's procs in D-state to call it a filesystem stall
 HUNG_CPU=${HUNG_CPU:-5}         # median cpu% at or below this, with few procs blocked, = hung
+# A single process above this is multi-threaded, so the one-sim-one-core model
+# this detector is built on does not describe it and the median is not a
+# starvation signal. 150 rather than 100 leaves headroom for the brief bursts a
+# nominally single-threaded R process gets from a threaded BLAS.
+MULTICORE_CPU=${MULTICORE_CPU:-150}
 NODE_OFFENSE_LIMIT=${NODE_OFFENSE_LIMIT:-3}   # confirmed CPU-STARVATION events on one node before it is a repeat offender
 # Campaign-scoped node offense ledger. Keyed to the doctor's own SLURM job so a
 # new campaign starts a clean ledger and concurrent doctors (e.g. two projects)
@@ -105,7 +110,7 @@ probe_all() {  # -> "<node> jobid=.. nproc=.. med_cpu=.. dstate=.."
   for n in $nodes; do
     ssh -o StrictHostKeyChecking=no -o ConnectTimeout=8 "$n" \
         "bash $ROOT/probe_node_cpu.sh $INT" 2>/dev/null \
-      | grep -E '^jobid=' | sed "s|^|$n |"
+      | grep -E '^(jobid|nodeinfo)=' | sed "s|^|$n |"
   done
 }
 
@@ -124,8 +129,15 @@ if [ -z "$probe_out" ]; then
 fi
 
 suspects=""
+declare -A NODEINFO
 while read -r node rest; do
   [ -n "${node:-}" ] || continue
+  # Node-level context, kept aside and printed only for nodes that produce a
+  # suspect. It is the difference between "the node is oversubscribed" and "the
+  # node is idle and my task is stuck on something else", and the per-task CPU
+  # cannot distinguish those.
+  case "$rest" in nodeinfo=*) NODEINFO[$node]="${rest#nodeinfo=1 }"; continue;; esac
+  seen_tasks=$(( ${seen_tasks:-0} + 1 ))
   jid=$(sed -n 's/.*jobid=\([0-9]*\).*/\1/p' <<< "$rest")
   med=$(sed -n 's/.*med_cpu=\([0-9]*\).*/\1/p' <<< "$rest")
   [ -n "${jid:-}" ] && [ -n "${med:-}" ] || continue
@@ -147,6 +159,20 @@ while read -r node rest; do
   if [ "${np:-0}" -lt "$MIN_PROC" ]; then
     printf "  startup   %-10s %-8s %s (nproc<$MIN_PROC: master-only, not judged)\n" "$jid" "$node" "$rest"; continue
   fi
+  # Multi-threaded workloads are outside this detector's model, so decline to
+  # judge them rather than guessing. The whole method rests on one simulation
+  # per core at about 100%, which makes a median across the task's processes a
+  # starvation signal. An rstan/cmdstanr task is an idle R wrapper plus a
+  # compiled binary at several hundred percent: the median is meaningless, the
+  # ~50% starvation signature does not apply, and there is no way to tell a
+  # healthy 4-thread chain from a contended 8-thread one without knowing how
+  # many threads it asked for. Under-flagging is the right failure here, because
+  # the alternative is requeuing someone's healthy Bayesian fit.
+  top=$(sed -n 's/.*top_cpu=\([0-9]*\).*/\1/p' <<< "$rest")
+  if [ "${top:-0}" -ge "$MULTICORE_CPU" ]; then
+    printf "  threaded  %-10s %-8s %s (top_cpu>=${MULTICORE_CPU}%%: not the one-core-per-sim model, not judged)\n" \
+           "$jid" "$node" "$rest"; continue
+  fi
   if [ "$med" -ge "$CPU_FLOOR" ]; then
     printf "  ok        %-10s %-8s %s\n" "$jid" "$node" "$rest"
   else
@@ -156,8 +182,26 @@ while read -r node rest; do
 done <<< "$probe_out"
 
 suspects=$(echo $suspects)
+
+# The probe now always returns a node line, so "nothing came back" no longer
+# covers the case where the probe RAN and attributed no process to any task.
+# SLURM says these nodes are running our work; if none of it is visible, the
+# attribution is broken, not the campaign. A warning rather than an error,
+# because a task genuinely between steps can be process-free for a moment.
+if [ "${seen_tasks:-0}" -eq 0 ]; then
+  echo "!! probe reached $(wc -w <<< "$nodes") node(s) but attributed no process to any of $(wc -l <<< "$mine") running task(s)" >&2
+  echo "!! expected at least one process per task; check that the tasks are really running and that SLURM_JOB_ID is set in their environment" >&2
+fi
 [ -n "$suspects" ] || { echo "---"; echo "all tasks healthy (median CPU >= ${CPU_FLOOR}%)"; exit 0; }
 
+# Node context for the nodes that produced a suspect. A starved task on a node
+# at load 30 of 32 is contention; the same reading on a node at load 8 of 32 is
+# not, and the difference decides whether excluding the node is justified. Other
+# users' processes never appear in the per-task view, so this is the only place
+# their weight shows up at all.
+for sn in $(tr ' ' '\n' <<< "$suspects" | awk -F: 'NF{print $2}' | sort -u); do
+  [ -n "${NODEINFO[$sn]:-}" ] && echo "  node      $sn  ${NODEINFO[$sn]}"
+done
 echo "--- strike 1 done; re-checking suspects in ${RECHECK}s (transient dips must not trigger) ---"
 sleep "$RECHECK"
 
