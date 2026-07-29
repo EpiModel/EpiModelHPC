@@ -1,3 +1,9 @@
+# EpiModelHPC 2.9.1
+
+## BUG FIXES
+
+- `degen_watch.sh` no longer judges the job it is running inside. The doctor's own job name necessarily matches `PATTERN`, since that is how it is scoped to a campaign, so it sits inside its own task set; and once the process scan widened past `pgrep -x R` in 2.9.0, its own `sleep` and `ssh` processes became visible too. That reads as a task at 0% CPU with nothing in D-state, which is exactly the `hung` signature, so the doctor confirmed itself hung once per sweep and would have requeued itself. Caught on the first campaign to run 2.9.0: ten consecutive confirmations of the doctor's own job id, spared only because its restart counter already sat at `MAX_RESTARTS`. Any task whose `jobid` equals `SLURM_JOB_ID` is now skipped before classification.
+
 # EpiModelHPC 2.9.0
 
 ## NEW FEATURES
