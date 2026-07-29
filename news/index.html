@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">EpiModelHPC</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.8.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.8.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,6 +36,15 @@
       <small>Source: <a href="https://github.com/EpiModel/EpiModelHPC/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="2.8.3" id="epimodelhpc-283">EpiModelHPC 2.8.3<a class="anchor" aria-label="anchor" href="#epimodelhpc-283"></a></h2>
+<div class="section level3">
+<h3 id="bug-fixes-2-8-3">BUG FIXES<a class="anchor" aria-label="anchor" href="#bug-fixes-2-8-3"></a></h3>
+<ul><li>
+<code>degen_watch.sh</code> no longer reports an idle task as CPU-starved, and no longer excludes the node it was running on. <code>dstate == 0</code> defaulted to <code>cpustarv</code> at any CPU level, but losing a share of the cores to a competitor reads near 50% and a task with no competitor and no I/O wait reads near zero. On a 64-task <code>swfcalib</code> array, 100 of 127 confirmed events read 0-3% against 23 at the genuine 51% signature; the nodes blamed were idle and process-free minutes later, and the requeued tasks had never begun work, all stopping inside package loading. <code>dstate == 0</code> with CPU at or below <code>HUNG_CPU</code> is now classified <code>hung</code>: still requeued promptly, but the node is not implicated, matching what the classifier already did for the same condition when one process happened to be in D-state.</li>
+<li>The confirmation line reports the classification (<code>CONFIRMED HUNG</code>, <code>CONFIRMED CPU-STARVED</code>, <code>CONFIRMED IO-STALLED</code>) instead of a blanket <code>CONFIRMED STARVED</code>. The label is what sends an operator looking for a competitor that may never have been there. The <code>CONFIRMED</code> token is unchanged, so existing log greps still match.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="2.8.2" id="epimodelhpc-282">EpiModelHPC 2.8.2<a class="anchor" aria-label="anchor" href="#epimodelhpc-282"></a></h2>
 <div class="section level3">
