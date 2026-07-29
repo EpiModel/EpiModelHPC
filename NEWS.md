@@ -1,3 +1,14 @@
+# EpiModelHPC 2.8.2
+
+## BUG FIXES
+
+- `degen_watch.sh` no longer reports an idle task as CPU-starved, and no longer excludes the node it was running on. `dstate == 0` defaulted to `cpustarv` at any CPU level, but losing a share of the cores to a competitor reads near 50% and a task with no competitor and no I/O wait reads near zero. On a 64-task `swfcalib` array, 100 of 127 confirmed events read 0-3% against 23 at the genuine 51% signature; the nodes blamed were idle and process-free minutes later, and the requeued tasks had never begun work, all stopping inside package loading. `dstate == 0` with CPU at or below `HUNG_CPU` is now classified `hung`: still requeued promptly, but the node is not implicated, matching what the classifier already did for the same condition when one process happened to be in D-state.
+- The confirmation line reports the classification (`CONFIRMED HUNG`, `CONFIRMED CPU-STARVED`, `CONFIRMED IO-STALLED`) instead of a blanket `CONFIRMED STARVED`. The label is what sends an operator looking for a competitor that may never have been there. The `CONFIRMED` token is unchanged, so existing log greps still match.
+
+## OTHER
+
+- `make_calibrated_scenario()` calls `swfcalib::load_calib_object()` and `swfcalib::get_default_proposal()` with `::` now that both are exported (EpiModel/swfcalib#34), clearing the `:::` NOTE from `R CMD check`. Requires a swfcalib built from `main` at or after that merge; the version there is unchanged at 0.0.0.9000, so `DESCRIPTION` cannot state the requirement.
+
 # EpiModelHPC 2.8.1
 
 ## BUG FIXES
