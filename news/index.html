@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">EpiModelHPC</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.9.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.9.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,6 +36,14 @@
       <small>Source: <a href="https://github.com/EpiModel/EpiModelHPC/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="2.9.1" id="epimodelhpc-291">EpiModelHPC 2.9.1<a class="anchor" aria-label="anchor" href="#epimodelhpc-291"></a></h2>
+<div class="section level3">
+<h3 id="bug-fixes-2-9-1">BUG FIXES<a class="anchor" aria-label="anchor" href="#bug-fixes-2-9-1"></a></h3>
+<ul><li>
+<code>degen_watch.sh</code> no longer judges the job it is running inside. The doctor’s own job name necessarily matches <code>PATTERN</code>, since that is how it is scoped to a campaign, so it sits inside its own task set; and once the process scan widened past <code>pgrep -x R</code> in 2.9.0, its own <code>sleep</code> and <code>ssh</code> processes became visible too. That reads as a task at 0% CPU with nothing in D-state, which is exactly the <code>hung</code> signature, so the doctor confirmed itself hung once per sweep and would have requeued itself. Caught on the first campaign to run 2.9.0: ten consecutive confirmations of the doctor’s own job id, spared only because its restart counter already sat at <code>MAX_RESTARTS</code>. Any task whose <code>jobid</code> equals <code>SLURM_JOB_ID</code> is now skipped before classification.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="2.9.0" id="epimodelhpc-290">EpiModelHPC 2.9.0<a class="anchor" aria-label="anchor" href="#epimodelhpc-290"></a></h2>
 <div class="section level3">
