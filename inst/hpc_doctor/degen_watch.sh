@@ -207,7 +207,24 @@ for s in $suspects; do
   #      (Observed 2026-07-19: nine procs, median 0%, one in D-state, requeued
   #      correctly but only after being routed down the filesystem branch.)
   exclude_node=1; kind=cpustarv
-  if [ "${dst:-0}" -gt 0 ]; then
+  if [ "${dst:-0}" -eq 0 ] && [ "${med:-100}" -le "$HUNG_CPU" ]; then
+    # Nothing blocked and nothing running. CPU starvation means losing a SHARE of
+    # the cores to a competitor, which reads near 50%, not near zero; a task at
+    # 0-3% with no process in D-state has no competitor and no I/O wait, it is
+    # simply not working. Before this branch existed the `dstate == 0` default
+    # swept both cases into `cpustarv` and excluded the node for the second one.
+    #
+    # Measured 2026-07-29 on a 64-task swfcalib array: 100 of 127 confirmed
+    # events read 0-3% with `dstate=0` against 23 at the genuine 51% signature,
+    # and every requeued task's log stopped inside package loading, none had
+    # begun simulating. The nodes blamed were idle and process-free minutes
+    # later, so the exclusions rested on nothing. Requeue is still right, and did
+    # eventually clear them; blaming the node was not.
+    kind=hung
+    exclude_node=0
+    echo "  $tid: HUNG ${med}% with ${npr} proc(s) and none in D-state (idle, not contended)"
+    echo "     no competitor and no I/O wait; requeuing without implicating $node"
+  elif [ "${dst:-0}" -gt 0 ]; then
     exclude_node=0
     [ "${npr:-0}" -gt 0 ] || npr=1          # never divide by zero on a partial probe
     io_pct=$(( dst * 100 / npr ))
@@ -245,7 +262,17 @@ for s in $suspects; do
 
   restarts=$(scontrol show job "$tid" 2>/dev/null | grep -oE "Restarts=[0-9]+" | head -1 | cut -d= -f2)
   restarts=${restarts:-0}
-  echo "  $tid: CONFIRMED STARVED ${med}% on $node (age ${age}m, restarts $restarts)"
+  # Report the CLASSIFICATION, not a blanket "STARVED". Three quarters of one
+  # campaign's events were idle tasks labelled starved, and the label is what
+  # sent the operator looking for a competitor that was never there. The
+  # "CONFIRMED" token is unchanged so existing log greps still match.
+  case "$kind" in
+    cpustarv) verdict="CPU-STARVED";;
+    hung)     verdict="HUNG";;
+    iostall)  verdict="IO-STALLED";;
+    *)        verdict="$kind";;
+  esac
+  echo "  $tid: CONFIRMED $verdict ${med}% on $node (age ${age}m, restarts $restarts)"
 
   # Node offense ledger, gated by CLASSIFICATION. Escalation-to-exclusion only
   # counts CPU-STARVATION events (dstate==0), where the node genuinely harbours

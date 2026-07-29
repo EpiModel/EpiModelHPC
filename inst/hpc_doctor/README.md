@@ -101,11 +101,12 @@ That was the substantive finding, and it is now fixed. The classifier previously
 
 | condition | verdict | action |
 |---|---|---|
-| `dstate == 0`, CPU below floor | CPU starvation | requeue; exclude the node after `NODE_OFFENSE_LIMIT` repeats |
+| `dstate == 0`, CPU between `HUNG_CPU` and the floor | CPU starvation | requeue; exclude the node after `NODE_OFFENSE_LIMIT` repeats |
+| `dstate == 0`, CPU `<= HUNG_CPU` | hung task | requeue promptly, never exclude (added in the fourth campaign, below) |
 | `dstate >= IO_MIN_FRAC%` of `nproc` | filesystem stall | wait up to `IO_MAX_CYCLES` x `IO_RECHECK`, requeue only if still stalled, never exclude |
 | `dstate < IO_MIN_FRAC%` and CPU `<= HUNG_CPU` | hung task | requeue promptly, skip the wait, never exclude |
 
-`IO_MIN_FRAC` defaults to 50 and `HUNG_CPU` to 5. The ambiguous middle (few processes blocked but CPU well above `HUNG_CPU`) deliberately keeps the old behaviour and takes the wait path, so the change only affects the clearly-hung case. A hang does not exclude the node, because a hang is not evidence of contention; `dstate == 0` is what detects that.
+`IO_MIN_FRAC` defaults to 50 and `HUNG_CPU` to 5. The ambiguous middle (few processes blocked but CPU well above `HUNG_CPU`) deliberately keeps the old behaviour and takes the wait path, so the change only affects the clearly-hung case. A hang does not exclude the node, because a hang is not evidence of contention.
 
 **Requeue cost scales with queue depth.** A requeued array task receives a new `SubmitTime` and re-enters the queue behind everything submitted earlier. On this campaign that put both tasks behind a 3,072-task array, so two stragglers that would have finished in 20 minutes instead gated their family's merge step for the whole run. Requeuing is close to free on an empty cluster and expensive on a full one. Being conservative is particularly warranted when a family is nearly complete and a single task gates a barrier or a merge.
 
@@ -151,6 +152,30 @@ Confirming the fix surfaced a second, independent defect in the same sweep. `PAT
 Verified by inverting the scope against two live campaigns sharing nodes. Pointed at the second project with the floor forced to 100%, the three nine-process tasks of the first on the same node are logged `co-tenant ... (outside /prep-d3/: not judged)` and the sweep ends with zero suspects; pointed back at the first, the second project's tasks get the same treatment. Nothing outside `PATTERN` can now reach the action path from either direction.
 
 The match is also now against the job name field alone rather than the whole `squeue` line. `deploy_doctor.sh` counts against `squeue -o "%j"` while `degen_watch.sh` grepped `%N %j`, so an anchored pattern such as `^doxy-` matched in the wrapper and silently found nothing in the worker: the doctor reported tasks to sweep and then swept nothing, on every sweep, for as long as it ran. Both now match on the name, so anchored and unanchored patterns behave identically in the two scripts.
+
+## Field evidence, fourth campaign (swfcalib, 2026-07-29)
+
+The same `swfcalib` calibration, two days on. 186 sweeps, 127 confirmed events since the array-task fix, 120 requeues across 79 distinct tasks out of 192 run. Two in five tasks needed intervention, which is one to two orders of magnitude above every prior campaign and was the signal that the doctor was diagnosing the wrong thing.
+
+**Most of it was not CPU starvation.** Splitting the confirmed events by their CPU reading:
+
+| reading | events | reads as |
+|---|---|---|
+| 0-3% | 100 | nine processes alive, nothing blocked, no work |
+| 51% | 23 | the orphan-contention signature this tooling was built for |
+| other | 4 | 12, 27, 35, 61% |
+
+Every one of the 310 probe readings had `dstate=0`, so the filesystem branch never fired once.
+
+The 51% group is real and is what the doctor is for. The 0-3% group is a different failure wearing the same label, because the classifier defaulted `dstate == 0` to `cpustarv` regardless of level. That default is wrong on its own terms: losing a share of the cores to a competitor reads near 50%, and a task with no competitor and no I/O wait reads near zero. There is no reading at which "starved" means "idle".
+
+Two independent checks confirmed the misdiagnosis. The nodes blamed most (node18, node19, node20, node21, node22) were IDLE with zero processes when checked afterwards, so the exclusions those events wrote rested on nothing. And the requeued tasks had never started work: measuring how much output each had produced when the doctor killed it gave exactly four values across 56 tasks, 59, 126, 193 and 260 lines, which is the same startup banner repeating once per requeue cycle, with 260 the end of package loading. One inspected directly had sat at `Attaching package: 'dplyr'` for 93 minutes.
+
+So these were tasks wedged during R startup, loading a package library off shared storage, being requeued into starting the same load again. Requeue was still the right action and did eventually clear them, one task completing in 1.6 hours after its restart. Blaming the node was not, and it is actively harmful: excluding healthy nodes on false evidence shrinks the pool and concentrates the next attempt onto fewer machines, which makes the real contention worse.
+
+`degen_watch.sh` now separates them. `dstate == 0` with CPU at or below `HUNG_CPU` is classified `hung`, requeued promptly and does not implicate the node, matching what the classifier already did for the same condition when one process happened to be in D-state. `dstate == 0` above `HUNG_CPU` and below the floor stays `cpustarv` and still escalates to exclusion on repeats.
+
+Worth stating plainly, because the doctor cannot fix it: a startup stall is a storage problem. The doctor's job here is to stop the task burning its walltime and to report honestly what it saw. Requeue volume at this level is a symptom to escalate, not a thing to tune away.
 
 ## Node-level view (open)
 
