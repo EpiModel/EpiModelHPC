@@ -8,7 +8,7 @@ The detector measures CPU utilisation rather than elapsed time. Healthy workers 
 
 | script | role |
 |---|---|
-| `probe_node_cpu.sh` | node-side; samples `/proc/<pid>/stat` twice and differences it. One ssh per node covers every task on it. Prints `jobid= taskid= nproc= med_cpu= dstate=` per task. |
+| `probe_node_cpu.sh` | node-side; samples `/proc/<pid>/stat` twice and differences it. One ssh per node covers every task on it. Prints a `nodeinfo=` line, then `jobid= taskid= nproc= med_cpu= top_cpu= dstate=` per task. |
 | `degen_watch.sh` | per-task verdict; report-only by default, `--requeue` acts. `PATTERN` scopes both the nodes probed and the tasks judged. |
 | `deploy_doctor.sh` | entry point, `sbatch` this. Sweep loop for the life of a campaign, self-terminating. Carries its own `#SBATCH` defaults. |
 | `term_orphans.sh` | SIGTERMs genuinely orphaned workers, safe on shared nodes |
@@ -85,7 +85,21 @@ Counting now uses `squeue -r`, so a collapsed pending range such as `41746874_[4
 - Requeue, never cancel. A requeued task re-runs its own unit and leaves no gap.
 - `ExcNodeList` can only be set on a pending task. The working sequence is requeue, hold, update, release.
 - Address array tasks as `<ArrayJobId>_<TaskId>`. A bare `ArrayJobId` given to `scontrol requeue` restarts every task in the array.
+- Decide task membership by `SLURM_JOB_ID`, not by process name. A task's work is not always in R, and children inherit the variable.
+- Judge only what the one-core-per-simulation model describes. A process above `MULTICORE_CPU` is threaded and its median is not a starvation signal.
 - Apply `PATTERN` to tasks, not only to nodes. The probe reports every R process the user owns on a probed node, so a node shared with another of the user's campaigns yields that campaign's tasks too.
+
+## What this detector can and cannot see
+
+The method rests on one assumption: **one simulation per core, each pegged near 100%**. That is what makes a median across a task's processes a starvation signal, and why healthy at ~99% against starved at ~50% is a wide, unambiguous gap. Everything else follows from it.
+
+Two kinds of workload break the assumption, and the doctor handles them differently.
+
+**Multi-threaded tasks are declined, not guessed at.** An `rstan`/`cmdstanr` task is an idle R wrapper plus a compiled `model_<hash>` binary running the chains at several hundred percent. There is no median to speak of, the ~50% signature does not apply, and nothing on the node says how many threads the chain asked for, so a healthy 4-thread run and a contended 8-thread one are indistinguishable from outside. A task whose busiest process exceeds `MULTICORE_CPU` (default 150, above any single-threaded R process including threaded-BLAS bursts) is reported `threaded` and skipped. Under-flagging is the right failure here: the alternative is requeuing someone's healthy Bayesian fit.
+
+Membership in a task is therefore decided by `SLURM_JOB_ID` from `/proc/<pid>/environ` rather than by process name. `pgrep -x R` saw only the idle wrapper and reported `nproc=1 med_cpu=0`, which read as a task doing nothing; the compiled binary inherits the variable and is now attributed correctly. Verified on a live cmdstan array, where the model binary carries both `SLURM_JOB_ID` and `SLURM_ARRAY_TASK_ID`. The batch script wrapper is excluded by name, since counting it would inflate `nproc` past `MIN_PROC` and cost a starting task its grace period.
+
+**Other users are invisible, so the node is reported instead.** The probe only ever sees processes owned by the invoking user, which means a co-tenant from another account can starve one of our tasks with nothing in the per-task view to show for it. `nodeinfo=1 cores= load1=` is now reported per node and printed for any node that produced a suspect. One number separates the two readings that matter: a suspect on a node at load 30 of 32 is contention and excluding the node may be justified; the same suspect on a node at load 4 of 32 is not, and the node is not at fault. Measured while writing this: nodes running a 16-CPU-per-task Bayesian campaign sat at load 8 of 32, holding cores they were not using, which creates queue pressure for everyone else but does not starve a co-tenant.
 
 ## Field evidence, first production campaign
 
