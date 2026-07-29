@@ -16,16 +16,9 @@ netsim_run_swfcalib_scenario <- function(calib_object, batch_num,
 #' Make an EpiModel scenario using the result of an `swfcalib` calibration
 #'
 #' @inheritParams swfcalib::calibration_step1
-# `load_calib_object()` and `get_default_proposal()` are not exported by swfcalib
-# and have no public equivalent, so they have to be reached inside its namespace.
-# R CMD check NOTEs the `:::`, and that NOTE is left standing deliberately: the
-# alternatives (utils::getFromNamespace, or moving swfcalib to Suggests) only
-# hide the coupling from the checker, and the second would stop
-# `remotes::install_github()` pulling swfcalib in. The real fix is to export both
-# from swfcalib, after which these become plain `swfcalib::` calls.
 make_calibrated_scenario <- function(calib_object) {
-  calib_object <- swfcalib:::load_calib_object(calib_object)
-  calibrated_scenario <- swfcalib:::get_default_proposal(calib_object)
+  calib_object <- swfcalib::load_calib_object(calib_object)
+  calibrated_scenario <- swfcalib::get_default_proposal(calib_object)
   swfcalib_proposal_to_scenario(calibrated_scenario)
 }
 
