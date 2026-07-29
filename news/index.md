@@ -1,5 +1,46 @@
 # Changelog
 
+## EpiModelHPC 2.9.0
+
+### NEW FEATURES
+
+- The doctor no longer assumes a task’s work happens in R. Task
+  membership is decided by `SLURM_JOB_ID` from `/proc/<pid>/environ`
+  rather than by process name, so a compiled child such as an
+  `rstan`/`cmdstanr` `model_<hash>` binary is attributed to the task
+  that launched it. `pgrep -x R` saw only the idle R wrapper and
+  reported `nproc=1 med_cpu=0` for a task consuming four cores. The
+  batch script wrapper is excluded by name so `nproc` still reflects the
+  workload and a starting task keeps its `MIN_PROC` grace period.
+- `probe_node_cpu.sh` reports `top_cpu=`, the busiest single process in
+  a task, and `degen_watch.sh` declines to judge any task whose
+  `top_cpu` exceeds `MULTICORE_CPU` (default 150), reporting it as
+  `threaded`. The whole detector rests on one simulation per core at
+  about 100%, which is what makes a median a starvation signal; a
+  threaded binary at several hundred percent is outside that model, and
+  a healthy 4-thread chain cannot be told from a contended 8-thread one
+  from outside the process. Under-flagging is the correct failure, since
+  the alternative is requeuing a healthy Bayesian fit.
+- `probe_node_cpu.sh` reports `nodeinfo=1 cores= load1=` per node,
+  printed for any node that produced a suspect. The probe only sees the
+  invoking user’s processes, so another account’s job can starve a task
+  with nothing in the per-task view to show for it. Load against core
+  count separates a suspect on a node at 30 of 32, where contention is
+  real and excluding the node may be justified, from the same suspect on
+  a node at 4 of 32, where it is not.
+
+### BUG FIXES
+
+- `degen_watch.sh` warns when the probe reached its nodes but attributed
+  no process to any running task. The existing guard only covered a
+  probe that returned nothing at all, which the new per-node line makes
+  impossible.
+- `probe_node_cpu.sh` no longer leaks “Permission denied” to stderr when
+  scanning processes it cannot read. `2>/dev/null` after an input
+  redirect is set up only after the failing open, so it never caught the
+  shell’s own message; it now precedes the redirect. Only reachable
+  since the scan widened beyond the user’s own R processes.
+
 ## EpiModelHPC 2.8.3
 
 ### BUG FIXES

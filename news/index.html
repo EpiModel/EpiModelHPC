@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">EpiModelHPC</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.8.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.9.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,6 +36,24 @@
       <small>Source: <a href="https://github.com/EpiModel/EpiModelHPC/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="2.9.0" id="epimodelhpc-290">EpiModelHPC 2.9.0<a class="anchor" aria-label="anchor" href="#epimodelhpc-290"></a></h2>
+<div class="section level3">
+<h3 id="new-features-2-9-0">NEW FEATURES<a class="anchor" aria-label="anchor" href="#new-features-2-9-0"></a></h3>
+<ul><li>The doctor no longer assumes a task’s work happens in R. Task membership is decided by <code>SLURM_JOB_ID</code> from <code>/proc/&lt;pid&gt;/environ</code> rather than by process name, so a compiled child such as an <code>rstan</code>/<code>cmdstanr</code> <code>model_&lt;hash&gt;</code> binary is attributed to the task that launched it. <code>pgrep -x R</code> saw only the idle R wrapper and reported <code>nproc=1 med_cpu=0</code> for a task consuming four cores. The batch script wrapper is excluded by name so <code>nproc</code> still reflects the workload and a starting task keeps its <code>MIN_PROC</code> grace period.</li>
+<li>
+<code>probe_node_cpu.sh</code> reports <code>top_cpu=</code>, the busiest single process in a task, and <code>degen_watch.sh</code> declines to judge any task whose <code>top_cpu</code> exceeds <code>MULTICORE_CPU</code> (default 150), reporting it as <code>threaded</code>. The whole detector rests on one simulation per core at about 100%, which is what makes a median a starvation signal; a threaded binary at several hundred percent is outside that model, and a healthy 4-thread chain cannot be told from a contended 8-thread one from outside the process. Under-flagging is the correct failure, since the alternative is requeuing a healthy Bayesian fit.</li>
+<li>
+<code>probe_node_cpu.sh</code> reports <code>nodeinfo=1 cores= load1=</code> per node, printed for any node that produced a suspect. The probe only sees the invoking user’s processes, so another account’s job can starve a task with nothing in the per-task view to show for it. Load against core count separates a suspect on a node at 30 of 32, where contention is real and excluding the node may be justified, from the same suspect on a node at 4 of 32, where it is not.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-2-9-0">BUG FIXES<a class="anchor" aria-label="anchor" href="#bug-fixes-2-9-0"></a></h3>
+<ul><li>
+<code>degen_watch.sh</code> warns when the probe reached its nodes but attributed no process to any running task. The existing guard only covered a probe that returned nothing at all, which the new per-node line makes impossible.</li>
+<li>
+<code>probe_node_cpu.sh</code> no longer leaks “Permission denied” to stderr when scanning processes it cannot read. <code>2&gt;/dev/null</code> after an input redirect is set up only after the failing open, so it never caught the shell’s own message; it now precedes the redirect. Only reachable since the scan widened beyond the user’s own R processes.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="2.8.3" id="epimodelhpc-283">EpiModelHPC 2.8.3<a class="anchor" aria-label="anchor" href="#epimodelhpc-283"></a></h2>
 <div class="section level3">
