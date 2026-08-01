@@ -215,7 +215,7 @@ done
 echo "--- strike 1 done; re-checking suspects in ${RECHECK}s (transient dips must not trigger) ---"
 sleep "$RECHECK"
 
-acted=0; cleared=0
+acted=0; cleared=0; exhausted=0
 for s in $suspects; do
   IFS=: read -r jid node tid <<< "$s"
   tid=${tid:-$jid}
@@ -353,7 +353,30 @@ for s in $suspects; do
   fi
 
   [ "$REQUEUE" = "1" ] || continue
-  if [ "$restarts" -ge "$MAX_RESTARTS" ]; then echo "     restarts exhausted; leaving it"; continue; fi
+  # Exhausting MAX_RESTARTS is a terminal state and has to read like one. The task
+  # is confirmed pathological, the doctor has stopped intervening, and it will now
+  # hold its slot until walltime producing nothing. Before this it announced
+  # itself with one lowercase line in the middle of a verbose sweep, which is the
+  # same shape of silent ending as a TIME_LIMIT kill mailed to nobody.
+  #
+  # Emitted once per task, not once per sweep: the doctor re-probes every 10
+  # minutes and an exhausted task stays exhausted, so an undeduplicated alert
+  # would repeat until walltime and train the reader to skip it. The campaign
+  # ledger already in STATE_FILE is the natural dedup key, and is campaign-scoped
+  # for free because the filename carries the doctor's own job id.
+  if [ "$restarts" -ge "$MAX_RESTARTS" ]; then
+    if ! grep -qxF "exhausted $tid" "$STATE_FILE" 2>/dev/null; then
+      echo "exhausted $tid" >> "$STATE_FILE" 2>/dev/null || true
+      echo "     !! EXHAUSTED $tid: $kind on $node after $restarts restarts (MAX_RESTARTS=$MAX_RESTARTS); no longer intervening, it will hold its slot until walltime"
+      exhausted=$((exhausted+1))
+      if [ -n "${MAIL_TO:-}" ] && command -v mail >/dev/null 2>&1; then
+        printf 'task %s exhausted %s restarts and is still %s on %s.\nThe doctor has stopped intervening; the task will hold its slot until walltime.\nDoctor job: %s\nCampaign pattern: /%s/\n' \
+          "$tid" "$restarts" "$kind" "$node" "${SLURM_JOB_ID:-manual}" "$PATTERN" \
+          | mail -s "deploy doctor: $tid exhausted its restarts" "$MAIL_TO" 2>/dev/null || true
+      fi
+    fi
+    continue
+  fi
   # Last line of defence before the destructive call. An unqualified ArrayJobId
   # would requeue the whole array, and the failure is silent: the sibling tasks
   # simply vanish from the next probe and get logged as "gone (finished/moved)".
@@ -380,5 +403,5 @@ for s in $suspects; do
 done
 
 echo "---"
-echo "confirmed_starved_requeued=$acted  cleared_as_transient=$cleared"
+echo "confirmed_starved_requeued=$acted  cleared_as_transient=$cleared  exhausted=$exhausted"
 [ "$REQUEUE" = "1" ] || echo "report-only; pass --requeue to act"
