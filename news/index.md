@@ -1,5 +1,29 @@
 # Changelog
 
+## EpiModelHPC 2.9.2
+
+### NEW FEATURES
+
+- `degen_watch.sh` announces a task that exhausts `MAX_RESTARTS` instead
+  of retiring it quietly. The cap is a terminal state: the task is
+  confirmed pathological, the doctor stops intervening, and the task
+  then holds its slot until walltime producing nothing. It previously
+  said so with one lowercase `restarts exhausted; leaving it` in the
+  middle of a verbose sweep, which is the same shape of silent ending as
+  a TIME_LIMIT kill mailed to nobody. The line is now a `!! EXHAUSTED`
+  token carrying the task, classification, node and restart count; the
+  sweep summary gains an `exhausted=` counter; and setting `MAIL_TO`
+  sends one message per newly exhausted task. Alerts are emitted once
+  per task rather than once per sweep, deduplicated through the
+  campaign-scoped ledger already in `STATE_FILE`, since the doctor
+  re-probes every ten minutes and an exhausted task stays exhausted.
+
+  Observed on a `swfcalib` campaign that ran the pre-2.8.3 classifier:
+  task `41767827_48` wedged in PSOCK worker startup three times, getting
+  3, 3 and 1 of its 8 workers through package loading before each
+  requeue, and took about 4.5 hours to deliver one 95-minute batch.
+  Nothing surfaced that except reading the sweep log by hand.
+
 ## EpiModelHPC 2.9.1
 
 ### BUG FIXES

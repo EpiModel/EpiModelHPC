@@ -7,15 +7,15 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/EpiModel/EpiModelHPC/blob/v2.9.1/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/EpiModel/EpiModelHPC/blob/main/DESCRIPTION)
 
 Jenness S (2026). *EpiModelHPC: EpiModel Extensions for High-Performance
-Computing*. R package version 2.9.1, <https://www.epimodel.org/>.
+Computing*. R package version 2.9.2, <https://www.epimodel.org/>.
 
     @Manual{,
       title = {EpiModelHPC: EpiModel Extensions for High-Performance Computing},
       author = {Samuel Jenness},
       year = {2026},
-      note = {R package version 2.9.1},
+      note = {R package version 2.9.2},
       url = {https://www.epimodel.org/},
     }

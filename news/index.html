@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">EpiModelHPC</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.9.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.9.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,9 +33,19 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/EpiModel/EpiModelHPC/blob/v2.9.1/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/EpiModel/EpiModelHPC/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="2.9.2" id="epimodelhpc-292">EpiModelHPC 2.9.2<a class="anchor" aria-label="anchor" href="#epimodelhpc-292"></a></h2>
+<div class="section level3">
+<h3 id="new-features-2-9-2">NEW FEATURES<a class="anchor" aria-label="anchor" href="#new-features-2-9-2"></a></h3>
+<ul><li>
+<p><code>degen_watch.sh</code> announces a task that exhausts <code>MAX_RESTARTS</code> instead of retiring it quietly. The cap is a terminal state: the task is confirmed pathological, the doctor stops intervening, and the task then holds its slot until walltime producing nothing. It previously said so with one lowercase <code>restarts exhausted; leaving it</code> in the middle of a verbose sweep, which is the same shape of silent ending as a TIME_LIMIT kill mailed to nobody. The line is now a <code>!! EXHAUSTED</code> token carrying the task, classification, node and restart count; the sweep summary gains an <code>exhausted=</code> counter; and setting <code>MAIL_TO</code> sends one message per newly exhausted task. Alerts are emitted once per task rather than once per sweep, deduplicated through the campaign-scoped ledger already in <code>STATE_FILE</code>, since the doctor re-probes every ten minutes and an exhausted task stays exhausted.</p>
+<p>Observed on a <code>swfcalib</code> campaign that ran the pre-2.8.3 classifier: task <code>41767827_48</code> wedged in PSOCK worker startup three times, getting 3, 3 and 1 of its 8 workers through package loading before each requeue, and took about 4.5 hours to deliver one 95-minute batch. Nothing surfaced that except reading the sweep log by hand.</p>
+</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="2.9.1" id="epimodelhpc-291">EpiModelHPC 2.9.1<a class="anchor" aria-label="anchor" href="#epimodelhpc-291"></a></h2>
 <div class="section level3">
