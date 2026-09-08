@@ -17,8 +17,8 @@ netsim_run_swfcalib_scenario <- function(calib_object, batch_num,
 #'
 #' @inheritParams swfcalib::calibration_step1
 make_calibrated_scenario <- function(calib_object) {
-  calib_object <- swfcalib::load_calib_object(calib_object)
-  calibrated_scenario <- swfcalib::get_default_proposal(calib_object)
+  calib_object <- swfcalib:::load_calib_object(calib_object)
+  calibrated_scenario <- swfcalib:::get_default_proposal(calib_object)
   swfcalib_proposal_to_scenario(calibrated_scenario)
 }
 
