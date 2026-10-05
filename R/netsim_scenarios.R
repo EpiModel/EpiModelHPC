@@ -40,7 +40,7 @@ step_tmpl_netsim_scenarios <- function(path_to_x, param, init, control,
   )
 
   slurmworkflow::step_tmpl_map(
-    FUN = netsim_run_one_scenario,
+    FUN = netsim_run_one_scenario_path,
     scenario = p_list$scenarios_list,
     batch_num = p_list$batchs_list,
     MoreArgs = p_list$MoreArgs,
@@ -238,6 +238,8 @@ merge_netsim_scenarios <- function(sim_dir, output_dir,
                                    keep.nwstats = TRUE, keep.other = TRUE,
                                    param.error = FALSE, keep.diss.stats = TRUE,
                                    truncate.at = NULL) {
+
+  #TODO: update the args to match EM2.7.0
 
   if (!fs::dir_exists(output_dir)) fs::dir_create(output_dir)
   batches_infos <- get_scenarios_batches_infos(sim_dir)
