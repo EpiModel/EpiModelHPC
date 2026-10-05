@@ -50,5 +50,5 @@ test_that("SIS with scenarios", {
     list.files(output_dir),
     n_scen * ceiling(n_rep / n_cores) + 1 # +1 for est file
   )
-  unlink(output_dir)
+  unlink(output_dir, recursive = TRUE)
 })

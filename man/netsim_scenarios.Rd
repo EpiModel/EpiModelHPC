@@ -18,8 +18,9 @@ netsim_scenarios(
 )
 }
 \arguments{
-\item{path_to_x}{Path to a Fitted network model object saved with \code{saveRDS}.
-(See the \code{x} argument to the \code{EpiModel::netsim} function)}
+\item{path_to_x}{Path to a fitted network model or a restart point saved
+with \code{saveRDS} (See the \code{x} argument to the \code{EpiModel::netsim}
+function), or to a restart pool directory (see \code{make_restart_pool}).}
 
 \item{param}{Model parameters, as an object of class \code{\link[EpiModel]{param.net}}.
 Includes transmission probability (\code{inf.prob}), act rate
@@ -69,7 +70,9 @@ to an HPC should not produce any issue.
 \section{Checkpointing}{
 
 This function takes care of editing \code{.checkpoint.dir} to create unique sub
-directories for each scenario. The \code{EpiModel::control.net} way of setting up
-checkpoints can be used transparently.
+directories for each scenario, batch and simulation:
+"<.checkpoint.dir>/sim__\if{html}{\out{<scenario id>}}__<batch_num>/sim_\if{html}{\out{<k>}}". The
+\code{EpiModel::control.net} way of setting up checkpoints can be used
+transparently.
 }
 

@@ -2,7 +2,8 @@
 % Please edit documentation in R/netsim_scenarios.R
 \name{netsim_run_one_scenario}
 \alias{netsim_run_one_scenario}
-\title{Run one \code{netsim} call with a scenario and saves the results deterministically}
+\title{Run one batch of \code{netsim} simulations with a scenario and saves the results
+deterministically}
 \usage{
 netsim_run_one_scenario(
   scenario,
@@ -24,8 +25,9 @@ netsim_run_one_scenario(
 \item{batch_num}{The batch number, calculated from the number of replications
 and CPUs required.}
 
-\item{path_to_x}{Path to a Fitted network model object saved with \code{saveRDS}.
-(See the \code{x} argument to the \code{EpiModel::netsim} function)}
+\item{path_to_x}{Path to a fitted network model or a restart point saved
+with \code{saveRDS} (See the \code{x} argument to the \code{EpiModel::netsim}
+function), or to a restart pool directory (see \code{make_restart_pool}).}
 
 \item{param}{Model parameters, as an object of class \code{\link[EpiModel]{param.net}}.
 Includes transmission probability (\code{inf.prob}), act rate
@@ -58,12 +60,20 @@ required for the model to run. (e.g. EpiModelHIV or EpiModelCOVID)}
 }
 \description{
 This inner function is called by \code{netsim_scenarios} and
-\code{step_tmpl_netsim_scenarios}.
+\code{step_tmpl_netsim_scenarios}. It runs the simulations of batch \code{batch_num}
+with \code{netsim_path_wrapper}, one \code{netsim} call per simulation, merges them
+and saves them as "sim__\if{html}{\out{<scenario id>}}__<batch_num>.rds" in \code{output_dir}.
+The simulations of batch \code{b} are numbered \code{(b - 1) * n_cores + 1} to
+\code{b * n_cores} over all the batches of a scenario. With a restart pool of
+size \code{N}, simulation \code{k} starts from pool element \code{(k - 1) \%\% N + 1}, the
+same for every scenario.
 }
 \section{Checkpointing}{
 
 This function takes care of editing \code{.checkpoint.dir} to create unique sub
-directories for each scenario. The \code{EpiModel::control.net} way of setting up
-checkpoints can be used transparently.
+directories for each scenario, batch and simulation:
+"<.checkpoint.dir>/sim__\if{html}{\out{<scenario id>}}__<batch_num>/sim_\if{html}{\out{<k>}}". The
+\code{EpiModel::control.net} way of setting up checkpoints can be used
+transparently.
 }
 

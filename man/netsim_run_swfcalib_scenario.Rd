@@ -24,8 +24,9 @@ netsim_run_swfcalib_scenario(
 \item{batch_num}{The batch number, calculated from the number of replications
 and CPUs required.}
 
-\item{path_to_x}{Path to a Fitted network model object saved with \code{saveRDS}.
-(See the \code{x} argument to the \code{EpiModel::netsim} function)}
+\item{path_to_x}{Path to a fitted network model or a restart point saved
+with \code{saveRDS} (See the \code{x} argument to the \code{EpiModel::netsim}
+function), or to a restart pool directory (see \code{make_restart_pool}).}
 
 \item{param}{Model parameters, as an object of class \code{\link[EpiModel]{param.net}}.
 Includes transmission probability (\code{inf.prob}), act rate
@@ -54,7 +55,7 @@ required for the model to run. (e.g. EpiModelHIV or EpiModelCOVID)}
 
 \item{n_rep}{The number of replication to be run for each scenario.}
 
-\item{n_cores}{number of cores to run the processing on}
+\item{n_cores}{The number of CPUs on which the simulations will be run.}
 }
 \description{
 Run one \code{netsim} call with the result of an \code{swfcalib} calibration

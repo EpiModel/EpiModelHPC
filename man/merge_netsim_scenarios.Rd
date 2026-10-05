@@ -14,7 +14,10 @@ merge_netsim_scenarios(
   keep.other = TRUE,
   param.error = FALSE,
   keep.diss.stats = TRUE,
-  truncate.at = NULL
+  truncate.at = NULL,
+  keep.run = TRUE,
+  keep.cumulative.edgelist = FALSE,
+  keep.attr.history = TRUE
 )
 }
 \arguments{
@@ -47,6 +50,21 @@ params (in \code{\link[EpiModel:param.net]{param.net()}}) or controls (passed in
 original \code{x} and \code{y} objects.}
 
 \item{truncate.at}{Time step at which to left-truncate the time series.}
+
+\item{keep.run}{If \code{TRUE}, keep the \code{run} sublists (as set by the
+\code{save.run} parameter in \code{control.net}) from the original \code{x} and
+\code{y} elements. These are required to use the merged object as a
+restart point in \code{\link[EpiModel:netsim]{netsim()}}.}
+
+\item{keep.cumulative.edgelist}{If \code{TRUE}, keep the cumulative edgelists
+(as set by the \code{save.cumulative.edgelist} parameter in
+\code{control.net}) from the original \code{x} and \code{y} elements. \code{FALSE} by
+default, as these grow with the length of the simulation.}
+
+\item{keep.attr.history}{If \code{TRUE}, keep the recorded histories (as set by
+\code{\link[EpiModel:record_attr_history]{record_attr_history()}} and \code{\link[EpiModel:record_raw_object]{record_raw_object()}}) from the original
+\code{x} and \code{y} elements. This governs both \code{attr.history} and
+\code{raw.records}.}
 }
 \description{
 Create a Single Sim File per Scenarios Using the Files From
