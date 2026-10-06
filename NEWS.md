@@ -10,6 +10,7 @@
 
 ## BREAKING CHANGES
 
+- Requires EpiModel 2.7.0: restart points holding a single simulation (`make_restart_point(sim_num = )`), the `keep.run`, `keep.cumulative.edgelist` and `keep.attr.history` arguments of `merge.netsim()`, and merges of batches in sequence.
 - Each simulation of a batch is now its own `netsim()` call (one per `future` worker). Restarting from a single file holding several simulations (e.g. a merged restart object) restarts every simulation from the first one; make a pool with `make_restart_pool()` instead. Runs from a fitted network model read it once per simulation.
 - With checkpointing, each simulation checkpoints in `<.checkpoint.dir>/sim__<scenario>__<batch>/sim_<k>`.
 
