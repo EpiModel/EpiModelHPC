@@ -4,7 +4,7 @@
 
 - Restart pools: a directory of single simulation restart points (`1.rds`, `2.rds`, ...) can now be passed as `path_to_x` to `netsim_scenarios()`, `step_tmpl_netsim_scenarios()`, `netsim_swfcalib_output()` and `step_tmpl_netsim_swfcalib_output()`. Simulation `k` of a scenario (numbered over all its batches) starts from pool element `(k - 1) %% N + 1`, the same for every scenario, so scenarios can be compared simulation by simulation.
 - `make_restart_pool()` makes such a pool from the batch files of a previous run, with `EpiModel::make_restart_point()`. Pool element `i` is made from row `i` of `keep_sims`, and a `pool_index.csv` file records the batch and simulation each element comes from.
-- `validate_restart_pool()` checks a pool before use: files numbered `1` to `N`, single simulation restart points made at the same time step, and identical parameters (the merge of a batch fails otherwise).
+- `validate_restart_pool()` checks a pool before use: files numbered `1` to `N`, each a single simulation restart point. It returns a table of the elements (number of simulations, time step made at).
 - `netsim_path_wrapper()` runs one `netsim()` call per simulation, from a pool or from a single file, and is now what every batch of `netsim_scenarios()` and `step_tmpl_netsim_scenarios()` runs. Batches are then merged with `merge()`.
 - `merge_netsim_scenarios()` and `step_tmpl_merge_netsim_scenarios()` gain the `keep.run`, `keep.cumulative.edgelist` and `keep.attr.history` arguments of `merge.netsim()`.
 

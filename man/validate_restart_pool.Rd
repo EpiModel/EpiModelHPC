@@ -12,8 +12,8 @@ file.}
 }
 \value{
 A \code{data.frame} with one row per pool element (invisibly):
-\code{pool_num}, \code{file_path}, \code{n_runs}, \code{nsteps} and \code{same_param} (whether its
-parameters are identical to the first element's ones).
+\code{pool_num}, \code{file_path}, \code{n_runs} and \code{nsteps} (the time step the
+element was made at).
 }
 \description{
 Checks that a restart pool (a directory made by \code{make_restart_pool}) can be
@@ -27,17 +27,11 @@ Errors are raised when:
 \item the pool files are not numbered \verb{1.rds} to \code{N.rds};
 \item an element is not a single simulation \code{netsim} restart point with the
 elements needed to restart (\code{param}, \code{nwparam}, \code{epi}, \code{run},
-\code{coef.form} and \code{num.nw});
-\item the elements were not all made at the same time step
-(\code{control$nsteps}).
+\code{coef.form} and \code{num.nw}).
 }
 
 Warnings are raised when:
 \itemize{
-\item the elements' parameters differ. On restart, \code{netsim} fills the
-parameters missing from \code{param} with the ones of the restart point. Then
-merging the simulations of a batch (\code{merge.netsim} with
-\code{param.error = TRUE}) fails if these differ between elements;
 \item \code{pool_index.csv} does not have one row per element;
 \item \code{path} is a single file holding several simulations:
 \code{netsim_path_wrapper} restarts every replicate from its first simulation.

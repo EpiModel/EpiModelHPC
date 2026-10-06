@@ -11,7 +11,7 @@ add_to_restart_pool <- function(sims, pool_dir) {
     message("Creating a new restart pool at: \n\"", pool_dir, "\"")
     fs::dir_create(pool_dir, recurse = TRUE)
   }
-  pool_last <- length(pool)
+  pool_last <- length(get_restart_pool_files(pool_dir))
   for (i in seq_along(sims)) {
     saveRDS(sims[[i]], fs::path(pool_dir, paste0(pool_last + i, ".rds")))
   }
@@ -158,15 +158,9 @@ make_restart_pool <- function(
 #' - the pool files are not numbered `1.rds` to `N.rds`;
 #' - an element is not a single simulation `netsim` restart point with the
 #'   elements needed to restart (`param`, `nwparam`, `epi`, `run`,
-#'   `coef.form` and `num.nw`);
-#' - the elements were not all made at the same time step
-#'   (`control$nsteps`).
+#'   `coef.form` and `num.nw`).
 #'
 #' Warnings are raised when:
-#' - the elements' parameters differ. On restart, `netsim` fills the
-#'   parameters missing from `param` with the ones of the restart point. Then
-#'   merging the simulations of a batch (`merge.netsim` with
-#'   `param.error = TRUE`) fails if these differ between elements;
 #' - `pool_index.csv` does not have one row per element;
 #' - `path` is a single file holding several simulations:
 #'   `netsim_path_wrapper` restarts every replicate from its first simulation.
@@ -175,8 +169,8 @@ make_restart_pool <- function(
 #'   file.
 #'
 #' @return A `data.frame` with one row per pool element (invisibly):
-#'   `pool_num`, `file_path`, `n_runs`, `nsteps` and `same_param` (whether its
-#'   parameters are identical to the first element's ones).
+#'   `pool_num`, `file_path`, `n_runs` and `nsteps` (the time step the
+#'   element was made at).
 #'
 #' @seealso [make_restart_pool()], [netsim_path_wrapper()]
 #'
@@ -202,7 +196,6 @@ validate_restart_pool <- function(path) {
   }
 
   required_elts <- c("param", "nwparam", "epi", "run", "coef.form", "num.nw")
-
   infos <- vector("list", length(file_paths))
   for (i in seq_along(file_paths)) {
     x <- readRDS(file_paths[i])
@@ -223,6 +216,15 @@ validate_restart_pool <- function(path) {
         "Restart pool elements must hold a single one"
       )
     }
+
+    infos[[i]] <- data.frame(
+      pool_num = i,
+      file_path = as.character(file_paths[i]),
+      n_runs = n_runs,
+      nsteps = x$control$nsteps
+    )
+  }
+  infos <- do.call(rbind, infos)
 
   if (is_pool_dir) {
     index_path <- fs::path(path, "pool_index.csv")

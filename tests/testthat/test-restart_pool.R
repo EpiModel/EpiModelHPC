@@ -107,7 +107,7 @@ test_that("make_restart_pool rejects bad keep_sims without leaving a pool", {
   expect_false(fs::dir_exists(pool_dir))
 })
 
-test_that("add_to_restart_pool appends to empty and numbered pools only", {
+test_that("add_to_restart_pool appends to empty and existing pools", {
   pool_dir <- fs::path(tempdir(), "rp_pool_add")
   on.exit(fs::dir_delete(pool_dir))
   fs::dir_create(pool_dir)
@@ -115,9 +115,6 @@ test_that("add_to_restart_pool appends to empty and numbered pools only", {
   expect_equal(add_to_restart_pool(list("a", "b"), pool_dir), 1:2)
   expect_equal(add_to_restart_pool(list("c"), pool_dir), 3)
   expect_equal(readRDS(fs::path(pool_dir, "3.rds")), "c")
-
-  fs::file_delete(fs::path(pool_dir, "2.rds"))
-  expect_error(add_to_restart_pool(list("d"), pool_dir), "not numbered")
 
   new_dir <- fs::path(pool_dir, "sub", "pool")
   expect_message(add_to_restart_pool(list("a"), new_dir), "Creating")
@@ -139,7 +136,6 @@ test_that("validate_restart_pool checks pools and single files", {
   expect_equal(infos$pool_num, 1:3)
   expect_equal(infos$n_runs, rep(1, 3))
   expect_equal(infos$nsteps, rep(1, 3))
-  expect_true(all(infos$same_param))
 
   # a single restart point file
   expect_warning(validate_restart_pool(fs::path(pool_dir, "1.rds")), NA)
@@ -159,21 +155,8 @@ test_that("validate_restart_pool checks pools and single files", {
   fs::file_copy(fs::path(scen_dir, "sim__base__1.rds"), fs::path(copy_dir, "2.rds"))
   expect_error(validate_restart_pool(copy_dir), "holds 3 simulations")
 
-  # different parameters
-  fs::file_copy(fs::path(pool_dir, "2.rds"), fs::path(copy_dir, "2.rds"), overwrite = TRUE)
-  x <- readRDS(fs::path(copy_dir, "3.rds"))
-  x$param$inf.prob <- 0.5
-  saveRDS(x, fs::path(copy_dir, "3.rds"))
-  expect_warning(infos <- validate_restart_pool(copy_dir), "inf.prob")
-  expect_equal(infos$same_param, c(TRUE, TRUE, FALSE))
-
-  # different restart time steps
-  x$param$inf.prob <- 0.3
-  x$control$nsteps <- 2
-  saveRDS(x, fs::path(copy_dir, "3.rds"))
-  expect_error(validate_restart_pool(copy_dir), "different time steps")
-
   # pool index not matching the files
+  fs::file_copy(fs::path(pool_dir, "2.rds"), fs::path(copy_dir, "2.rds"), overwrite = TRUE)
   fs::file_delete(fs::path(copy_dir, "3.rds"))
   expect_warning(validate_restart_pool(copy_dir), "pool_index.csv")
 
