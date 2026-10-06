@@ -219,7 +219,8 @@ netsim_run_one_scenario <- function(scenario, batch_num,
 #'
 #' @return a `tibble` with three columns: `file_path` - the full paths of
 #' the simulation file, `scenario_name` the associated scenario name,
-#' `batch_number` the associated batch number.
+#' `batch_number` the associated batch number. Sorted by scenario name, then
+#' batch number (`2` before `10`).
 #'
 #' @export
 get_scenarios_batches_infos <- function(scenario_dir) {
@@ -237,7 +238,8 @@ get_scenarios_batches_infos <- function(scenario_dir) {
     file_path = file_name_list,
     scenario_name = parts[, "scenario"],
     batch_number = as.integer(parts[, "batch"])
-  )
+  ) |>
+    dplyr::arrange(.data$scenario_name, .data$batch_number)
 }
 
 

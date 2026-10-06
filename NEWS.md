@@ -15,6 +15,7 @@
 
 ## BUG FIXES
 
+- `get_scenarios_batches_infos()` sorts the batch files by scenario, then batch number. They were listed in alphabetical order of their file names (batch `10` before batch `2`), so `merge_netsim_scenarios()` merged the batches of a scenario with 10 or more batches out of order, and simulation `k` of the merged object was not simulation `k` of the scenario.
 - `step_tmpl_merge_netsim_scenarios()` passed `keep.diss.stats` and `param.error` in swapped order to its inner function, and swapped them back when calling `merge_netsim_scenarios()`. Arguments are now passed by name.
 
 # EpiModelHPC 2.9.2
