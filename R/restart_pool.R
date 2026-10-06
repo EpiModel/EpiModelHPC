@@ -11,13 +11,6 @@ add_to_restart_pool <- function(sims, pool_dir) {
     message("Creating a new restart pool at: \n\"", pool_dir, "\"")
     fs::dir_create(pool_dir, recurse = TRUE)
   }
-  pool <- get_restart_pool_files(pool_dir)
-  if (!identical(pool, sprintf("%d.rds", seq_along(pool)))) {
-    stop(
-      "The restart pool at \"", pool_dir, "\" is not numbered from 1 to ",
-      length(pool), ". Check the directory."
-    )
-  }
   pool_last <- length(pool)
   for (i in seq_along(sims)) {
     saveRDS(sims[[i]], fs::path(pool_dir, paste0(pool_last + i, ".rds")))
@@ -209,8 +202,7 @@ validate_restart_pool <- function(path) {
   }
 
   required_elts <- c("param", "nwparam", "epi", "run", "coef.form", "num.nw")
-  first_param <- NULL
-  param_diffs <- character(0)
+
   infos <- vector("list", length(file_paths))
   for (i in seq_along(file_paths)) {
     x <- readRDS(file_paths[i])
@@ -232,47 +224,6 @@ validate_restart_pool <- function(path) {
       )
     }
 
-    # same comparison as `merge.netsim`
-    param <- x$param
-    param[c(names(param$random.params.values), "random.params.values")] <- NULL
-    if (i == 1) {
-      first_param <- param
-      same_param <- TRUE
-    } else {
-      nms <- union(names(first_param), names(param))
-      differ <- nms[!vapply(
-        nms,
-        function(nm) identical(first_param[[nm]], param[[nm]]),
-        logical(1)
-      )]
-      param_diffs <- union(param_diffs, differ)
-      same_param <- length(differ) == 0
-    }
-
-    infos[[i]] <- data.frame(
-      pool_num = i,
-      file_path = as.character(file_paths[i]),
-      n_runs = n_runs,
-      nsteps = x$control$nsteps,
-      same_param = same_param
-    )
-  }
-  infos <- do.call(rbind, infos)
-
-  if (length(unique(infos$nsteps)) > 1) {
-    stop(
-      "The restart pool elements were made at different time steps ",
-      "(`control$nsteps`): ", paste(unique(infos$nsteps), collapse = ", ")
-    )
-  }
-  if (length(param_diffs) > 0) {
-    warning(
-      "The restart pool elements have different values for the ",
-      "parameter(s): ", paste(param_diffs, collapse = ", "), ". `netsim` ",
-      "fills the parameters missing from `param` with these, and merging the ",
-      "simulations of a batch then fails."
-    )
-  }
   if (is_pool_dir) {
     index_path <- fs::path(path, "pool_index.csv")
     if (fs::file_exists(index_path)) {
