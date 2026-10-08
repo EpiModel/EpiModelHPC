@@ -10,12 +10,14 @@
 
 ## BREAKING CHANGES
 
+- Requires EpiModel 2.7.0: restart points holding a single simulation (`make_restart_point(sim_num = )`), the `keep.run`, `keep.cumulative.edgelist` and `keep.attr.history` arguments of `merge.netsim()`, and merges of batches in sequence.
 - Each simulation of a batch is now its own `netsim()` call (one per `future` worker). Restarting from a single file holding several simulations (e.g. a merged restart object) restarts every simulation from the first one; make a pool with `make_restart_pool()` instead. Runs from a fitted network model read it once per simulation.
 - With checkpointing, each simulation checkpoints in `<.checkpoint.dir>/sim__<scenario>__<batch>/sim_<k>`.
 - `step_tmpl_netsim_swfcalib_output()` now runs its batches with `future::plan("multicore", workers = n_cores)` by default, like `step_tmpl_netsim_scenarios()`. It previously used the `multisession` default of `EpiModel::netsim()`, whose PSOCK workers can stall at startup and outlive a cancelled job on the HPC. The local `netsim_scenarios()` and `netsim_swfcalib_output()` keep `multisession`, which also runs in parallel from RStudio and on Windows. `control$future.use.plan <- future::tweak(<your plan>)` still overrides the default.
 
 ## BUG FIXES
 
+- `get_scenarios_batches_infos()` sorts the batch files by scenario, then batch number. They were listed in alphabetical order of their file names (batch `10` before batch `2`), so `merge_netsim_scenarios()` merged the batches of a scenario with 10 or more batches out of order, and simulation `k` of the merged object was not simulation `k` of the scenario.
 - `step_tmpl_merge_netsim_scenarios()` passed `keep.diss.stats` and `param.error` in swapped order to its inner function, and swapped them back when calling `merge_netsim_scenarios()`. Arguments are now passed by name.
 
 # EpiModelHPC 2.9.2
