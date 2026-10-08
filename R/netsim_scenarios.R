@@ -60,6 +60,13 @@ step_tmpl_netsim_scenarios <- function(path_to_x, param, init, control,
 #' "sim__name_of_scenario__2.rds". Where the last number is the batch number
 #' for this particular scenario. Each scenario is therefore run over
 #' `ceiling(n_rep / n_cores)` batches.
+#' The simulations of a batch are run in parallel, one `netsim` call per
+#' simulation (see `netsim_path_wrapper`), by default with
+#' `future::plan("multisession", workers = n_cores)`. Unlike the `multicore`
+#' default of `step_tmpl_netsim_scenarios`, this also runs in parallel from
+#' RStudio and on Windows.
+#' Using `control$future.use.plan <- future::tweak(<your plan>)` will bypass
+#' this setting.
 #' This function is meant to mimic the behavior of
 #' `step_tmpl_netsim_scenarios` in your local machine. It should fail
 #' in a similar fashion an reciprocally, if it runs correctly locally, moving
@@ -143,6 +150,10 @@ netsim_scenarios_setup <- function(path_to_x, param, init, control,
 #' `b * n_cores` over all the batches of a scenario. With a restart pool of
 #' size `N`, simulation `k` starts from pool element `(k - 1) %% N + 1`, the
 #' same for every scenario.
+#' The simulations are run with the `future::tweak()` plan in
+#' `control$future.use.plan`, or with
+#' `future::plan("multisession", workers = n_cores)` if there is none. The step
+#' templates set it to `multicore` before calling this function.
 #'
 #' @param path_to_x Path to a fitted network model or a restart point saved
 #'   with `saveRDS` (See the `x` argument to the `EpiModel::netsim`
@@ -188,10 +199,11 @@ netsim_run_one_scenario <- function(scenario, batch_num,
     )
   }
 
-  # `multicore` plan with `n_cores` workers unless set in `future.use.plan`
+  # `multisession` plan with `n_cores` workers unless set in `future.use.plan`
+  # The step templates set a `multicore` plan before reaching here
   sim_plan <- control$future.use.plan
   if (!inherits(sim_plan, c("tweaked", "future"))) {
-    sim_plan <- future::tweak("multicore", workers = n_cores)
+    sim_plan <- future::tweak("multisession", workers = n_cores)
   }
 
   print(paste0("Starting simulation for scenario: ", scenario[["id"]]))

@@ -67,6 +67,10 @@ The simulations of batch \code{b} are numbered \code{(b - 1) * n_cores + 1} to
 \code{b * n_cores} over all the batches of a scenario. With a restart pool of
 size \code{N}, simulation \code{k} starts from pool element \code{(k - 1) \%\% N + 1}, the
 same for every scenario.
+The simulations are run with the \code{future::tweak()} plan in
+\code{control$future.use.plan}, or with
+\code{future::plan("multisession", workers = n_cores)} if there is none. The step
+templates set it to \code{multicore} before calling this function.
 }
 \section{Checkpointing}{
 

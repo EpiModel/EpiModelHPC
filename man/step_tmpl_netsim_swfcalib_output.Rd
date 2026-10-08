@@ -65,7 +65,11 @@ submission of the next batch is automatically handled by \code{slurmworkflow}.}
 a template function to be used by \code{add_workflow_step}
 }
 \description{
-Step template to run sims with the result of an \code{swfcalib} calibration
+The simulations of a batch are run in parallel, one \code{netsim} call per
+simulation (see \code{netsim_path_wrapper}), by default with
+\code{future::plan("multicore", workers = n_cores)}.
+Using \verb{control$future.use.plan <- future::tweak(<your plan>)} will bypass
+this setting.
 }
 \section{Checkpointing}{
 

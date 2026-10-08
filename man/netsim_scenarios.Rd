@@ -62,6 +62,13 @@ the \code{scenarios_list}. It runs them as multiple batches of up to
 "sim__name_of_scenario__2.rds". Where the last number is the batch number
 for this particular scenario. Each scenario is therefore run over
 \code{ceiling(n_rep / n_cores)} batches.
+The simulations of a batch are run in parallel, one \code{netsim} call per
+simulation (see \code{netsim_path_wrapper}), by default with
+\code{future::plan("multisession", workers = n_cores)}. Unlike the \code{multicore}
+default of \code{step_tmpl_netsim_scenarios}, this also runs in parallel from
+RStudio and on Windows.
+Using \verb{control$future.use.plan <- future::tweak(<your plan>)} will bypass
+this setting.
 This function is meant to mimic the behavior of
 \code{step_tmpl_netsim_scenarios} in your local machine. It should fail
 in a similar fashion an reciprocally, if it runs correctly locally, moving

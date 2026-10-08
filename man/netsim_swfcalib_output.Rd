@@ -54,7 +54,13 @@ required for the model to run. (e.g. EpiModelHIV or EpiModelCOVID)}
 a template function to be used by \code{add_workflow_step}
 }
 \description{
-Function to run an EpiModel sim with the result of an \code{swfcalib} calibration
+The simulations of a batch are run in parallel, one \code{netsim} call per
+simulation (see \code{netsim_path_wrapper}), by default with
+\code{future::plan("multisession", workers = n_cores)}. Unlike the \code{multicore}
+default of \code{step_tmpl_netsim_swfcalib_output}, this also runs in parallel
+from RStudio and on Windows.
+Using \verb{control$future.use.plan <- future::tweak(<your plan>)} will bypass
+this setting.
 }
 \section{Checkpointing}{
 
