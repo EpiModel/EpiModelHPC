@@ -43,6 +43,12 @@ netsim_swfcalib_output_setup <- function(path_to_x, param, init, control,
 
 #' Step template to run sims with the result of an `swfcalib` calibration
 #'
+#' The simulations of a batch are run in parallel, one `netsim` call per
+#' simulation (see `netsim_path_wrapper`), by default with
+#' `future::plan("multicore", workers = n_cores)`.
+#' Using `control$future.use.plan <- future::tweak(<your plan>)` will bypass
+#' this setting.
+#'
 #' @inheritParams step_tmpl_netsim_scenarios
 #' @inheritParams swfcalib::calibration_step1
 #'
@@ -56,6 +62,12 @@ step_tmpl_netsim_swfcalib_output <- function(path_to_x, param, init, control,
                                              output_dir, libraries = NULL,
                                              setup_lines = NULL,
                                              max_array_size = NULL) {
+  # Set a `multicore` plan with `n_cores` workers by default.
+  # Bypassed if `control$future.use.plan` is manually set
+  if (!inherits(control$future.use.plan, c("tweaked", "future"))) {
+    control$future.use.plan <- future::tweak("multicore", workers = n_cores)
+  }
+
   p_list <- netsim_swfcalib_output_setup(
     path_to_x, param, init, control,
     calib_object, n_rep, n_cores,
@@ -72,6 +84,14 @@ step_tmpl_netsim_swfcalib_output <- function(path_to_x, param, init, control,
 }
 
 #' Function to run an EpiModel sim with the result of an `swfcalib` calibration
+#'
+#' The simulations of a batch are run in parallel, one `netsim` call per
+#' simulation (see `netsim_path_wrapper`), by default with
+#' `future::plan("multisession", workers = n_cores)`. Unlike the `multicore`
+#' default of `step_tmpl_netsim_swfcalib_output`, this also runs in parallel
+#' from RStudio and on Windows.
+#' Using `control$future.use.plan <- future::tweak(<your plan>)` will bypass
+#' this setting.
 #'
 #' @inheritParams netsim_scenarios
 #' @inheritParams swfcalib::calibration_step1

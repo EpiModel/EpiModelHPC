@@ -16,7 +16,10 @@ step_tmpl_merge_netsim_scenarios(
   keep.diss.stats = TRUE,
   truncate.at = NULL,
   n_cores = 1,
-  setup_lines = NULL
+  setup_lines = NULL,
+  keep.run = TRUE,
+  keep.cumulative.edgelist = FALSE,
+  keep.attr.history = TRUE
 )
 }
 \arguments{
@@ -54,6 +57,21 @@ original \code{x} and \code{y} objects.}
 
 \item{setup_lines}{(optional) a vector of bash lines to be run first.
 This can be used to load the required modules (like R, python, etc).}
+
+\item{keep.run}{If \code{TRUE}, keep the \code{run} sublists (as set by the
+\code{save.run} parameter in \code{control.net}) from the original \code{x} and
+\code{y} elements. These are required to use the merged object as a
+restart point in \code{\link[EpiModel:netsim]{netsim()}}.}
+
+\item{keep.cumulative.edgelist}{If \code{TRUE}, keep the cumulative edgelists
+(as set by the \code{save.cumulative.edgelist} parameter in
+\code{control.net}) from the original \code{x} and \code{y} elements. \code{FALSE} by
+default, as these grow with the length of the simulation.}
+
+\item{keep.attr.history}{If \code{TRUE}, keep the recorded histories (as set by
+\code{\link[EpiModel:record_attr_history]{record_attr_history()}} and \code{\link[EpiModel:record_raw_object]{record_raw_object()}}) from the original
+\code{x} and \code{y} elements. This governs both \code{attr.history} and
+\code{raw.records}.}
 }
 \value{
 a template function to be used by \code{add_workflow_step}

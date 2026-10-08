@@ -50,5 +50,19 @@ test_that("SIS with scenarios", {
     list.files(output_dir),
     n_scen * ceiling(n_rep / n_cores) + 1 # +1 for est file
   )
-  unlink(output_dir)
+  unlink(output_dir, recursive = TRUE)
+})
+
+test_that("get_scenarios_batches_infos sorts by scenario and batch number", {
+  scen_dir <- fs::path(tempdir(), "batches_order")
+  on.exit(fs::dir_delete(scen_dir))
+  fs::dir_create(scen_dir)
+  fs::file_touch(fs::path(scen_dir, paste0("sim__b__", 1:12, ".rds")))
+  fs::file_touch(fs::path(scen_dir, paste0("sim__a__", c(10, 2, 1), ".rds")))
+
+  infos <- get_scenarios_batches_infos(scen_dir)
+  expect_equal(infos$scenario_name, c(rep("a", 3), rep("b", 12)))
+  expect_equal(infos$batch_number, c(1L, 2L, 10L, 1:12))
+  expect_equal(fs::path_file(infos$file_path)[1:3],
+               c("sim__a__1.rds", "sim__a__2.rds", "sim__a__10.rds"))
 })

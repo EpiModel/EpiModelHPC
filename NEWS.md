@@ -1,3 +1,25 @@
+# EpiModelHPC 2.10.0
+
+## NEW FEATURES
+
+- Restart pools: a directory of single simulation restart points (`1.rds`, `2.rds`, ...) can now be passed as `path_to_x` to `netsim_scenarios()`, `step_tmpl_netsim_scenarios()`, `netsim_swfcalib_output()` and `step_tmpl_netsim_swfcalib_output()`. Simulation `k` of a scenario (numbered over all its batches) starts from pool element `(k - 1) %% N + 1`, the same for every scenario, so scenarios can be compared simulation by simulation.
+- `make_restart_pool()` makes such a pool from the batch files of a previous run, with `EpiModel::make_restart_point()`. Pool element `i` is made from row `i` of `keep_sims`, and a `pool_index.csv` file records the batch and simulation each element comes from.
+- `validate_restart_pool()` checks a pool before use: files numbered `1` to `N`, each a single simulation restart point. It returns a table of the elements (number of simulations, time step made at).
+- `netsim_path_wrapper()` runs one `netsim()` call per simulation, from a pool or from a single file, and is now what every batch of `netsim_scenarios()` and `step_tmpl_netsim_scenarios()` runs. Batches are then merged with `merge()`.
+- `merge_netsim_scenarios()` and `step_tmpl_merge_netsim_scenarios()` gain the `keep.run`, `keep.cumulative.edgelist` and `keep.attr.history` arguments of `merge.netsim()`.
+
+## BREAKING CHANGES
+
+- Requires EpiModel 2.7.0: restart points holding a single simulation (`make_restart_point(sim_num = )`), the `keep.run`, `keep.cumulative.edgelist` and `keep.attr.history` arguments of `merge.netsim()`, and merges of batches in sequence.
+- Each simulation of a batch is now its own `netsim()` call (one per `future` worker). Restarting from a single file holding several simulations (e.g. a merged restart object) restarts every simulation from the first one; make a pool with `make_restart_pool()` instead. Runs from a fitted network model read it once per simulation.
+- With checkpointing, each simulation checkpoints in `<.checkpoint.dir>/sim__<scenario>__<batch>/sim_<k>`.
+- `step_tmpl_netsim_swfcalib_output()` now runs its batches with `future::plan("multicore", workers = n_cores)` by default, like `step_tmpl_netsim_scenarios()`. It previously used the `multisession` default of `EpiModel::netsim()`, whose PSOCK workers can stall at startup and outlive a cancelled job on the HPC. The local `netsim_scenarios()` and `netsim_swfcalib_output()` keep `multisession`, which also runs in parallel from RStudio and on Windows. `control$future.use.plan <- future::tweak(<your plan>)` still overrides the default.
+
+## BUG FIXES
+
+- `get_scenarios_batches_infos()` sorts the batch files by scenario, then batch number. They were listed in alphabetical order of their file names (batch `10` before batch `2`), so `merge_netsim_scenarios()` merged the batches of a scenario with 10 or more batches out of order, and simulation `k` of the merged object was not simulation `k` of the scenario.
+- `step_tmpl_merge_netsim_scenarios()` passed `keep.diss.stats` and `param.error` in swapped order to its inner function, and swapped them back when calling `merge_netsim_scenarios()`. Arguments are now passed by name.
+
 # EpiModelHPC 2.9.2
 
 ## NEW FEATURES
