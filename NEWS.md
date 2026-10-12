@@ -14,6 +14,7 @@
 ## OTHER
 
 - The restore step from `swf_configs_rsph()` gets 180 minutes instead of 120, as in the EpiModelHIV-Template. A first restore under a new R version builds every package from source.
+- The `epimodelhiv-slurmworkflow` vignette is rewritten for the current EpiModelHIV-Template: `make_em_workflow()` in `R/hpc_configs.R`, `renv.lock.hpc` restored on compute nodes by the first step, `data/run/`, the current partitions and `max_array_size = 1000`. It no longer passes `save_pattern` (removed in 2.5.0) or reserves whole nodes for simulation steps, and it points to the Template chapter READMEs and the wiki for the step-by-step instructions.
 
 # EpiModelHPC 2.9.2
 
