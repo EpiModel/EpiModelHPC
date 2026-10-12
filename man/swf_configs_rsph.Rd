@@ -5,17 +5,23 @@
 \title{Preset of Configuration for the RSPH Cluster}
 \usage{
 swf_configs_rsph(
-  partition = "preemptable",
-  r_version = "4.5.1",
+  partition = "epimodel",
+  r_version = "4.6.1",
   mail_user = NULL,
   cleanup_workers = TRUE
 )
 }
 \arguments{
-\item{partition}{Which partition to use on RSPH (either "compute" or
-"epimodel")}
+\item{partition}{The RSPH partition, or partitions, to submit to: a single
+name, a character vector, or a comma-separated string such as
+\code{"epimodel,CIDMATH"}. With several partitions, SLURM starts each job on
+whichever can run it first. The default, \code{"epimodel"}, is the lab's
+dedicated partition. See the "Partitions" section for the valid names.}
 
-\item{r_version}{Which version of R to load}
+\item{r_version}{Which version of R to load with spack. Use the full version
+(\code{"4.6.1"} or \code{"4.5.1"}) matching the R version in the project lockfile. A
+partial version such as \code{"4.3"} can match several spack builds, which makes
+\verb{spack load} fail, so it gives a warning.}
 
 \item{mail_user}{The mail address to send the messages to, default is NULL
 (see 'sbatch --mail-type' argument)}
@@ -27,12 +33,56 @@ without this, workers survive \code{scancel} and squat on cores SLURM has
 re-allocated, starving later tasks. See \code{\link{swf_cleanup_r_workers}}.}
 }
 \value{
-a list containing \code{default_sbatch_opts}, \code{renv_sbatch_opts}
-and \code{r_loader} (see the "hpc_configs" section)
+a list with four elements:
+\itemize{
+\item \code{default_sbatch_opts}: sbatch options to pass to
+\code{slurmworkflow::create_workflow()}. They set the partition list,
+\code{mail-type = "FAIL"} and, when \code{mail_user} is given, \code{mail-user}.
+\item \code{renv_sbatch_opts}: sbatch options for the \code{\link[=step_tmpl_renv_restore]{step_tmpl_renv_restore()}} step:
+16 GB of memory, 4 CPUs and 180 minutes, as in the EpiModelHIV-Template.
+The first restore under a new R version builds every package from source
+and takes longer than later ones.
+\item \code{r_loader}: bash lines that make R available on a compute node. Pass them
+to the \code{setup_lines} argument of the \code{step_tmpl_} functions.
+\item \code{max_cores}: the largest \code{cpus-per-task} a single task can request on
+every listed partition. It is 32, except 16 when \code{interactive-cpu} is
+listed and 31 when \code{largemem} is listed.
+}
 }
 \description{
 Preset of Configuration for the RSPH Cluster
 }
+\section{Partitions}{
+
+The RSPH partitions as of October 2026. All nodes have 32 cores.\tabular{llll}{
+   Partition \tab Time limit \tab Max cores per task \tab Notes \cr
+   \code{epimodel} \tab none \tab 32 \tab The lab's dedicated nodes; the default \cr
+   \code{CIDMATH} \tab none \tab 32 \tab Dedicated nodes shared with three other groups \cr
+   \code{short-cpu} \tab 8 hours \tab 32 \tab The cluster's default partition \cr
+   \code{day-long-cpu} \tab 1 day \tab 32 \tab  \cr
+   \code{week-long-cpu} \tab 7 days \tab 32 \tab At most 6 nodes per job \cr
+   \code{month-long-cpu} \tab 31 days \tab 32 \tab At most 4 nodes per job \cr
+   \code{interactive-cpu} \tab 12 hours \tab 16 \tab Meant for \code{srun} sessions \cr
+   \code{largemem} \tab 7 days \tab 31 \tab High-memory nodes \cr
+}
+
+
+The \code{preemptable} partition no longer exists, and asking for it is an error.
+
+\code{default_sbatch_opts} sets no \code{time}, so a step without its own \code{time} runs
+up to the limit of the partition it lands on. A step whose \code{time} exceeds a
+partition's limit can only start on the other partitions in the list.
+
+RSPH gives each CPU 5 GB of memory by default (\code{DefMemPerCPU = 5120}) and
+does not enforce memory requests. A step that uses more than it asked for is
+not killed, but it can starve other jobs on the node, so request what each
+step needs with \code{mem-per-cpu}. Keep \code{mem = "0"} (a whole node) for network
+estimation.
+
+SLURM's \code{MaxArraySize} is 1001 on RSPH, so one array holds at most 1001
+tasks (indices 0 to 1000). We use \code{max_array_size = 1000} in array steps.
+}
+
 \section{Node setup}{
 
 \code{r_loader} sources the shared spack environment, unloads everything, and
@@ -41,17 +91,14 @@ RSPH, and the project template has not loaded it for some time. The
 \code{git_version} argument was removed accordingly.
 }
 
-\section{hpc_configs}{
+\examples{
+hpc_configs <- swf_configs_rsph(mail_user = "user@emory.edu")
+hpc_configs$default_sbatch_opts
 
-\enumerate{
-\item \code{default_sbatch_opts} is a list of sbatch options to be passed to
-\code{slurmworkflow::create_workflow}.
-\item \code{renv_sbatch_opts} is a list of sbatch options to be passed to
-\code{slurmworkflow::step_tmpl_renv_restore}. It provides sane defaults for
-building the dependencies of an R project using \code{renv}
-\item \code{r_loader} is a set of bash lines to make the R software available.
-This is passed to the \code{setup_lines} arguments of the
-\code{slurmworkflow::step_tmpl_} functions that requires it.
-}
-}
+# Start each step on whichever partition can run it first
+swf_configs_rsph(c("epimodel", "CIDMATH", "short-cpu"))$default_sbatch_opts
 
+# A project whose lockfile records R 4.5
+swf_configs_rsph(r_version = "4.5.1", cleanup_workers = FALSE)$r_loader
+
+}

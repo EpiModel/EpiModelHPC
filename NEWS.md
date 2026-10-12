@@ -1,3 +1,20 @@
+# EpiModelHPC 2.9.3
+
+## BREAKING CHANGES
+
+- `swf_configs_rsph()` targets the current RSPH partitions. `partition` defaults to `"epimodel"`, the lab's dedicated nodes, instead of `"preemptable"`, which no longer exists on the cluster and now gives an error saying so. It accepts `epimodel`, `CIDMATH`, `short-cpu`, `day-long-cpu`, `week-long-cpu`, `month-long-cpu`, `interactive-cpu` and `largemem`, as a vector or a comma-separated string, so a step can start on whichever listed partition has room first.
+- `swf_configs_rsph()` defaults `r_version` to 4.6.1, the current spack build. Projects whose lockfile records R 4.5 pass `r_version = "4.5.1"`.
+
+## NEW FEATURES
+
+- `swf_configs_rsph()` returns `max_cores`, the largest `cpus-per-task` a single task can request on every listed partition: 32, or 16 when `interactive-cpu` is listed and 31 when `largemem` is.
+- `swf_configs_rsph()` warns when `r_version` is not a full version. `spack load r@4.3` fails because it matches three builds.
+- `?swf_configs_rsph` documents the time and core limits of each partition, the 5 GB per CPU memory default, and the array size ceiling.
+
+## OTHER
+
+- The restore step from `swf_configs_rsph()` gets 180 minutes instead of 120, as in the EpiModelHIV-Template. A first restore under a new R version builds every package from source.
+
 # EpiModelHPC 2.9.2
 
 ## NEW FEATURES
