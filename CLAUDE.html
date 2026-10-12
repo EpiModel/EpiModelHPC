@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="index.html">EpiModelHPC</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.9.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.9.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,14 +40,14 @@
 
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a></h2>
-<p>EpiModelHPC is an R package that extends the core <a href="https://github.com/EpiModel/EpiModel" class="external-link">EpiModel</a> package for running stochastic network epidemic models on high-performance computing (HPC) systems. It provides parallelization, checkpointing, scenario batching, and integration with <a href="https://github.com/EpiModel/slurmworkflow" class="external-link">slurmworkflow</a> for Slurm-based job scheduling.</p>
+<p>EpiModelHPC is an R package that extends the core <a href="https://github.com/EpiModel/EpiModel" class="external-link">EpiModel</a> package for running stochastic network epidemic models on high-performance computing (HPC) systems. It provides scenario batching, merging of simulation output, cluster presets, and step templates for <a href="https://github.com/EpiModel/slurmworkflow" class="external-link">slurmworkflow</a>, which handles Slurm-based job scheduling. Parallelism and checkpointing come from EpiModel itself (<code>ncores</code>, <code>.checkpoint.dir</code> and <code>.checkpoint.steps</code> in <code>control.net()</code>).</p>
 </div>
 <div class="section level2">
 <h2 id="package-structure">Package Structure<a class="anchor" aria-label="anchor" href="#package-structure"></a></h2>
 <ul><li>
-<code>R/</code> - 13 source files with core functionality</li>
+<code>R/</code> - 5 source files with core functionality</li>
 <li>
-<code>man/</code> - roxygen2-generated documentation (32 .Rd files)</li>
+<code>man/</code> - roxygen2-generated documentation</li>
 <li>
 <code>vignettes/</code> - detailed vignette on slurmworkflow integration</li>
 <li>
@@ -62,25 +62,27 @@
 <li>
 <strong>swfcalib</strong> - calibration framework (GitHub: EpiModel/swfcalib)</li>
 <li>
-<strong>doParallel / foreach</strong> - parallel execution</li>
-<li>
 <strong>future / future.apply</strong> - scenario-level parallelization</li>
 </ul></div>
 <div class="section level2">
 <h2 id="key-functions">Key Functions<a class="anchor" aria-label="anchor" href="#key-functions"></a></h2>
 <ul><li>
-<code>netsim_hpc()</code> - parallel netsim with checkpointing</li>
-<li>
 <code><a href="reference/netsim_scenarios.html">netsim_scenarios()</a></code> / <code><a href="reference/step_tmpl_netsim_scenarios.html">step_tmpl_netsim_scenarios()</a></code> - scenario-based simulation (local / HPC)</li>
 <li>
 <code><a href="reference/merge_netsim_scenarios.html">merge_netsim_scenarios()</a></code> / <code><a href="reference/step_tmpl_merge_netsim_scenarios.html">step_tmpl_merge_netsim_scenarios()</a></code> - merge batch results</li>
 <li>
 <code><a href="reference/merge_netsim_scenarios_tibble.html">merge_netsim_scenarios_tibble()</a></code> - convert results to tibble</li>
 <li>
-<code><a href="reference/swf_configs_hyak.html">swf_configs_hyak()</a></code> / <code><a href="reference/swf_configs_rsph.html">swf_configs_rsph()</a></code> - cluster presets</li>
+<code><a href="reference/swf_configs_hyak.html">swf_configs_hyak()</a></code> / <code><a href="reference/swf_configs_rsph.html">swf_configs_rsph()</a></code> - cluster presets (<code><a href="reference/swf_configs_rsph.html">swf_configs_rsph()</a></code> knows the current RSPH partitions; <code>preemptable</code> no longer exists)</li>
 <li>
 <code><a href="reference/step_tmpl_renv_restore.html">step_tmpl_renv_restore()</a></code> - renv setup on HPC</li>
+<li>
+<code><a href="reference/hpc_doctor_script.html">hpc_doctor_script()</a></code>, <code><a href="reference/doctor_watch_steps.html">add_doctor_register_step()</a></code>, <code><a href="reference/doctor_watch_steps.html">add_doctor_teardown_step()</a></code> - workflow monitoring helpers</li>
 </ul></div>
+<div class="section level2">
+<h2 id="removed-in-280">Removed in 2.8.0<a class="anchor" aria-label="anchor" href="#removed-in-280"></a></h2>
+<p>The pre-<code>slurmworkflow</code> HPC path is gone, so do not suggest these functions: <code>netsim_hpc()</code> (use <code><a href="https://epimodel.github.io/EpiModel/reference/netsim.html" class="external-link">EpiModel::netsim()</a></code> with <code>ncores</code> in <code>control.net()</code>), <code>check_cp()</code>, <code>initialize_cp()</code>, <code>save_cpdata()</code> (use EpiModel’s <code>.checkpoint.dir</code> and <code>.checkpoint.steps</code>), <code>savesim()</code>, <code>merge_simfiles()</code>, <code>process_simfiles()</code> (use <code><a href="reference/merge_netsim_scenarios.html">merge_netsim_scenarios()</a></code> or <code><a href="reference/merge_netsim_scenarios_tibble.html">merge_netsim_scenarios_tibble()</a></code>), <code>sbatch_master()</code> (use the slurmworkflow step templates), and <code>pull_env_vars()</code> (handled by slurmworkflow). See NEWS.md.</p>
+</div>
 <div class="section level2">
 <h2 id="build--check">Build &amp; Check<a class="anchor" aria-label="anchor" href="#build--check"></a></h2>
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="ex">R</span> CMD build .</span>

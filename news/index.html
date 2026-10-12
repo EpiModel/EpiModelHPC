@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">EpiModelHPC</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.9.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.9.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,6 +36,30 @@
       <small>Source: <a href="https://github.com/EpiModel/EpiModelHPC/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="2.9.3" id="epimodelhpc-293">EpiModelHPC 2.9.3<a class="anchor" aria-label="anchor" href="#epimodelhpc-293"></a></h2>
+<div class="section level3">
+<h3 id="breaking-changes-2-9-3">BREAKING CHANGES<a class="anchor" aria-label="anchor" href="#breaking-changes-2-9-3"></a></h3>
+<ul><li>
+<code><a href="../reference/swf_configs_rsph.html">swf_configs_rsph()</a></code> targets the current RSPH partitions. <code>partition</code> defaults to <code>"epimodel"</code>, the lab’s dedicated nodes, instead of <code>"preemptable"</code>, which no longer exists on the cluster and now gives an error saying so. It accepts <code>epimodel</code>, <code>CIDMATH</code>, <code>short-cpu</code>, <code>day-long-cpu</code>, <code>week-long-cpu</code>, <code>month-long-cpu</code>, <code>interactive-cpu</code> and <code>largemem</code>, as a vector or a comma-separated string, so a step can start on whichever listed partition has room first.</li>
+<li>
+<code><a href="../reference/swf_configs_rsph.html">swf_configs_rsph()</a></code> defaults <code>r_version</code> to 4.6.1, the current spack build. Projects whose lockfile records R 4.5 pass <code>r_version = "4.5.1"</code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="new-features-2-9-3">NEW FEATURES<a class="anchor" aria-label="anchor" href="#new-features-2-9-3"></a></h3>
+<ul><li>
+<code><a href="../reference/swf_configs_rsph.html">swf_configs_rsph()</a></code> returns <code>max_cores</code>, the largest <code>cpus-per-task</code> a single task can request on every listed partition: 32, or 16 when <code>interactive-cpu</code> is listed and 31 when <code>largemem</code> is.</li>
+<li>
+<code><a href="../reference/swf_configs_rsph.html">swf_configs_rsph()</a></code> warns when <code>r_version</code> is not a full version. <code>spack load r@4.3</code> fails because it matches three builds.</li>
+<li>
+<code><a href="../reference/swf_configs_rsph.html">?swf_configs_rsph</a></code> documents the time and core limits of each partition, the 5 GB per CPU memory default, and the array size ceiling.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="other-2-9-3">OTHER<a class="anchor" aria-label="anchor" href="#other-2-9-3"></a></h3>
+<ul><li>The restore step from <code><a href="../reference/swf_configs_rsph.html">swf_configs_rsph()</a></code> gets 180 minutes instead of 120, as in the EpiModelHIV-Template. A first restore under a new R version builds every package from source.</li>
+<li>The <code>epimodelhiv-slurmworkflow</code> vignette is rewritten for the current EpiModelHIV-Template: <code>make_em_workflow()</code> in <code>R/hpc_configs.R</code>, <code>renv.lock.hpc</code> restored on compute nodes by the first step, <code>data/run/</code>, the current partitions and <code>max_array_size = 1000</code>. It no longer passes <code>save_pattern</code> (removed in 2.5.0) or reserves whole nodes for simulation steps, and it points to the Template chapter READMEs and the wiki for the step-by-step instructions.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="2.9.2" id="epimodelhpc-292">EpiModelHPC 2.9.2<a class="anchor" aria-label="anchor" href="#epimodelhpc-292"></a></h2>
 <div class="section level3">

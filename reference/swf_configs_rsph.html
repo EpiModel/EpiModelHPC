@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">EpiModelHPC</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.9.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.9.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,8 +44,8 @@
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">swf_configs_rsph</span><span class="op">(</span></span>
-<span>  partition <span class="op">=</span> <span class="st">"preemptable"</span>,</span>
-<span>  r_version <span class="op">=</span> <span class="st">"4.5.1"</span>,</span>
+<span>  partition <span class="op">=</span> <span class="st">"epimodel"</span>,</span>
+<span>  r_version <span class="op">=</span> <span class="st">"4.6.1"</span>,</span>
 <span>  mail_user <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cleanup_workers <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -56,12 +56,18 @@
 
 
 <dl><dt id="arg-partition">partition<a class="anchor" aria-label="anchor" href="#arg-partition"></a></dt>
-<dd><p>Which partition to use on RSPH (either "compute" or
-"epimodel")</p></dd>
+<dd><p>The RSPH partition, or partitions, to submit to: a single
+name, a character vector, or a comma-separated string such as
+<code>"epimodel,CIDMATH"</code>. With several partitions, SLURM starts each job on
+whichever can run it first. The default, <code>"epimodel"</code>, is the lab's
+dedicated partition. See the "Partitions" section for the valid names.</p></dd>
 
 
 <dt id="arg-r-version">r_version<a class="anchor" aria-label="anchor" href="#arg-r-version"></a></dt>
-<dd><p>Which version of R to load</p></dd>
+<dd><p>Which version of R to load with spack. Use the full version
+(<code>"4.6.1"</code> or <code>"4.5.1"</code>) matching the R version in the project lockfile. A
+partial version such as <code>"4.3"</code> can match several spack builds, which makes
+<code>spack load</code> fail, so it gives a warning.</p></dd>
 
 
 <dt id="arg-mail-user">mail_user<a class="anchor" aria-label="anchor" href="#arg-mail-user"></a></dt>
@@ -79,8 +85,34 @@ re-allocated, starving later tasks. See <code><a href="swf_cleanup_r_workers.htm
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>a list containing <code>default_sbatch_opts</code>, <code>renv_sbatch_opts</code>
-and <code>r_loader</code> (see the "hpc_configs" section)</p>
+    <p>a list with four elements:</p><ul><li><p><code>default_sbatch_opts</code>: sbatch options to pass to
+<code><a href="https://epimodel.github.io/slurmworkflow/reference/create_workflow.html" class="external-link">slurmworkflow::create_workflow()</a></code>. They set the partition list,
+<code>mail-type = "FAIL"</code> and, when <code>mail_user</code> is given, <code>mail-user</code>.</p></li>
+<li><p><code>renv_sbatch_opts</code>: sbatch options for the <code><a href="step_tmpl_renv_restore.html">step_tmpl_renv_restore()</a></code> step:
+16 GB of memory, 4 CPUs and 180 minutes, as in the EpiModelHIV-Template.
+The first restore under a new R version builds every package from source
+and takes longer than later ones.</p></li>
+<li><p><code>r_loader</code>: bash lines that make R available on a compute node. Pass them
+to the <code>setup_lines</code> argument of the <code>step_tmpl_</code> functions.</p></li>
+<li><p><code>max_cores</code>: the largest <code>cpus-per-task</code> a single task can request on
+every listed partition. It is 32, except 16 when <code>interactive-cpu</code> is
+listed and 31 when <code>largemem</code> is listed.</p></li>
+</ul></div>
+    <div class="section level2">
+    <h2 id="partitions">Partitions<a class="anchor" aria-label="anchor" href="#partitions"></a></h2>
+
+
+<p>The RSPH partitions as of October 2026. All nodes have 32 cores.</p><table class="table table"><tr><td>Partition</td><td>Time limit</td><td>Max cores per task</td><td>Notes</td></tr><tr><td><code>epimodel</code></td><td>none</td><td>32</td><td>The lab's dedicated nodes; the default</td></tr><tr><td><code>CIDMATH</code></td><td>none</td><td>32</td><td>Dedicated nodes shared with three other groups</td></tr><tr><td><code>short-cpu</code></td><td>8 hours</td><td>32</td><td>The cluster's default partition</td></tr><tr><td><code>day-long-cpu</code></td><td>1 day</td><td>32</td><td></td></tr><tr><td><code>week-long-cpu</code></td><td>7 days</td><td>32</td><td>At most 6 nodes per job</td></tr><tr><td><code>month-long-cpu</code></td><td>31 days</td><td>32</td><td>At most 4 nodes per job</td></tr><tr><td><code>interactive-cpu</code></td><td>12 hours</td><td>16</td><td>Meant for <code>srun</code> sessions</td></tr><tr><td><code>largemem</code></td><td>7 days</td><td>31</td><td>High-memory nodes</td></tr></table><p>The <code>preemptable</code> partition no longer exists, and asking for it is an error.</p>
+<p><code>default_sbatch_opts</code> sets no <code>time</code>, so a step without its own <code>time</code> runs
+up to the limit of the partition it lands on. A step whose <code>time</code> exceeds a
+partition's limit can only start on the other partitions in the list.</p>
+<p>RSPH gives each CPU 5 GB of memory by default (<code>DefMemPerCPU = 5120</code>) and
+does not enforce memory requests. A step that uses more than it asked for is
+not killed, but it can starve other jobs on the node, so request what each
+step needs with <code>mem-per-cpu</code>. Keep <code>mem = "0"</code> (a whole node) for network
+estimation.</p>
+<p>SLURM's <code>MaxArraySize</code> is 1001 on RSPH, so one array holds at most 1001
+tasks (indices 0 to 1000). We use <code>max_array_size = 1000</code> in array steps.</p>
     </div>
     <div class="section level2">
     <h2 id="node-setup">Node setup<a class="anchor" aria-label="anchor" href="#node-setup"></a></h2>
@@ -91,20 +123,38 @@ loads R. It deliberately does not load git: git is on the default path on
 RSPH, and the project template has not loaded it for some time. The
 <code>git_version</code> argument was removed accordingly.</p>
     </div>
+
     <div class="section level2">
-    <h2 id="hpc-configs">hpc_configs<a class="anchor" aria-label="anchor" href="#hpc-configs"></a></h2>
-
-
-<ol><li><p><code>default_sbatch_opts</code> is a list of sbatch options to be passed to
-<code><a href="https://epimodel.github.io/slurmworkflow/reference/create_workflow.html" class="external-link">slurmworkflow::create_workflow</a></code>.</p></li>
-<li><p><code>renv_sbatch_opts</code> is a list of sbatch options to be passed to
-<code>slurmworkflow::step_tmpl_renv_restore</code>. It provides sane defaults for
-building the dependencies of an R project using <code>renv</code></p></li>
-<li><p><code>r_loader</code> is a set of bash lines to make the R software available.
-This is passed to the <code>setup_lines</code> arguments of the
-<code>slurmworkflow::step_tmpl_</code> functions that requires it.</p></li>
-</ol></div>
-
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">hpc_configs</span> <span class="op">&lt;-</span> <span class="fu">swf_configs_rsph</span><span class="op">(</span>mail_user <span class="op">=</span> <span class="st">"user@emory.edu"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">hpc_configs</span><span class="op">$</span><span class="va">default_sbatch_opts</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $partition</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "epimodel"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $`mail-type`</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "FAIL"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $`mail-user`</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "user@emory.edu"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Start each step on whichever partition can run it first</span></span></span>
+<span class="r-in"><span><span class="fu">swf_configs_rsph</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"epimodel"</span>, <span class="st">"CIDMATH"</span>, <span class="st">"short-cpu"</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">default_sbatch_opts</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $partition</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "epimodel,CIDMATH,short-cpu"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $`mail-type`</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "FAIL"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># A project whose lockfile records R 4.5</span></span></span>
+<span class="r-in"><span><span class="fu">swf_configs_rsph</span><span class="op">(</span>r_version <span class="op">=</span> <span class="st">"4.5.1"</span>, cleanup_workers <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">$</span><span class="va">r_loader</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] ". /projects/epimodel/spack/share/spack/setup-env.sh"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [2] "spack unload -a"                                    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [3] "spack load r@4.5.1"                                 </span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

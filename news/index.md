@@ -1,5 +1,48 @@
 # Changelog
 
+## EpiModelHPC 2.9.3
+
+### BREAKING CHANGES
+
+- [`swf_configs_rsph()`](http://epimodel.github.io/EpiModelHPC/reference/swf_configs_rsph.md)
+  targets the current RSPH partitions. `partition` defaults to
+  `"epimodel"`, the lab’s dedicated nodes, instead of `"preemptable"`,
+  which no longer exists on the cluster and now gives an error saying
+  so. It accepts `epimodel`, `CIDMATH`, `short-cpu`, `day-long-cpu`,
+  `week-long-cpu`, `month-long-cpu`, `interactive-cpu` and `largemem`,
+  as a vector or a comma-separated string, so a step can start on
+  whichever listed partition has room first.
+- [`swf_configs_rsph()`](http://epimodel.github.io/EpiModelHPC/reference/swf_configs_rsph.md)
+  defaults `r_version` to 4.6.1, the current spack build. Projects whose
+  lockfile records R 4.5 pass `r_version = "4.5.1"`.
+
+### NEW FEATURES
+
+- [`swf_configs_rsph()`](http://epimodel.github.io/EpiModelHPC/reference/swf_configs_rsph.md)
+  returns `max_cores`, the largest `cpus-per-task` a single task can
+  request on every listed partition: 32, or 16 when `interactive-cpu` is
+  listed and 31 when `largemem` is.
+- [`swf_configs_rsph()`](http://epimodel.github.io/EpiModelHPC/reference/swf_configs_rsph.md)
+  warns when `r_version` is not a full version. `spack load r@4.3` fails
+  because it matches three builds.
+- [`?swf_configs_rsph`](http://epimodel.github.io/EpiModelHPC/reference/swf_configs_rsph.md)
+  documents the time and core limits of each partition, the 5 GB per CPU
+  memory default, and the array size ceiling.
+
+### OTHER
+
+- The restore step from
+  [`swf_configs_rsph()`](http://epimodel.github.io/EpiModelHPC/reference/swf_configs_rsph.md)
+  gets 180 minutes instead of 120, as in the EpiModelHIV-Template. A
+  first restore under a new R version builds every package from source.
+- The `epimodelhiv-slurmworkflow` vignette is rewritten for the current
+  EpiModelHIV-Template: `make_em_workflow()` in `R/hpc_configs.R`,
+  `renv.lock.hpc` restored on compute nodes by the first step,
+  `data/run/`, the current partitions and `max_array_size = 1000`. It no
+  longer passes `save_pattern` (removed in 2.5.0) or reserves whole
+  nodes for simulation steps, and it points to the Template chapter
+  READMEs and the wiki for the step-by-step instructions.
+
 ## EpiModelHPC 2.9.2
 
 ### NEW FEATURES

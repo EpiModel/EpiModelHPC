@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">EpiModelHPC</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.9.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.9.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -58,7 +58,7 @@
 
       <h1>Using `slurmworkflow` with EpiModel</h1>
             
-            <h4 data-toc-skip class="date">2026-09-08</h4>
+            <h4 data-toc-skip class="date">2026-10-12</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/EpiModel/EpiModelHPC/blob/main/vignettes/epimodelhiv-slurmworkflow.Rmd" class="external-link"><code>vignettes/epimodelhiv-slurmworkflow.Rmd</code></a></small>
       <div class="d-none name"><code>epimodelhiv-slurmworkflow.Rmd</code></div>
@@ -69,719 +69,596 @@
 <div class="section level2">
 <h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
-<p><code>slurmworkflow</code> is a package to construct
-<em>workflows</em> on a <a href="https://slurm.schedmd.com/overview.html" class="external-link">SLURM</a> equipped High
-Performance Computer (HPC). In this vignette, a <em>workflow</em> refers
-to a set of tasks to be executed on the HPC, one after the other.</p>
-<p>We will describe how to construct and use <em>workflows</em> using
-the <a href="https://github.com/EpiModel/EpiModelHIV-Template" class="external-link">EpiModel/EpiModelHIV-Template</a>
-project.</p>
-<p>This project uses <a href="https://rstudio.github.io/renv/index.html" class="external-link">renv</a> and requires
-access to the <a href="https://github.com/EpiModel/EpiModelHIV-p" class="external-link">EpiModelHIV-p</a>
-private repository. This vignette assumes that your project is hosted on
-a git repository checked out on your local computer and on the HPC.</p>
-<p>This vignette will use the Rollins School of Public Health (RSPH)
-High Performance Computing cluster (HPC) from <a href="https://www.sph.emory.edu/" class="external-link">Emory University</a> as an
-example.</p>
+<p><a href="https://epimodel.github.io/slurmworkflow/" class="external-link"><code>slurmworkflow</code></a>
+builds <em>workflows</em> for a <a href="https://slurm.schedmd.com/overview.html" class="external-link">SLURM</a> equipped
+high-performance computing (HPC) cluster. A workflow is a sequence of
+<em>steps</em>, each one a SLURM job, that run one after the other on
+the HPC. We build the workflow on our own computer, copy it to the HPC,
+and start it there with a single command.</p>
+<p>This vignette explains the ideas behind the workflows we use in
+applied EpiModelHIV projects. It follows the <a href="https://github.com/EpiModel/EpiModelHIV-Template" class="external-link">EpiModelHIV-Template</a>
+(branch <code>v3.3.x</code>) and uses the Rollins School of Public
+Health (RSPH) HPC at <a href="https://www.sph.emory.edu/" class="external-link">Emory
+University</a> as the example cluster. It is not a step-by-step guide.
+For that, follow the README in each chapter of the Template and the wiki
+page <a href="https://github.com/EpiModel/EpiModeling/wiki/Running-Project-Workflows-on-the-HPC" class="external-link">Running
+Project Workflows on the HPC</a>.</p>
+<p>The Template uses <a href="https://rstudio.github.io/renv/" class="external-link">renv</a>
+and needs access to the private <a href="https://github.com/EpiModel/EpiModelHIV-p" class="external-link">EpiModelHIV-p</a>
+repository. We assume that the project is a git repository cloned both
+on your computer and on the HPC.</p>
 </div>
 <div class="section level2">
-<h2 id="structure-of-an-applied-epimodelhiv-project">Structure of an Applied EpiModelHIV Project<a class="anchor" aria-label="anchor" href="#structure-of-an-applied-epimodelhiv-project"></a>
+<h2 id="structure-of-an-applied-epimodelhiv-project">Structure of an applied EpiModelHIV project<a class="anchor" aria-label="anchor" href="#structure-of-an-applied-epimodelhiv-project"></a>
 </h2>
-<p>The R scripts are all located in the “R/” subdirectory and are using
-the following naming conventions:</p>
+<p>All the R code lives under <code>R/</code>:</p>
 <ul>
-<li>“01-snake_case_name.R”: steps to be run locally in a given
-order.</li>
-<li>“workflow_01-snake_case_names.R”: scripts creating <em>workflow</em>
-directories to be sent on the HPC.</li>
-<li>“utils-snake_case_name.R”: utility scripts to be
-<code>source</code>d by the steps or <em>workflows</em>. They limit code
-repetition.</li>
+<li>
+<code>R/00-setup.R</code>: one-time setup of the project library
+with renv.</li>
+<li>
+<code>R/shared_variables.R</code>: paths, time steps and other
+values shared by every script. The paths to generated files point inside
+<code>data/run/</code>: for example <code>est_dir</code> is
+<code>data/run/estimates/</code> and <code>scenarios_dir</code> is
+<code>data/run/scenarios/</code>.</li>
+<li>
+<code>R/hpc_configs.R</code>: the HPC settings and the
+<code>make_em_workflow()</code> function used by every workflow.</li>
+<li>
+<code>R/netsim_settings.R</code>: builds the <code>param</code> and
+<code>init</code> objects and the <code>path_to_est</code> and
+<code>path_to_restart</code> paths used by the simulations.</li>
+<li>One folder per chapter: <code>R/A-networks</code>,
+<code>R/B-model_dev</code>, <code>R/C-calibration</code> and
+<code>R/D-interventions</code>. Each chapter has a README, numbered
+scripts (<code>1-estimation.R</code>, <code>2-diagnostics.R</code>, …)
+to run locally in order, <code>workflow-*.R</code> scripts that build
+HPC workflows, and a <code>z-context.R</code> file that switches between
+local and HPC settings.</li>
 </ul>
-<p>The “data/” directory contains:</p>
+<p>The <code>data/</code> folder contains:</p>
 <ul>
-<li>“data/input/”: files required by the project before any code is ran.
-These files are tracked by <code>git</code>.</li>
-<li>“data/run/”: raw files produced and used by the code. They are not
-tracked by <code>git</code>.</li>
-<li>“data/output/”: final results, tables, graphs. Tracked by
-<code>git</code>.</li>
+<li>
+<code>data/input/</code>: files the project needs before any code
+runs, such as model parameters and scenario definitions. Tracked by
+git.</li>
+<li>
+<code>data/run/</code>: everything the code produces: network
+estimates, calibration and scenario runs. Not tracked by git.</li>
+<li>
+<code>data/output/</code>: final tables and figures. Not tracked by
+git.</li>
 </ul>
+<p>The project has two renv lockfiles. <code>renv.lock</code> records
+the full local environment, analysis packages included.
+<code>renv.lock.hpc</code> records only what the model needs on the HPC:
+EpiModelHIV, EpiModelHPC, ARTnetData and their dependencies. Workflows
+are built in <code>workflows/</code>, which is not tracked by git
+either.</p>
+<p>Two per-user values go in the project <code>.Renviron</code> file
+(open it with <code>usethis::edit_r_environ("project")</code>):
+<code>EPIMODELHIV_DIR</code>, the path to your local clone of
+EpiModelHIV-p, and <code>HPC_MAIL_USER</code>, the address SLURM mails
+about your jobs.</p>
 </div>
 <div class="section level2">
-<h2 id="general-steps-in-a-applied-epimodelhiv-project">General Steps in a Applied EpiModelHIV Project<a class="anchor" aria-label="anchor" href="#general-steps-in-a-applied-epimodelhiv-project"></a>
+<h2 id="local-and-hpc-contexts">Local and HPC contexts<a class="anchor" aria-label="anchor" href="#local-and-hpc-contexts"></a>
 </h2>
-<p>These applied projects aim to accurately represent the population of
-Men who have Sex with Men (MSM) from the Atlanta Metro area. And then
-simulate how the HIV epidemic would behave under different
-<em>intervention scenarios</em>.</p>
-<p>A (massive) oversimplification of the project would be to see it as
-the following 3 steps:</p>
+<p>Every numbered script and every workflow sources
+<code>R/shared_variables.R</code> and the <code>z-context.R</code> file
+of its chapter. <code>z-context.R</code> looks for a variable named
+<code>hpc_context</code>. When it is <code>TRUE</code>, it sets
+<code>context &lt;- "hpc"</code> and the full-scale settings; otherwise
+it sets <code>context &lt;- "local"</code> and small, fast ones. In
+<code>R/A-networks/z-context.R</code>, for example, the local context
+estimates 10,000-node networks with the Stochastic-Approximation method
+on one core, and the HPC context estimates 100,000-node networks with
+MCMLE on 10 cores.</p>
+<p>The context also goes into the file names, so local and HPC results
+never overwrite each other: the network estimates are saved as
+<code>data/run/estimates/netest-local.rds</code> or
+<code>data/run/estimates/netest-hpc.rds</code>.</p>
+<p>On the HPC, workflow steps run the same numbered scripts with
+<code>hpc_context = TRUE</code>. The goal is that a script that runs
+locally also runs on the HPC without modification, so test every script
+locally first.</p>
+<p><strong>Note</strong>: run each numbered script in a fresh R session
+(Ctrl+Shift+F10 in RStudio) to avoid starting from a polluted
+environment, which makes debugging very hard. Do not use
+<code>rm(list = ls())</code> instead: <a href="https://rstats.wtf/source-and-blank-slates" class="external-link">it does not do the
+same thing</a>. It also breaks the scripts run by
+<code><a href="https://epimodel.github.io/slurmworkflow/reference/step_tmpl_do_call_script.html" class="external-link">step_tmpl_do_call_script()</a></code>, because it deletes the
+variables the step defines before running the script.</p>
+</div>
+<div class="section level2">
+<h2 id="workflows-and-steps">Workflows and steps<a class="anchor" aria-label="anchor" href="#workflows-and-steps"></a>
+</h2>
+<p>A workflow is a folder, <code>workflows/&lt;name&gt;/</code>, holding
+a <code>start_workflow.sh</code> script and one subfolder per step. Each
+<code>workflow-*.R</code> script builds one workflow in two moves:</p>
 <ol style="list-style-type: decimal">
-<li>Estimate the social networks modeling the population
-interactions.</li>
-<li>Calibrate the epidemic model to match key epidemiological
-targets.</li>
-<li>Run the model under <em>intervention scenarios</em> to assess their
-effects on the epidemic.</li>
+<li>
+<code>make_em_workflow()</code> creates the workflow and its first
+step, which brings the project on the HPC up to date (see below).</li>
+<li>Each call to <code><a href="https://epimodel.github.io/slurmworkflow/reference/add_workflow_step.html" class="external-link">slurmworkflow::add_workflow_step()</a></code> appends
+a step. Its <code>step_tmpl</code> argument is a <em>step template</em>,
+which says what the step runs, and its <code>sbatch_opts</code> argument
+says which resources the step asks SLURM for.</li>
 </ol>
+<p><code>sbatch_opts</code> accepts any long-form <a href="https://slurm.schedmd.com/sbatch.html" class="external-link"><code>sbatch</code></a>
+option without the leading <code>--</code> (“cpus-per-task” is valid,
+“c” is not). The options given to the workflow when it is created are
+the defaults for every step, and each step can override them.</p>
+<p>The steps are chained by a small controller job, so step 2 starts
+when step 1 is over, and so on. A step can also change which step runs
+next; this is how <code>swfcalib</code> loops over calibration
+iterations.</p>
+<p>The templates used in the Template come from two packages:</p>
+<ul>
+<li>
+<code>slurmworkflow</code>: <code><a href="https://epimodel.github.io/slurmworkflow/reference/step_tmpl_do_call_script.html" class="external-link">step_tmpl_do_call_script()</a></code>
+runs an R script that is on the HPC, <code><a href="https://epimodel.github.io/slurmworkflow/reference/step_tmpl_do_call.html" class="external-link">step_tmpl_do_call()</a></code>
+runs an R function, and <code><a href="https://epimodel.github.io/slurmworkflow/reference/step_tmpl_map.html" class="external-link">step_tmpl_map()</a></code> runs a function
+over many inputs as a SLURM array.</li>
+<li>
+<code>EpiModelHPC</code>: <code><a href="../reference/step_tmpl_renv_restore.html">step_tmpl_renv_restore()</a></code>
+updates the project, <code><a href="../reference/step_tmpl_netsim_scenarios.html">step_tmpl_netsim_scenarios()</a></code> runs
+scenario simulations,
+<code><a href="../reference/step_tmpl_merge_netsim_scenarios_tibble.html">step_tmpl_merge_netsim_scenarios_tibble()</a></code> merges their
+output, and <code><a href="../reference/step_tmpl_netsim_swfcalib_output.html">step_tmpl_netsim_swfcalib_output()</a></code> runs the
+model with calibrated parameters.</li>
+</ul>
 </div>
 <div class="section level2">
-<h2 id="local-vs-hpc-context">Local vs HPC Context<a class="anchor" aria-label="anchor" href="#local-vs-hpc-context"></a>
+<h2 id="make_em_workflow-the-common-first-step">
+<code>make_em_workflow()</code>: the common first step<a class="anchor" aria-label="anchor" href="#make_em_workflow-the-common-first-step"></a>
 </h2>
-<p>All the numbered scripts (“R/01-snake_case_name.R”) are meant to be
-executed on your local computer. They allow you to explore all the steps
-and substeps on small networks with few replications. Most of them
-define a <code>context</code> variable at the top. This variable takes
-the value “local” or “hpc” and is use to set the context of the
-computation: - “local”: Uses small networks and few replications, unfit
-for publication. This is used to test the code and processes. - “hpc”:
-Uses full size networks and many replications. This is used to produce
-the analysis for publication. Once the code has been validated
-locally.</p>
-<p>A lot of the numbered scripts are re-used by the <em>workflows</em>
-with the <code>context</code> variable set to “hpc”.</p>
-<p>The goal is: if your scripts run locally, they should run on the HPC
-without modification.</p>
-</div>
-<div class="section level2">
-<h2 id="network-estimation-and-diagnostics">Network Estimation and Diagnostics<a class="anchor" aria-label="anchor" href="#network-estimation-and-diagnostics"></a>
-</h2>
-<div class="section level3">
-<h3 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
-</h3>
-<p>This project simulates HIV dynamics on a population of 100 000
-individuals. The first step is to estimate 3 networks of 100 000 nodes
-representing respectively <em>main</em>, <em>casual</em> and <em>one
-off</em> partnerships. This step will happen in the script
-“R/01-networks_estimation.R”. Afterwards we will want to diagnose the
-estimations using the script “R/02-networks_diagnostics.R” and finally
-explore these diagnostics interactively in the script
-“R/03-networks_diagnostics_explore.R”.</p>
-<p>You should run these 3 scripts locally and make sure you understand
-what they do. Without modification, the <code>context</code> variable
-will be set to “local” and produce fast “Stochastic-Approximation” for
-5k nodes networks.</p>
-<p><strong>NOTE</strong>: You should run each script in a fresh R
-console each time to avoid starting with a polluted environment that
-will lead to very complicated debugging. In RStudio: Ctrl-Shift-F10 or
-<code>.rs.restartR()</code> (aliased to <code>rs()</code> in the
-project). Do not do: <code>rm(list = ls())</code> instead, <a href="https://rstats.wtf/save-source.html#rm-list-ls" class="external-link">it does not do the
-same thing and should not be used</a>.</p>
-</div>
-<div class="section level3">
-<h3 id="defining-the-networks_estimation-workflow">Defining the “networks_estimation” <em>workflow</em><a class="anchor" aria-label="anchor" href="#defining-the-networks_estimation-workflow"></a>
-</h3>
-<p>Now that you have run the 3 scripts locally, we will define an HPC
-<em>workflow</em> to run the first 2 parts, networks estimation and
-networks diagnostics, with 100k nodes networks with the full MCMLE
-estimation method. Trying to run this locally will take multiple days
-and probably crash your computer before ending.</p>
-<p>Instead, we will create a <em>workflow</em> locally, send it to the
-HPC, run it there and collect the results for analysis.</p>
-<p>The script “R/workflow_01-networks_estimation.R” is responsible to
-the creation of the first <em>workflow</em>. We will walk through it
-block by block to understand the basics of
-<code>slurmworkflow</code>.</p>
-<div class="section level4">
-<h4 id="setup">Setup<a class="anchor" aria-label="anchor" href="#setup"></a>
-</h4>
-<p>A <em>workflow</em> exists on your computer as a directory inside the
-“workflows/” directory of your project. Our first <em>workflow</em> is
-called “networks_estimation” and will live in
-“workflows/networks_estimation/”.</p>
-<p>First we load the required libraries and source the
-“R/utils-0_project_settings.R”.</p>
+<p>Every workflow in the Template starts with
+<code>make_em_workflow()</code>, defined in
+<code>R/hpc_configs.R</code>. Here is a slightly shortened version:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Libraries --------------------------------------------------------------------</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://epimodel.github.io/slurmworkflow/" class="external-link">"slurmworkflow"</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://www.epimodel.org/" class="external-link">"EpiModelHPC"</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">current_git_branch</span> <span class="op">&lt;-</span> <span class="st">"main"</span>          <span class="co"># &lt;- USER: your git branch</span></span>
 <span></span>
-<span><span class="co"># Settings ---------------------------------------------------------------------</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="st">"./R/utils-0_project_settings.R"</span><span class="op">)</span></span></code></pre></div>
-<p>This last script contains variable used throughout the project. You
-should make sure that the <code>current_git_branch</code> is correct and
-put your emai address in <code>mail_user</code>. This way the HPC will
-send you a mail when the <em>workflow</em> is finished.</p>
-<p>Then we set a <code>max_cores</code> variable to 10. This will be the
-number of CPU cores to be used for the network estimations. 10 usually
-works fine.</p>
+<span><span class="va">hpc_node_setup</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  <span class="st">". /projects/epimodel/spack/share/spack/setup-env.sh"</span>,</span>
+<span>  <span class="st">"spack unload -a"</span>,</span>
+<span>  <span class="st">"spack load r@4.5.1"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">make_em_workflow</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">wf_name</span>, <span class="va">override</span> <span class="op">=</span> <span class="cn">FALSE</span>, <span class="va">update_renv</span> <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="co"># The Template stops with instructions if this is not set in `.Renviron`</span></span>
+<span>  <span class="va">hpc_mail_user</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">"HPC_MAIL_USER"</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="va">update_renv</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="fu">renv</span><span class="fu">::</span><span class="fu">snapshot</span><span class="op">(</span></span>
+<span>      packages <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"EpiModelHIV"</span>, <span class="st">"EpiModelHPC"</span>, <span class="st">"ARTnetData"</span><span class="op">)</span>,</span>
+<span>      lockfile <span class="op">=</span> <span class="st">"renv.lock.hpc"</span>,</span>
+<span>      prompt <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">}</span></span>
+<span></span>
+<span>  <span class="va">wf_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"workflows/"</span>, <span class="va">wf_name</span><span class="op">)</span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="va">override</span> <span class="op">&amp;&amp;</span> <span class="fu">fs</span><span class="fu">::</span><span class="fu"><a href="https://fs.r-lib.org/reference/file_access.html" class="external-link">dir_exists</a></span><span class="op">(</span><span class="va">wf_path</span><span class="op">)</span><span class="op">)</span> <span class="fu">fs</span><span class="fu">::</span><span class="fu"><a href="https://fs.r-lib.org/reference/delete.html" class="external-link">dir_delete</a></span><span class="op">(</span><span class="va">wf_path</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="va">wf</span> <span class="op">&lt;-</span> <span class="fu">slurmworkflow</span><span class="fu">::</span><span class="fu"><a href="https://epimodel.github.io/slurmworkflow/reference/create_workflow.html" class="external-link">create_workflow</a></span><span class="op">(</span></span>
+<span>    wf_name <span class="op">=</span> <span class="va">wf_name</span>,</span>
+<span>    default_sbatch_opts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>      <span class="st">"partition"</span> <span class="op">=</span></span>
+<span>        <span class="st">"epimodel,short-cpu,day-long-cpu,week-long-cpu,month-long-cpu"</span>,</span>
+<span>      <span class="st">"mail-type"</span> <span class="op">=</span> <span class="st">"FAIL"</span>,</span>
+<span>      <span class="st">"mail-user"</span> <span class="op">=</span> <span class="va">hpc_mail_user</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span>  <span class="co"># Update renv on the HPC</span></span>
+<span>  <span class="va">wf</span> <span class="op">&lt;-</span> <span class="fu">slurmworkflow</span><span class="fu">::</span><span class="fu"><a href="https://epimodel.github.io/slurmworkflow/reference/add_workflow_step.html" class="external-link">add_workflow_step</a></span><span class="op">(</span></span>
+<span>    wf_summary <span class="op">=</span> <span class="va">wf</span>,</span>
+<span>    step_tmpl <span class="op">=</span> <span class="fu">EpiModelHPC</span><span class="fu">::</span><span class="fu"><a href="../reference/step_tmpl_renv_restore.html">step_tmpl_renv_restore</a></span><span class="op">(</span></span>
+<span>      git_branch <span class="op">=</span> <span class="va">current_git_branch</span>,</span>
+<span>      setup_lines <span class="op">=</span> <span class="va">hpc_node_setup</span>,</span>
+<span>      lockfile <span class="op">=</span> <span class="kw">if</span> <span class="op">(</span><span class="va">update_renv</span><span class="op">)</span> <span class="st">"renv.lock.hpc"</span> <span class="kw">else</span> <span class="cn">NULL</span></span>
+<span>    <span class="op">)</span>,</span>
+<span>    sbatch_opts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>      <span class="st">"mem"</span> <span class="op">=</span> <span class="st">"16G"</span>,</span>
+<span>      <span class="st">"cpus-per-task"</span> <span class="op">=</span> <span class="fl">4</span>,</span>
+<span>      <span class="st">"time"</span> <span class="op">=</span> <span class="fl">180</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span>  <span class="va">wf</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<p>It does four things.</p>
+<p><strong>It refreshes <code>renv.lock.hpc</code></strong> from the
+packages installed in your local project library. Install the
+EpiModelHIV-p version you want to run locally first, then build the
+workflow, then commit and push <code>renv.lock.hpc</code>.</p>
+<p><strong>It creates the workflow</strong> in
+<code>workflows/&lt;wf_name&gt;/</code>. <code><a href="https://epimodel.github.io/slurmworkflow/reference/create_workflow.html" class="external-link">create_workflow()</a></code>
+stops if that folder already exists; <code>override = TRUE</code>
+deletes the old one first.</p>
+<p><strong>It sets the default sbatch options</strong>: mail
+<code>HPC_MAIL_USER</code> when a step fails, and run on any of the
+listed partitions. SLURM starts each job on whichever listed partition
+can run it first, and it considers the lab’s dedicated
+<code>epimodel</code> partition (15 nodes, no time limit) before the
+shared ones: <code>short-cpu</code> (8 hours), <code>day-long-cpu</code>
+(1 day), <code>week-long-cpu</code> (7 days) and
+<code>month-long-cpu</code> (31 days). A step that asks for more time
+than a partition allows only runs on the others. Lab members can also
+add <code>CIDMATH</code>, 8 dedicated nodes shared with three other
+groups. The <code>preemptable</code> partition that older projects used
+no longer exists. <code>interactive-cpu</code> (12 hours, at most 16
+cores per job) is meant for <code>srun</code> sessions and
+<code>largemem</code> holds high-memory nodes; neither is needed for
+routine runs.</p>
+<p><strong>It adds the restore step</strong>, which is always step 1. On
+a compute node, this step loads R with <code>hpc_node_setup</code>,
+checks that the HPC clone is on <code>current_git_branch</code> (and
+stops otherwise, to avoid running the wrong code), runs
+<code>git pull</code>, and restores the packages listed in
+<code>renv.lock.hpc</code>. This is how EpiModelHIV-p and the other
+packages get installed on the HPC: there is no need to run
+<code>renv::init()</code> or <code>renv::restore()</code> by hand. Do
+not run them on the login node either. The login node runs a different
+release of the operating system than the compute nodes, so renv keeps a
+separate library for it that the jobs never use.</p>
+<p><code>hpc_node_setup</code> holds the bash lines that make R
+available in each step. On RSPH, R comes from <a href="https://spack.io/" class="external-link">spack</a>: <code>r@4.6.1</code> is the current
+build and <code>r@4.5.1</code> is still available. Load the version
+recorded in your lockfile, and always give the full version:
+<code>spack load r@4.3</code>, for example, fails because it matches
+several builds.</p>
+<div class="section level3">
+<h3 id="outside-the-template-swf_configs_rsph">Outside the Template: <code>swf_configs_rsph()</code><a class="anchor" aria-label="anchor" href="#outside-the-template-swf_configs_rsph"></a>
+</h3>
+<p>Projects that do not use <code>make_em_workflow()</code> can get the
+same settings from <code><a href="../reference/swf_configs_rsph.html">swf_configs_rsph()</a></code>:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">max_cores</span> <span class="op">&lt;-</span> <span class="fl">10</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="st">"./R/utils-hpc_configs.R"</span><span class="op">)</span> <span class="co"># creates `hpc_configs`</span></span></code></pre></div>
-<p>The “R/utils-hpc_configs.R” script contains helper functions to
-simplify the HPC setup. Here is the part that should be uncommented for
-using the RSPH cluster:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Must be sourced **AFTER** "./R/utils-0_project_settings.R"</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://epimodel.github.io/slurmworkflow/" class="external-link">slurmworkflow</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://www.epimodel.org/" class="external-link">EpiModelHPC</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">hpc_configs</span> <span class="op">&lt;-</span> <span class="fu">EpiModelHPC</span><span class="fu">::</span><span class="fu"><a href="../reference/swf_configs_rsph.html">swf_configs_rsph</a></span><span class="op">(</span></span>
-<span>  partition <span class="op">=</span> <span class="st">"epimodel"</span>,</span>
-<span>  r_version <span class="op">=</span> <span class="st">"4.5.1"</span>,</span>
-<span>  mail_user <span class="op">=</span> <span class="va">mail_user</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p>We use the <code><a href="../reference/swf_configs_rsph.html">EpiModelHPC::swf_configs_rsph</a></code> helper function
-to create the <code>hpc_configs</code> objects that will holds some
-pre-defined configurations. We specify that we want to work on the
-“epimodel” partition and that e-mails telling us when the jobs are done
-should be sent to “<a href="mailto:user@emory.edu" class="email">user@emory.edu</a>”.</p>
-<p><em>Note</em>: the HPC is using the <a href="https://slurm.schedmd.com/overview.html" class="external-link">Slurm workflow
-manager</a> to allocate tasks to computing nodes. The EpiModel partition
-allocate jobs to nodes <em>reserved</em> for the EpiModel team. The
-other option is <em>preemptable</em>, where you can use any empty node
-but may be kicked out if a <em>reserved</em> node is <em>preempted</em>
-by someone.</p>
-</div>
-<div class="section level4">
-<h4 id="creating-the-workflow">Creating the <em>workflow</em><a class="anchor" aria-label="anchor" href="#creating-the-workflow"></a>
-</h4>
-<p>The <code><a href="https://epimodel.github.io/slurmworkflow/reference/create_workflow.html" class="external-link">slurmworkflow::create_workflow</a></code> function takes 2
-mandatory arguments:</p>
-<ol style="list-style-type: decimal">
-<li>
-<code>wf_name</code>: the name of the new workflow</li>
-<li>
-<code>default_sbatch_opts</code>: a list of default options for the
-<a href="https://slurm.schedmd.com/sbatch.html" class="external-link"><code>sbatch</code></a>
-command. They will be shared among all steps.</li>
-</ol>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Workflow creation ------------------------------------------------------------</span></span>
+<span><span class="va">hpc_configs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/swf_configs_rsph.html">swf_configs_rsph</a></span><span class="op">(</span></span>
+<span>  partition <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"epimodel"</span>, <span class="st">"short-cpu"</span>, <span class="st">"day-long-cpu"</span><span class="op">)</span>,</span>
+<span>  r_version <span class="op">=</span> <span class="st">"4.6.1"</span>,</span>
+<span>  mail_user <span class="op">=</span> <span class="st">"&lt;netid&gt;@emory.edu"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
 <span><span class="va">wf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://epimodel.github.io/slurmworkflow/reference/create_workflow.html" class="external-link">create_workflow</a></span><span class="op">(</span></span>
-<span>  wf_name <span class="op">=</span> <span class="st">"networks_estimation"</span>,</span>
+<span>  wf_name <span class="op">=</span> <span class="st">"my_workflow"</span>,</span>
 <span>  default_sbatch_opts <span class="op">=</span> <span class="va">hpc_configs</span><span class="op">$</span><span class="va">default_sbatch_opts</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p>Here we created a <em>workflow</em> called “networks_estimation” and
-use the sbatch options stored in
-<code>hpc_configs$default_sbatch_opts</code>.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">hpc_configs</span><span class="op">$</span><span class="va">default_sbatch_opts</span></span>
-<span><span class="co">#&gt; list(</span></span>
-<span><span class="co">#&gt;   "partition" = "epimodel",</span></span>
-<span><span class="co">#&gt;   "mail-type" = "FAIL"</span></span>
-<span><span class="co">#&gt;   "mail-user" = "user@emory.edu"</span></span>
-<span><span class="co">#&gt; )</span></span></code></pre></div>
-<p>It specifies that we want to use the “epimodel” partition and that an
-e-mail should be sent if a task fails.</p>
-<p>With this we have created the directory
-“workflows/networks_estimation” and stored a summary of it in the
-<code>wf</code> variable. For now our workflow has no steps.</p>
-<p><em>notes</em>: SLURM configuration can vary, on <a href="https://hyak.uw.edu/" class="external-link">HYAK</a> for instance there is an accounting
-module and we would have to specify the “account” option). An equivalent
-<code>swf_configs_hyak</code> function exists for the HYAK ecosystem. -
-<code>default_sbatch_opts</code> and <code>sbatch_opts</code> parameters
-accept all the options for <code>sbatch</code> starting with “–”.
-(e.g. “account” is valid but “A” is not, as it corresponds to the “-A”
-shorthand) - If a “workflows/networks_estimation” directory already
-exists, <code>create_workflow</code> will throw an error. You have to
-delete the previous versions of the workflow yourself if you want to
-overwrite them.</p>
-</div>
-<div class="section level4">
-<h4 id="adding-of-a-renvrestore-step">Adding of a <code>renv::restore</code> Step<a class="anchor" aria-label="anchor" href="#adding-of-a-renvrestore-step"></a>
-</h4>
-<p>Before running the actual calculation, we want to make sure that the
-project on the HPC is up to date with the right packages version. It
-translates to running <code>git pull</code> on the HPC and
-<code>renv::restore()</code> from the project.</p>
-<p>To do this we will add a <em>step</em> to the workflow. The
-<code><a href="https://epimodel.github.io/slurmworkflow/reference/add_workflow_step.html" class="external-link">slurmworkflow::add_workflow_step</a></code> take 2 mandatory
-arguments:</p>
-<ol style="list-style-type: decimal">
-<li>
-<code>wf_summary</code>: a summary of the workflow to edit (the
-<code>wf</code> variable)</li>
-<li>
-<code>step_tmpl</code>: a <em>step template</em>. These are made by
-a special kind of functions from <code>slurmworkflow</code>.</li>
-</ol>
-<p>Here we will also use the optional <code>sbatch_opts</code> arguments
-to override some of the default options defined above.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Update RENV on the HPC -------------------------------------------------------</span></span>
+<span><span class="op">)</span></span>
+<span></span>
 <span><span class="va">wf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://epimodel.github.io/slurmworkflow/reference/add_workflow_step.html" class="external-link">add_workflow_step</a></span><span class="op">(</span></span>
 <span>  wf_summary <span class="op">=</span> <span class="va">wf</span>,</span>
 <span>  step_tmpl <span class="op">=</span> <span class="fu"><a href="../reference/step_tmpl_renv_restore.html">step_tmpl_renv_restore</a></span><span class="op">(</span></span>
-<span>    git_branch <span class="op">=</span> <span class="va">current_git_branch</span>,</span>
+<span>    git_branch <span class="op">=</span> <span class="st">"main"</span>,</span>
 <span>    setup_lines <span class="op">=</span> <span class="va">hpc_configs</span><span class="op">$</span><span class="va">r_loader</span></span>
 <span>  <span class="op">)</span>,</span>
 <span>  sbatch_opts <span class="op">=</span> <span class="va">hpc_configs</span><span class="op">$</span><span class="va">renv_sbatch_opts</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>The <em>step template</em> here is from the function
-<code><a href="../reference/step_tmpl_renv_restore.html">EpiModelHPC::step_tmpl_renv_restore</a></code> which takes two
-arguments:</p>
-<ol style="list-style-type: decimal">
+<p><code>hpc_configs</code> holds:</p>
+<ul>
 <li>
-<code>git_branch</code>: the branch that the repository must follow.
-If the branch followed (on the HPC) is not the right one, the step will
-stop there to avoid potential data loss and undefined behaviors. Here we
-use the <code>current_git_branch</code> variable defined in
-“R/utils-0_project_settings.R”.</li>
+<code>default_sbatch_opts</code>: the partition list and the mail
+settings.</li>
 <li>
-<code>setup_lines</code>: some boilerplate <code>bash</code> code to
-allow running R code on the HPC.</li>
-</ol>
-<p>Internally this function sets up an <code>sbatch</code> task that
-will run <code>git pull</code> and <code>renv::restore()</code> on the
-HPC.</p>
-<p>For this specific task we need to change some of the
-<code>sbatch</code> options using
-<code>hpc_configs$renv_sbatch_opts</code>.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">hpc_configs</span><span class="op">$</span><span class="va">renv_sbatch_opts</span></span>
-<span><span class="co">#&gt; list(</span></span>
-<span><span class="co">#&gt; "mem" = "16G",</span></span>
-<span><span class="co">#&gt; "cpus-per-task" = 4,</span></span>
-<span><span class="co">#&gt; "time" = 120</span></span>
-<span><span class="co">#&gt; )</span></span></code></pre></div>
-<p>It asks for 16GB of RAM, 4 CPUs and tell SLURM that the job should
-take less than 120 minutes.</p>
-<p>We assigned the result of the call to <code>wf</code>
-(<code>wf &lt;- add_workflow_step(...)</code>), and the function
-modified the “workflows/networks_estimation/” folder.</p>
-<p><em>notes</em>: on the MOX cluster from HYAK,
-<code>renv_sbatch_opts</code> would also changes the
-<code>partition</code> to “build” as on MOX the “default” partition does
-not have internet access.</p>
+<code>renv_sbatch_opts</code>: the resources for the restore
+step.</li>
+<li>
+<code>r_loader</code>: the spack lines, followed by a trap that
+stops a job’s own R workers when the job is canceled or times out (see
+<code><a href="../reference/swf_cleanup_r_workers.html">?swf_cleanup_r_workers</a></code>). Pass it as
+<code>setup_lines</code> to every step template.</li>
+<li>
+<code>max_cores</code>: the most CPUs one task can request on every
+listed partition.</li>
+</ul>
+<p>See <code><a href="../reference/swf_configs_rsph.html">?swf_configs_rsph</a></code> for the partitions it accepts and
+their limits. <code><a href="../reference/swf_configs_hyak.html">swf_configs_hyak()</a></code> does the same for the HYAK
+cluster at the University of Washington.</p>
 </div>
-<div class="section level4">
-<h4 id="addition-of-the-estimation-step">Addition of the <em>estimation</em> Step<a class="anchor" aria-label="anchor" href="#addition-of-the-estimation-step"></a>
-</h4>
-<p>Now that we ensured that the project will be up to date on the HPC,
-we want to run the “R/01-networks_estimation.R” script there with
-<code>context &lt;- "hpc"</code>.</p>
-<p>To do this we add another step with
-<code><a href="https://epimodel.github.io/slurmworkflow/reference/add_workflow_step.html" class="external-link">slurmworkflow::add_workflow_step</a></code> but with a different
-<em>step template</em>.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Estimate the networks --------------------------------------------------------</span></span>
+</div>
+<div class="section level2">
+<h2 id="example-estimating-the-networks">Example: estimating the networks<a class="anchor" aria-label="anchor" href="#example-estimating-the-networks"></a>
+</h2>
+<p><code>R/A-networks/workflow-networks.R</code> runs the network
+estimation and diagnostics at full scale. Estimating 100,000-node
+networks with MCMLE would take days on a laptop.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://epimodel.github.io/slurmworkflow/" class="external-link">slurmworkflow</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">hpc_context</span> <span class="op">&lt;-</span> <span class="cn">TRUE</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="st">"R/shared_variables.R"</span>, local <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="st">"R/A-networks/z-context.R"</span>, local <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="st">"R/hpc_configs.R"</span>, local <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">wf</span> <span class="op">&lt;-</span> <span class="fu">make_em_workflow</span><span class="op">(</span><span class="st">"networks"</span>, override <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
 <span><span class="va">wf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://epimodel.github.io/slurmworkflow/reference/add_workflow_step.html" class="external-link">add_workflow_step</a></span><span class="op">(</span></span>
 <span>  wf_summary <span class="op">=</span> <span class="va">wf</span>,</span>
 <span>  step_tmpl <span class="op">=</span> <span class="fu"><a href="https://epimodel.github.io/slurmworkflow/reference/step_tmpl_do_call_script.html" class="external-link">step_tmpl_do_call_script</a></span><span class="op">(</span></span>
-<span>    r_script <span class="op">=</span> <span class="st">"./R/01-networks_estimation.R"</span>,</span>
-<span>    args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>      context <span class="op">=</span> <span class="st">"hpc"</span>,</span>
-<span>      estimation_method <span class="op">=</span> <span class="st">"MCMLE"</span>,</span>
-<span>      estimation_ncores <span class="op">=</span> <span class="va">max_cores</span></span>
-<span>   <span class="op">)</span>,</span>
-<span>    setup_lines <span class="op">=</span> <span class="va">hpc_configs</span><span class="op">$</span><span class="va">r_loader</span></span>
+<span>    r_script <span class="op">=</span> <span class="st">"R/A-networks/1-estimation.R"</span>,</span>
+<span>    args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>hpc_context <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    setup_lines <span class="op">=</span> <span class="va">hpc_node_setup</span></span>
 <span>  <span class="op">)</span>,</span>
 <span>  sbatch_opts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    <span class="st">"cpus-per-task"</span> <span class="op">=</span> <span class="va">max_cores</span>,</span>
+<span>    <span class="st">"cpus-per-task"</span> <span class="op">=</span> <span class="va">est_cores</span>,</span>
+<span>    <span class="st">"time"</span> <span class="op">=</span> <span class="st">"24:00:00"</span>,</span>
+<span>    <span class="st">"mem"</span> <span class="op">=</span> <span class="st">"0"</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">wf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://epimodel.github.io/slurmworkflow/reference/add_workflow_step.html" class="external-link">add_workflow_step</a></span><span class="op">(</span></span>
+<span>  wf_summary <span class="op">=</span> <span class="va">wf</span>,</span>
+<span>  step_tmpl <span class="op">=</span> <span class="fu"><a href="https://epimodel.github.io/slurmworkflow/reference/step_tmpl_do_call_script.html" class="external-link">step_tmpl_do_call_script</a></span><span class="op">(</span></span>
+<span>    r_script <span class="op">=</span> <span class="st">"R/A-networks/2-diagnostics.R"</span>,</span>
+<span>    args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>hpc_context <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    setup_lines <span class="op">=</span> <span class="va">hpc_node_setup</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  sbatch_opts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    <span class="st">"mail-type"</span> <span class="op">=</span> <span class="st">"END"</span>,</span>
+<span>    <span class="st">"cpus-per-task"</span> <span class="op">=</span> <span class="va">est_cores</span>,</span>
 <span>    <span class="st">"time"</span> <span class="op">=</span> <span class="st">"24:00:00"</span>,</span>
 <span>    <span class="st">"mem"</span> <span class="op">=</span> <span class="st">"0"</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><code><a href="https://epimodel.github.io/slurmworkflow/reference/step_tmpl_do_call_script.html" class="external-link">slurmworkflow::step_tmpl_do_call_script</a></code> template sets up
-a step to run the script located <strong>on the HPC</strong> under the
-path <code>r_script</code>, here “R/01-networks_estimation.R”, with some
-variables pre-defined. We set the following variables: -
-<code>context = "hpc"</code>: signals the script to use the “hpc”
-settings. - <code>estimation_method = "MCMLE"</code>: we want the slower
-but more accurate estimation method. -
-<code>estimation_ncores = max_cores</code>: this estimation method
-benefits from being parallelized. (more that 10 cores can slow things
-down significantly).</p>
-<p>If you take a look at the “R/01-networks_estimation.R” script, you
-will see that <code>estimation_method</code> and
-<code>estimation_ncores</code> are set if
-<code>context == "local"</code> but not for “hpc”. Thanks to our
-<em>step template</em> they will be defined when the script run as part
-of the workflow.</p>
-<p><em>note</em>: The syntax of <code>step_tmpl_do_call_script</code> to
-pass arguments to a script is similar to the one of
-<code><a href="https://rdrr.io/r/base/do.call.html" class="external-link">base::do.call</a></code>.</p>
-<p><strong>Important note</strong>: Some users like to clear their R
-environment by placing <code>rm(list = ls())</code> at the start of
-their scripts. In addition to <a href="https://rstats.wtf/save-source.html#rm-list-ls" class="external-link">it being
-discouraged generally</a>, it will actually prevent a script to work
-with <code>step_tmpl_do_call_script</code> as it deletes the variable at
-the start of the script. Restarting the R session or using the <a href="https://callr.r-lib.org/index.html" class="external-link"><code>callr</code> package</a>
-are better alternatives when working interactively.</p>
-<p>Finally, we also provide the <code>setup_lines</code> as before and
-some new <code>sbatch_opts</code>. As no “partition” option is provided,
-it will default to “epimodel” (using the values set in
-<code>create_workflow</code> at the beginning.</p>
-<p>This step will write 3 files on the HPC: (see the script itself for
-details)</p>
-<ol style="list-style-type: decimal">
-<li>“data/intermediate/estimates/epistats-hpc.rds”</li>
-<li>“data/intermediate/estimates/netstats-hpc.rds”</li>
-<li>“data/intermediate/estimates/netest-hpc.rds”</li>
-</ol>
-</div>
-<div class="section level4">
-<h4 id="addition-of-the-diagnostics-step">Addition of the <em>diagnostics</em> Step<a class="anchor" aria-label="anchor" href="#addition-of-the-diagnostics-step"></a>
-</h4>
-<p>Finally we want to generate diagnostics for these networks with
-“R/02-networks_diagnostics.R”.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Generate the diagnostics data ------------------------------------------------</span></span>
-<span><span class="va">wf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://epimodel.github.io/slurmworkflow/reference/add_workflow_step.html" class="external-link">add_workflow_step</a></span><span class="op">(</span></span>
-<span>  wf_summary <span class="op">=</span> <span class="va">wf</span>,</span>
-<span>  step_tmpl <span class="op">=</span> <span class="fu"><a href="https://epimodel.github.io/slurmworkflow/reference/step_tmpl_do_call_script.html" class="external-link">step_tmpl_do_call_script</a></span><span class="op">(</span></span>
-<span>    r_script <span class="op">=</span> <span class="st">"./R/02-networks_diagnostics.R"</span>,</span>
-<span>    args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>      context <span class="op">=</span> <span class="st">"hpc"</span>,</span>
-<span>      ncores <span class="op">=</span> <span class="va">max_cores</span>,</span>
-<span>      nsims <span class="op">=</span> <span class="fl">50</span></span>
-<span>    <span class="op">)</span>,</span>
-<span>    setup_lines <span class="op">=</span> <span class="va">hpc_configs</span><span class="op">$</span><span class="va">r_loader</span></span>
-<span>  <span class="op">)</span>,</span>
-<span>  sbatch_opts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    <span class="st">"cpus-per-task"</span> <span class="op">=</span> <span class="va">max_cores</span>,</span>
-<span>    <span class="st">"time"</span> <span class="op">=</span> <span class="st">"04:00:00"</span>,</span>
-<span>    <span class="st">"mem-per-cpu"</span> <span class="op">=</span> <span class="st">"4G"</span>,</span>
-<span>    <span class="st">"mail-type"</span> <span class="op">=</span> <span class="st">"FAIL,END"</span></span>
-<span>  <span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p>This step uses the same template as before, with 3 variables passed
-to the script: <code>context</code>, <code>ncores</code> and
-<code>nsteps</code>.</p>
-<p>As it is the last step of this <em>workflow</em> we override the
-“mail-type” <code>sbatch</code> option to receive a mail when this step
-ends. We do so to be notified when the workflow is finished.</p>
-<p>This step will write 3 files on the HPC: (see the script itself for
-details)</p>
-<ol style="list-style-type: decimal">
-<li>“data/intermediate/calibration/netdx-main-hpc.rds”</li>
-<li>“data/intermediate/calibration/netdx-casl-hpc.rds”</li>
-<li>“data/intermediate/calibration/netdx-inst-hpc.rds”</li>
-</ol>
-</div>
-</div>
-<div class="section level3">
-<h3 id="using-the-estimation-workflow-on-the-rsph-hpc">Using the “estimation” <em>workflow</em> on the RSPH HPC<a class="anchor" aria-label="anchor" href="#using-the-estimation-workflow-on-the-rsph-hpc"></a>
-</h3>
-<p>Now that our <em>estimation workflow</em> is set up, we need to send
-it to the HPC, run it and download the results.</p>
-<p>We assume that the “workflows/” and “data/intermediate/” directories
-are not tracked by git (using “.gitignore” for example) and that the
-user has an SSH access to the HPC.</p>
-<p>We will use <code>scp</code> to copy the folder over to the HPC as it
-is available on Windows, MacOS and GNU/Linux.</p>
-<p>In this example, the “EpiModelHIV-Template” repository is located at
-“~/projects/EpiModelHIV-Template” on the HPC.</p>
-<p>Before sending the workflow, make sure that the project on the HPC
-has <code>renv</code> initialized. This means running
-<code>renv::init()</code> from the root of the project on the HPC.</p>
-<div class="section level4">
-<h4 id="sending-the-workflow-to-the-hpc">Sending the <em>workflow</em> to the HPC<a class="anchor" aria-label="anchor" href="#sending-the-workflow-to-the-hpc"></a>
-</h4>
-<p>If you have never used the command line before, we recommend using
-the terminal from RStudio (not the R console).</p>
-<p>Everything written <code>&lt;between angle brackets&gt;</code> is to
-be replaced with the correct value.</p>
-<p>You should make sure to understand what each part of the commands do
-before running them. It will make your life easier.</p>
-<p>The following commands are to be run from your local computer.</p>
-<p><strong>MacOS or GNU/Linux</strong></p>
-<pre><code># bash - local
-scp -r workflows/networks_estimation &lt;user&gt;@clogin01.sph.emory.edu:projects/EpiModelHIV-Template/workflows/</code></pre>
-<p><strong>Windows</strong></p>
-<pre><code># bash - local
-set DISPLAY=
-scp -r workflows\networks_estimation &lt;user&gt;@clogin01.sph.emory.edu:projects/EpiModelHIV-Template/workflows/</code></pre>
-<p>Forgetting <code>set DISPLAY=</code> will prevent <code>scp</code>
-from working correctly.</p>
-<p>Note that its <code>workflows\networks_estimation</code>. Windows
-uses back-slashes for directories and Unix OSes uses
-forward-slashes.</p>
-</div>
-<div class="section level4">
-<h4 id="running-the-workflow-from-the-hpc">Running the <em>workflow</em> from the HPC<a class="anchor" aria-label="anchor" href="#running-the-workflow-from-the-hpc"></a>
-</h4>
-<p>For this step, you must be at the command line on the HPC. This means
-that you have run: <code>ssh &lt;user&gt;@clogin01.sph.emory.edu</code>
-from your local computer.</p>
-<p><em>run <code>set DISPLAY=</code> on Windows before if you get this
-error:
-<code>ssh_askpass: posix_spawnp: No such file or directory</code></em></p>
-<p>You also need to be at the root directory of the project (where the
-“.git” folder is as well as the “renv.lock” file”. In this example you
-would get there by running
-<code>$ cd ~/projects/EpiModelHIV-Template</code>. The following steps
-will not work if you are not at the root of your project.</p>
-<p>Running the <em>workflow</em> is done by <strong>executing</strong>
-the file “workflows/estimation/start_workflow.sh” with the following
-command:</p>
-<pre><code><span><span class="co"># bash - hpc</span></span>
-<span><span class="va">.</span><span class="op">/</span><span class="va">workflows</span><span class="op">/</span><span class="va">estimation</span><span class="op">/</span><span class="va">start_workflow.sh</span></span></code></pre>
-<p>If you are using Windows, the may not be executable. You can solve it
-with the following command:</p>
-<pre><code># bash - hpc
-chmod +x workflows/estimation/start_workflow.sh`</code></pre>
-<p>The workflow will not work if you <em>source</em> the file (with
-<code>source &lt;script&gt;</code> or
-<code>. &lt;script&gt;</code>).</p>
-</div>
-<div class="section level4">
-<h4 id="downloading-the-results-for-analysis">Downloading the Results for Analysis<a class="anchor" aria-label="anchor" href="#downloading-the-results-for-analysis"></a>
-</h4>
-<p>Granting that the workflow worked correctly, you should receive a
-mail telling you that the last step ended with exit code 0 (success, or
-0 errors).</p>
-<p>We want to download the “data/intermediate/estimates/” and
-“data/intermediate/diagnostics/” directories back to our local
-machine:</p>
-<p><em>These command are to be run from your local machine, not from the
-SSH session on the HPC.</em></p>
-<p><strong>MacOs or GNU/Linux</strong></p>
-<pre><code># bash - local
-scp -r &lt;user&gt;@clogin01.sph.emory.edu:projects/EpiModelHIV-Template/data/intermediate/estimates data/intermediate/
-scp -r &lt;user&gt;@clogin01.sph.emory.edu:projects/EpiModelHIV-Template/data/intermediate/diagnostics data/intermediate/</code></pre>
-<p><strong>Windows</strong></p>
-<p><em>Same notes as before for Windows</em></p>
-<pre><code># bash - local
-set DISPLAY=
-scp -r &lt;user&gt;@clogin01.sph.emory.edu:projects/EpiModelHIV-Template/data/intermediate/estimates data\intermediate\
-scp -r &lt;user&gt;@clogin01.sph.emory.edu:projects/EpiModelHIV-Template/data/intermediate/diagnostics data\intermediate\</code></pre>
-<p>We can now run the R script “03-diagnostics_explore.R” to see if
-everything is correct. Don’t forget to set the <code>context</code> to
-“hpc” at the top of the file to assess the right networks.</p>
-</div>
-</div>
+<p>Setting <code>hpc_context &lt;- TRUE</code> before sourcing
+<code>z-context.R</code> gives us the HPC settings in this script too,
+including <code>est_cores</code> (10).</p>
+<p><code><a href="https://epimodel.github.io/slurmworkflow/reference/step_tmpl_do_call_script.html" class="external-link">step_tmpl_do_call_script()</a></code> runs a script that is already
+<strong>on the HPC</strong>, in the git clone of the project, after
+defining the variables listed in <code>args</code>. The syntax is
+similar to <code><a href="https://rdrr.io/r/base/do.call.html" class="external-link">base::do.call()</a></code>. Here the scripts start with
+<code>hpc_context = TRUE</code>, so they pick the HPC settings when they
+source <code>z-context.R</code>.</p>
+<p>The <code>sbatch_opts</code> of these two steps ask for
+<code>est_cores</code> CPUs, 24 hours, and <code>mem = "0"</code>, which
+means all the memory of the node. That reserves a whole node, which
+network estimation needs; do not use it for simulation steps. With 24
+hours, these steps cannot run on <code>short-cpu</code>. The last step
+asks for a mail when it ends, so we know when the workflow is done.</p>
+<p>The steps write <code>netest-hpc.rds</code>,
+<code>netstats-hpc.rds</code> and <code>epistats-hpc.rds</code> to
+<code>data/run/estimates/</code> on the HPC, and the diagnostics to
+<code>data/run/diagnostics/</code>. Once they are downloaded to the same
+folders locally, <code>R/A-networks/3-assess.R</code> reads them (see
+the chapter README).</p>
 </div>
 <div class="section level2">
-<h2 id="running-intervention-scenarios-of-the-model">Running Intervention Scenarios of the Model<a class="anchor" aria-label="anchor" href="#running-intervention-scenarios-of-the-model"></a>
+<h2 id="example-running-intervention-scenarios">Example: running intervention scenarios<a class="anchor" aria-label="anchor" href="#example-running-intervention-scenarios"></a>
 </h2>
-<p>We will skip directly to intervention scenarios <em>workflow</em> as
-the process is very similar for calibration.</p>
-<p>At this point, we assume that you have a
-“data/intermediate/estimates/restart-hpc.rds” file and a bunch of
-scenarios defined in “data/input/scenarios.csv”</p>
-<p>Further, we will not differentiate the command line from MacOS,
-GNU/Linux and Windows anymore.We will present only the UNIX version and
-Windows user can apply the same rules as previously when required.</p>
+<p><code>R/D-interventions/workflow-intervention.R</code> runs every
+scenario in <code>data/input/scenarios.csv</code> many times, starting
+from the restart point made in the calibration chapter
+(<code>data/run/estimates/restart-hpc.rds</code>), then merges and
+processes the results.</p>
 <div class="section level3">
-<h3 id="overview-1">Overview<a class="anchor" aria-label="anchor" href="#overview-1"></a>
+<h3 id="simulation-step">Simulation step<a class="anchor" aria-label="anchor" href="#simulation-step"></a>
 </h3>
-<p>Here we will define a 3 steps workflow: 1. a renv_update step as
-before. 2. a set <code>nrep</code> replications of each scenario. 3. a
-processing step.</p>
-</div>
-<div class="section level3">
-<h3 id="defining-the-intervention_scenarios-workflow">Defining the “intervention_scenarios” <em>workflow</em><a class="anchor" aria-label="anchor" href="#defining-the-intervention_scenarios-workflow"></a>
-</h3>
-<p>The script “R/workflow_05-intervention_scenario.R” is responsible of
-the creation of this <em>workflow</em>.</p>
-<div class="section level4">
-<h4 id="setup-creation-and-renvrestore">Setup, Creation and <code>renv::restore</code><a class="anchor" aria-label="anchor" href="#setup-creation-and-renvrestore"></a>
-</h4>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Libraries --------------------------------------------------------------------</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://epimodel.github.io/slurmworkflow/" class="external-link">"slurmworkflow"</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://www.epimodel.org/" class="external-link">"EpiModelHPC"</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st">"EpiModelHIV"</span><span class="op">)</span></span>
+<p>Terminology:</p>
+<ul>
+<li>simulation: one run of an epidemic model.</li>
+<li>scenario: a set of parameter values for a simulation. See
+<code><a href="https://epimodel.github.io/EpiModel/articles/model-parameters.html" class="external-link">vignette("model-parameters", package = "EpiModel")</a></code>.</li>
+<li>batch: a set of up to <code>n_cores</code> simulations of the same
+scenario, run in parallel by one SLURM task.</li>
+</ul>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://epimodel.github.io/slurmworkflow/" class="external-link">slurmworkflow</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://www.epimodel.org/" class="external-link">EpiModelHPC</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">EpiModelHIV</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Settings ---------------------------------------------------------------------</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="st">"./R/utils-0_project_settings.R"</span><span class="op">)</span></span>
-<span><span class="va">context</span> <span class="op">&lt;-</span> <span class="st">"hpc"</span></span>
-<span><span class="va">max_cores</span> <span class="op">&lt;-</span> <span class="fl">32</span></span>
+<span><span class="va">hpc_context</span> <span class="op">&lt;-</span> <span class="cn">TRUE</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="st">"R/shared_variables.R"</span>, local <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="st">"R/D-interventions/z-context.R"</span>, local <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="st">"R/hpc_configs.R"</span>, local <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="st">"./R/utils-default_inputs.R"</span><span class="op">)</span> <span class="co"># make `path_to_est`, `param` and `init`</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="st">"./R/utils-hpc_configs.R"</span><span class="op">)</span> <span class="co"># creates `hpc_configs`</span></span>
+<span><span class="va">max_cores</span> <span class="op">&lt;-</span> <span class="fl">8</span></span>
 <span></span>
-<span><span class="co"># ------------------------------------------------------------------------------</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="st">"R/netsim_settings.R"</span>, local <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="co"># `param`, `init`, `path_to_restart`</span></span>
 <span></span>
-<span><span class="co"># Workflow creation</span></span>
-<span><span class="va">wf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://epimodel.github.io/slurmworkflow/reference/create_workflow.html" class="external-link">create_workflow</a></span><span class="op">(</span></span>
-<span>  wf_name <span class="op">=</span> <span class="st">"intervention_scenarios"</span>,</span>
-<span>  default_sbatch_opts <span class="op">=</span> <span class="va">hpc_configs</span><span class="op">$</span><span class="va">default_sbatch_opts</span></span>
+<span><span class="va">control</span> <span class="op">&lt;-</span> <span class="fu">control_msm</span><span class="op">(</span></span>
+<span>  start          <span class="op">=</span> <span class="va">restart_time</span>,</span>
+<span>  nsteps         <span class="op">=</span> <span class="va">intervention_end</span>,</span>
+<span>  initialize.FUN <span class="op">=</span> <span class="va">reinit_msm</span>,</span>
+<span>  verbose        <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Update RENV on the HPC</span></span>
+<span><span class="va">wf</span> <span class="op">&lt;-</span> <span class="fu">make_em_workflow</span><span class="op">(</span><span class="st">"interventions"</span>, override <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">scenarios_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="st">"data/input/scenarios.csv"</span><span class="op">)</span></span>
+<span><span class="va">scenarios_list</span> <span class="op">&lt;-</span> <span class="fu">EpiModel</span><span class="fu">::</span><span class="fu"><a href="https://epimodel.github.io/EpiModel/reference/create_scenario_list.html" class="external-link">create_scenario_list</a></span><span class="op">(</span><span class="va">scenarios_df</span><span class="op">)</span></span>
+<span></span>
 <span><span class="va">wf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://epimodel.github.io/slurmworkflow/reference/add_workflow_step.html" class="external-link">add_workflow_step</a></span><span class="op">(</span></span>
-<span>  wf_summary <span class="op">=</span> <span class="va">wf</span>,</span>
-<span>  step_tmpl <span class="op">=</span> <span class="fu"><a href="../reference/step_tmpl_renv_restore.html">step_tmpl_renv_restore</a></span><span class="op">(</span></span>
-<span>    git_branch <span class="op">=</span> <span class="va">current_git_branch</span>,</span>
-<span>    setup_lines <span class="op">=</span> <span class="va">hpc_configs</span><span class="op">$</span><span class="va">r_loader</span></span>
-<span>  <span class="op">)</span>,</span>
-<span>  sbatch_opts <span class="op">=</span> <span class="va">hpc_configs</span><span class="op">$</span><span class="va">renv_sbatch_opts</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p>We go quickly on this part as it is similar to the previous workflow.
-If you tested the numbered script locally, all the sourced files should
-make sense to you.</p>
-</div>
-<div class="section level4">
-<h4 id="addition-of-the-simulation-step">Addition of the <em>simulation</em> Step<a class="anchor" aria-label="anchor" href="#addition-of-the-simulation-step"></a>
-</h4>
-<p>This step assumes that you know how to run an EpiModel network
-simulation. This part is similar to the local script
-“R/40-intervention_scenarios.R”.</p>
-<p>Terminology: - simulation: One run of an epidemic model. - scenario:
-a set of parameters for a simulation. See
-<code>vignette("Working       with Model Parameters", package = "EpiModel")</code>
-- batch: a set of <code>ncores</code> simulations to be run on a single
-cluster node. They all share the same scenario.</p>
-<p>In this step we need the <code>path_to_restart</code>,
-<code>param</code>, <code>init</code> and <code>control</code> objects
-as for a the <code><a href="../reference/netsim_scenarios.html">EpiModelHPC::netsim_scenarios</a></code> call. They are
-loaded from “R/utils-default_inputs.R”.</p>
-<p>The <code>control</code> object differs from it’s usual form as the
-<code>nsims</code> and <code>ncores</code> argument will be overridden
-by the <em>workflow</em>.</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Controls</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="st">"./R/utils-targets.R"</span><span class="op">)</span></span>
-<span><span class="va">control</span> <span class="op">&lt;-</span> <span class="fu">control_msm</span><span class="op">(</span></span>
-<span>  start               <span class="op">=</span> <span class="va">restart_time</span>,</span>
-<span>  nsteps              <span class="op">=</span> <span class="va">intervention_end</span>,</span>
-<span>  nsims               <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  ncores              <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  initialize.FUN      <span class="op">=</span> <span class="va">reinit_msm</span>,</span>
-<span>  cumulative.edgelist <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  truncate.el.cuml    <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>  .tracker.list       <span class="op">=</span> <span class="va">calibration_trackers</span>,</span>
-<span>  verbose             <span class="op">=</span> <span class="cn">FALSE</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p>As in other scripts, the <code>restart_time</code> and
-<code>intervention_end</code> are loaded from the
-“R/utils-0_project_settings” script.</p>
-<p>Note that for these simulations we restart note from time zero but
-from a previous simulation. Therefore we need to specify a different
-<code>initialize.FUN</code> to handle the restarting process.
-<code>reinit_msm</code> is such a function in
-<code>EpiModelHIV-p</code>.</p>
-<p>We then load a <code>tibble</code> of 2 scenarios found in
-“data/input/scenarios.csv” and transform it into a scenario list.</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">scenarios_df</span> <span class="op">&lt;-</span> <span class="fu">readr</span><span class="fu">::</span><span class="fu">read_csv</span><span class="op">(</span><span class="st">"./data/input/scenarios.csv"</span><span class="op">)</span></span>
-<span><span class="va">scenarios_list</span> <span class="op">&lt;-</span> <span class="fu">EpiModel</span><span class="fu">::</span><span class="fu"><a href="https://epimodel.github.io/EpiModel/reference/create_scenario_list.html" class="external-link">create_scenario_list</a></span><span class="op">(</span><span class="va">scenarios_df</span><span class="op">)</span></span></code></pre></div>
-<p>To account for the variability in our models, we want each scenario
-to be run 120 times. (usually 500 to 1000 times for the final
-paper).</p>
-<p>As before we use <code>add_workflow_step</code> to create the step.
-This time we use the <em>step template</em>
-<code><a href="../reference/step_tmpl_netsim_scenarios.html">EpiModelHPC::step_tmpl_netsim_scenarios</a></code>. It takes as
-arguments:</p>
-<ul>
-<li>
-<code>path_to_est</code>, <code>param</code>, <code>init</code>, and
-<code>control</code>. <code>path_to_est</code> is the where the workflow
-should look for the <code>est</code> file on the HPC. Here we will pass
-<code>path_to_restart</code> which is
-“data/intermediate/estimates/restart-hpc.rds”</li>
-<li>
-<code>scenarios_list</code>: the list of scenarios produced by
-<code>create_scenario_list</code>
-</li>
-<li>
-<code>output_dir</code>: a path to a directory to store the
-results</li>
-<li>
-<code>libraries</code>: a character vector of the libraries required
-to run the model. here we only need “EpiModelHIV”</li>
-<li>
-<code>save_pattern</code>: what part of the <code>sim</code> object
-should be kept. Simple will keep only <code>epi</code>,
-<code>param</code> and <code>control</code>. Other values can be used in
-other use cases.</li>
-<li>
-<code>n_rep</code>: the number of time each scenarios must be
-simulated. (here 120)</li>
-<li>
-<code>n_cores</code>: the number of cores to be used on each
-node</li>
-<li>
-<code>max_array_size</code> is detailed below but a value of 500 is
-usually fine.</li>
-<li>
-<code>setup_lines</code>: same as before.</li>
-</ul>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">wf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://epimodel.github.io/slurmworkflow/reference/add_workflow_step.html" class="external-link">add_workflow_step</a></span><span class="op">(</span></span>
 <span>  wf_summary <span class="op">=</span> <span class="va">wf</span>,</span>
 <span>  step_tmpl <span class="op">=</span> <span class="fu"><a href="../reference/step_tmpl_netsim_scenarios.html">step_tmpl_netsim_scenarios</a></span><span class="op">(</span></span>
 <span>    <span class="va">path_to_restart</span>, <span class="va">param</span>, <span class="va">init</span>, <span class="va">control</span>,</span>
 <span>    scenarios_list <span class="op">=</span> <span class="va">scenarios_list</span>,</span>
-<span>    output_dir <span class="op">=</span> <span class="st">"./data/intermediate/scenarios"</span>,</span>
-<span>    libraries <span class="op">=</span> <span class="st">"EpiModelHIV"</span>,</span>
-<span>    save_pattern <span class="op">=</span> <span class="st">"simple"</span>,</span>
-<span>    n_rep <span class="op">=</span> <span class="fl">120</span>,</span>
+<span>    output_dir <span class="op">=</span> <span class="va">scenarios_dir</span>,</span>
+<span>    n_rep <span class="op">=</span> <span class="fl">32</span>,</span>
 <span>    n_cores <span class="op">=</span> <span class="va">max_cores</span>,</span>
-<span>    max_array_size <span class="op">=</span> <span class="fl">500</span>,</span>
-<span>    setup_lines <span class="op">=</span> <span class="va">hpc_configs</span><span class="op">$</span><span class="va">r_loader</span></span>
+<span>    max_array_size <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>    setup_lines <span class="op">=</span> <span class="va">hpc_node_setup</span></span>
 <span>  <span class="op">)</span>,</span>
 <span>  sbatch_opts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    <span class="st">"mail-type"</span> <span class="op">=</span> <span class="st">"FAIL,TIME_LIMIT"</span>,</span>
 <span>    <span class="st">"cpus-per-task"</span> <span class="op">=</span> <span class="va">max_cores</span>,</span>
 <span>    <span class="st">"time"</span> <span class="op">=</span> <span class="st">"04:00:00"</span>,</span>
-<span>    <span class="st">"mem"</span> <span class="op">=</span> <span class="fl">0</span></span>
+<span>    <span class="st">"mem-per-cpu"</span> <span class="op">=</span> <span class="st">"5G"</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>This step will run the simulations and save the result to
-<code>output_dir</code> using the following format:
-<code>paste0("sim__", scenario[["id"]], "__", batch_num, ".rds")</code>.</p>
-<p>As we are running the simulations on 32 core machines, each scenario
-will be run over 4 batches, with the last one containing only 24
-simulations to get to the desired 120.
-<code>(3 * 32 + 24 == 120)</code>.</p>
-<p><em>NOTE</em>: The <code>max_array_size</code> argument allow us to
-constrain how many runs could be submitted as once. On RSPH HPC one is
-limited to around 1000 job submission at a time. Trying to submit more
-will result on SLURM rejecting all the jobs. To prevent this,
-<code>slurmworkflow</code> will split the job into parts that will be
-submitted automatically one after the other. If the length of
-<code>scenarios_list</code> was 3 000, <code>max_array_size = 500</code>
-would split it in 6 parts were each part would not be submitted before
-the previous one is over.</p>
+<p>These simulations restart from a previous simulation rather than from
+time 0, so <code>control</code> sets <code>start = restart_time</code>
+and <code>initialize.FUN = reinit_msm</code>, a function from
+EpiModelHIV-p that handles the restart.</p>
+<p><code><a href="../reference/step_tmpl_netsim_scenarios.html">step_tmpl_netsim_scenarios()</a></code> takes the same arguments as
+<code><a href="../reference/netsim_scenarios.html">netsim_scenarios()</a></code>, which runs the same thing locally:</p>
+<ul>
+<li>
+<code>path_to_restart</code>, <code>param</code>, <code>init</code>
+and <code>control</code>: the inputs to <code><a href="https://epimodel.github.io/EpiModel/reference/netsim.html" class="external-link">netsim()</a></code>. The first
+one is the path to the restart point <strong>on the HPC</strong>, which
+<code><a href="https://epimodel.github.io/EpiModel/reference/netsim.html" class="external-link">netsim()</a></code> uses as its <code>x</code> argument. The
+<code>nsims</code> and <code>ncores</code> values in
+<code>control</code> are replaced by the step.</li>
+<li>
+<code>scenarios_list</code>: the scenarios made by
+<code><a href="https://epimodel.github.io/EpiModel/reference/create_scenario_list.html" class="external-link">EpiModel::create_scenario_list()</a></code>.</li>
+<li>
+<code>output_dir</code>: where to save the simulations, here
+<code>data/run/scenarios/</code>.</li>
+<li>
+<code>n_rep</code>: how many times to run each scenario. 32 is
+enough to test the workflow; final analyses use many more.</li>
+<li>
+<code>n_cores</code>: how many simulations each task runs in
+parallel, on as many CPUs.</li>
+<li>
+<code>max_array_size</code>: the most tasks submitted at once (see
+below).</li>
+<li>
+<code>setup_lines</code>: the bash lines that load R.</li>
+</ul>
+<p>Each scenario is run in <code>ceiling(n_rep / n_cores)</code>
+batches, and each batch is one task of a SLURM array. With
+<code>n_rep = 32</code> and <code>n_cores = 8</code>, each scenario
+takes 4 batches, so 10 scenarios make an array of 40 tasks. When
+<code>n_rep</code> is not a multiple of <code>n_cores</code>, the last
+batch of each scenario runs the remainder. Each batch is saved as
+<code>sim__&lt;scenario id&gt;__&lt;batch number&gt;.rds</code> in
+<code>output_dir</code>. Files from an earlier run are not deleted, so
+empty <code>data/run/scenarios/</code> on the HPC before running new
+scenarios.</p>
+<p>RSPH sets SLURM’s <code>MaxArraySize</code> to 1001, so one array
+holds at most 1001 tasks (indices 0 to 1000), and we use
+<code>max_array_size = 1000</code>. When a step has more tasks than
+<code>max_array_size</code>, slurmworkflow splits it into parts of at
+most that size and submits each part when the previous one is over. With
+3,000 tasks, <code>max_array_size = 1000</code> makes 3 parts. Older
+projects use 500, which works but can double the number of parts.</p>
+<p>Each task asks for 8 CPUs for 4 hours, with 5 GB of memory per CPU.
+RSPH does not enforce memory requests, so ask for what the simulations
+really use: a task that uses more than it asked for is not stopped and
+slows down the other jobs on its node. Tasks of 8 cores fit on partly
+busy nodes and usually start sooner than whole-node tasks. The task
+mails us if it fails or runs out of time.</p>
+<p><code>control_msm()</code> keeps the final state of the model in each
+saved simulation (<code>save.run = TRUE</code>). On a 100,000-node model
+this state is most of the file. When the simulations are only read
+through merged tibbles, as here, <code>save.run = FALSE</code> makes the
+files much smaller. Keep the default when a restart point will be picked
+from the files, as in the calibration chapter.</p>
 </div>
-<div class="section level4">
-<h4 id="addition-of-the-processing-step">Addition of the <em>processing</em> Step<a class="anchor" aria-label="anchor" href="#addition-of-the-processing-step"></a>
-</h4>
-<p>Now that all the batches have been run we will process them and
-create a small summary <code>tibble</code> to be downloaded and
-evaluated locally.</p>
-<p>We return to <code>step_tmpl_do_call_script</code> for this
-steps.</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Process calibrations</span></span>
-<span><span class="co">#</span></span>
-<span><span class="co"># produce a data frame with the calibration targets for each scenario</span></span>
+<div class="section level3">
+<h3 id="merging-and-processing-steps">Merging and processing steps<a class="anchor" aria-label="anchor" href="#merging-and-processing-steps"></a>
+</h3>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">wf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://epimodel.github.io/slurmworkflow/reference/add_workflow_step.html" class="external-link">add_workflow_step</a></span><span class="op">(</span></span>
+<span>  wf_summary <span class="op">=</span> <span class="va">wf</span>,</span>
+<span>  step_tmpl <span class="op">=</span> <span class="fu"><a href="../reference/step_tmpl_merge_netsim_scenarios_tibble.html">step_tmpl_merge_netsim_scenarios_tibble</a></span><span class="op">(</span></span>
+<span>    sim_dir <span class="op">=</span> <span class="va">scenarios_dir</span>,</span>
+<span>    output_dir <span class="op">=</span> <span class="fu">fs</span><span class="fu">::</span><span class="fu"><a href="https://fs.r-lib.org/reference/path.html" class="external-link">path</a></span><span class="op">(</span><span class="va">scenarios_dir</span>, <span class="st">"merged_tibbles"</span><span class="op">)</span>,</span>
+<span>    steps_to_keep <span class="op">=</span> <span class="va">intervention_end</span> <span class="op">-</span> <span class="va">intervention_start</span>,</span>
+<span>    cols <span class="op">=</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyselect.r-lib.org/reference/everything.html" class="external-link">everything</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>    n_cores <span class="op">=</span> <span class="va">max_cores</span>,</span>
+<span>    setup_lines <span class="op">=</span> <span class="va">hpc_node_setup</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  sbatch_opts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    <span class="st">"cpus-per-task"</span> <span class="op">=</span> <span class="va">max_cores</span>,</span>
+<span>    <span class="st">"time"</span> <span class="op">=</span> <span class="st">"02:00:00"</span>,</span>
+<span>    <span class="st">"mem-per-cpu"</span> <span class="op">=</span> <span class="st">"5G"</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
 <span><span class="va">wf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://epimodel.github.io/slurmworkflow/reference/add_workflow_step.html" class="external-link">add_workflow_step</a></span><span class="op">(</span></span>
 <span>  wf_summary <span class="op">=</span> <span class="va">wf</span>,</span>
 <span>  step_tmpl <span class="op">=</span> <span class="fu"><a href="https://epimodel.github.io/slurmworkflow/reference/step_tmpl_do_call_script.html" class="external-link">step_tmpl_do_call_script</a></span><span class="op">(</span></span>
-<span>    r_script <span class="op">=</span> <span class="st">"./R/41-intervention_scenarios_process.R"</span>,</span>
-<span>    args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>      context <span class="op">=</span> <span class="st">"hpc"</span>,</span>
-<span>      ncores <span class="op">=</span> <span class="fl">15</span></span>
-<span>    <span class="op">)</span>,</span>
-<span>    setup_lines <span class="op">=</span> <span class="va">hpc_configs</span><span class="op">$</span><span class="va">r_loader</span></span>
+<span>    r_script <span class="op">=</span> <span class="st">"R/D-interventions/3-process_tables.R"</span>,</span>
+<span>    args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>hpc_context <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    setup_lines <span class="op">=</span> <span class="va">hpc_node_setup</span></span>
 <span>  <span class="op">)</span>,</span>
 <span>  sbatch_opts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    <span class="st">"cpus-per-task"</span> <span class="op">=</span> <span class="va">max_cores</span>,</span>
 <span>    <span class="st">"time"</span> <span class="op">=</span> <span class="st">"04:00:00"</span>,</span>
-<span>    <span class="st">"mem-per-cpu"</span> <span class="op">=</span> <span class="st">"4G"</span>,</span>
-<span>    <span class="st">"mail-type"</span> <span class="op">=</span> <span class="st">"END"</span></span>
+<span>    <span class="st">"mem-per-cpu"</span> <span class="op">=</span> <span class="st">"5G"</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>The arguments we pass to the script are <code>ncores</code>, how many
-cores to use as this step will process the files in parallel using the
-<a href="https://future.apply.futureverse.org/" class="external-link"><code>future.apply</code>
-package</a>, and <code>context = "hpc"</code> as before.</p>
-<p>This script will save two file: 1.
-“data/intermediate/scenarios/assessments_raws.rds” 2.
-“data/intermediate/scenarios/assessments.rds”</p>
-<p>See the script itself to see what it does.</p>
+<p><code><a href="../reference/step_tmpl_merge_netsim_scenarios_tibble.html">step_tmpl_merge_netsim_scenarios_tibble()</a></code> turns all the
+batches of a scenario into a single tibble, saved as
+<code>df__&lt;scenario id&gt;.rds</code> in <code>output_dir</code>. It
+keeps only the last <code>steps_to_keep</code> time steps and the
+columns selected by <code>cols</code> (<code>batch_number</code>,
+<code>sim</code> and <code>time</code> are always kept). These files are
+much smaller than the raw simulations and are what we download.</p>
+<p>The processing scripts then run on the HPC with
+<code><a href="https://epimodel.github.io/slurmworkflow/reference/step_tmpl_do_call_script.html" class="external-link">step_tmpl_do_call_script()</a></code>, as in the networks workflow.
+The Template adds a last step for the plots, with
+<code>"mail-type" = "END"</code> so that we get a mail when the workflow
+is done.</p>
 </div>
 </div>
-<div class="section level3">
-<h3 id="using-the-intervention_scenarios-workflow-on-the-rsph-hpc">Using the “intervention_scenarios” <em>workflow</em> on the RSPH
-HPC<a class="anchor" aria-label="anchor" href="#using-the-intervention_scenarios-workflow-on-the-rsph-hpc"></a>
-</h3>
-<p>We send the <em>workflow</em> as before with:</p>
-<pre><code># bash - local
-scp -r workflows/intervention_scenarios &lt;user&gt;@clogin01.sph.emory.edu:projects/EpiModelHIV-Template/workflows/</code></pre>
-<p>run it from our project directory on the HPC with:</p>
-<pre><code><span><span class="co"># bash - hpc</span></span>
-<span><span class="va">.</span><span class="op">/</span><span class="va">workflows</span><span class="op">/</span><span class="va">intervention_scenarios</span><span class="op">/</span><span class="va">start_workflow.sh</span></span></code></pre>
-<p>and finally we download the results for evaluation:</p>
-<pre><code># bash - local
-scp -r &lt;user&gt;@clogin01.sph.emory.edu:projects/EpiModelHIV-Template/data/intermediate/scenarios/assessments_raws.rds data/intermediate/calibration/
-scp -r &lt;user&gt;@clogin01.sph.emory.edu:projects/EpiModelHIV-Template/data/intermediate/scenarios/assessments_raws.rds data/intermediate/scenarios/</code></pre>
-<p>We can now use these files as we please locally.</p>
+<div class="section level2">
+<h2 id="running-a-workflow-on-the-hpc">Running a workflow on the HPC<a class="anchor" aria-label="anchor" href="#running-a-workflow-on-the-hpc"></a>
+</h2>
+<p>The wiki page <a href="https://github.com/EpiModel/EpiModeling/wiki/Running-Project-Workflows-on-the-HPC" class="external-link">Running
+Project Workflows on the HPC</a> gives the commands. These are the ideas
+behind them.</p>
+<p><strong>Two channels.</strong> The code and
+<code>renv.lock.hpc</code> reach the HPC through git: commit and push
+them, and the restore step pulls them. The workflow folder is not
+tracked by git, so copy it with <code>scp -r</code> into the
+<code>workflows/</code> folder of the project on the HPC (for example
+<code>/projects/epimodel/&lt;netid&gt;/&lt;project&gt;/workflows/</code>).
+Files in <code>data/run/</code> that a run reads but that were made
+locally, such as a restart point, must be copied with <code>scp</code>
+as well. A file that is neither pushed nor copied does not exist on the
+HPC.</p>
+<p><strong>Start from the project folder.</strong> On the HPC, go to the
+root of the project (where <code>renv.lock.hpc</code> is) and run
+<code>./workflows/&lt;name&gt;/start_workflow.sh</code>. The script must
+be executed, not sourced. Every step runs in the folder the workflow was
+started from, which is why the relative paths such as
+<code>data/run/</code> work. <code>start_workflow.sh -s &lt;n&gt;</code>
+starts the workflow at step <code>n</code>, and
+<code>start_workflow.sh -h</code> lists the other options.</p>
+<p><strong>Follow the jobs.</strong> SLURM mails
+<code>HPC_MAIL_USER</code> when a step fails and when the last step
+ends. <code>squeue -u $USER</code> lists your pending and running jobs;
+the steps of a workflow are named
+<code>&lt;workflow name&gt;_step&lt;n&gt;</code>. The output of each
+step, and of each array task, goes to a file in
+<code>workflows/&lt;name&gt;/log/</code> on the HPC. <code>sacct</code>
+and <code>seff</code> do not work on RSPH because SLURM accounting is
+turned off. To stop a workflow, cancel its jobs by name
+(<code>scancel -u $USER --name=&lt;workflow name&gt;_step&lt;n&gt;</code>)
+rather than all of your jobs at once.</p>
+<p><strong>Download the results.</strong> The outputs are in the
+<code>data/run/</code> folder of the project on the HPC. Copy what you
+need with <code>scp</code> to the same path in your local project,
+preferably merged tibbles and summaries rather than raw simulation
+files.</p>
 </div>
+<div class="section level2">
+<h2 id="calibration-with-swfcalib">Calibration with <code>swfcalib</code><a class="anchor" aria-label="anchor" href="#calibration-with-swfcalib"></a>
+</h2>
+<p>Automated calibration uses the same building blocks.
+<code>R/C-calibration/workflow-swfcalib.R</code> in the Template chains
+<code><a href="https://epimodel.github.io/swfcalib/reference/calibration_step1.html" class="external-link">swfcalib::calibration_step1()</a></code>,
+<code>calibration_step2()</code> and <code>calibration_step3()</code>
+with <code><a href="https://epimodel.github.io/slurmworkflow/reference/step_tmpl_do_call.html" class="external-link">step_tmpl_do_call()</a></code> and <code><a href="https://epimodel.github.io/slurmworkflow/reference/step_tmpl_map.html" class="external-link">step_tmpl_map()</a></code>,
+and then runs the calibrated model with
+<code><a href="../reference/step_tmpl_netsim_swfcalib_output.html">step_tmpl_netsim_swfcalib_output()</a></code>. See the <a href="https://epimodel.github.io/swfcalib/articles/swfcalib.html" class="external-link">swfcalib
+vignette</a> and <code>R/C-calibration/README.md</code> in the
+Template.</p>
+</div>
+<div class="section level2">
+<h2 id="other-helpers">Other helpers<a class="anchor" aria-label="anchor" href="#other-helpers"></a>
+</h2>
+<p><code><a href="../reference/doctor_watch_steps.html">add_doctor_register_step()</a></code> and
+<code><a href="../reference/doctor_watch_steps.html">add_doctor_teardown_step()</a></code> connect a workflow to the deploy
+doctor, a separate SLURM job that watches for stalled tasks and requeues
+them. See their help pages and <code><a href="../reference/hpc_doctor_script.html">hpc_doctor_script()</a></code>.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
