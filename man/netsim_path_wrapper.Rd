@@ -45,7 +45,8 @@ current \code{future} plan).
 If \code{path_to_x} is a restart pool directory of size \code{N} (see
 \code{make_restart_pool}), simulation \code{k} starts from pool element
 \code{(k - 1) \%\% N + 1}: the pool is reused in order when there are more
-simulations than pool elements. If \code{path_to_x} is a file, every simulation
+simulations than pool elements; the path of the restart point used is saved
+in \verb{$restart_point}. If \code{path_to_x} is a file, every simulation
 starts from it (from its first simulation if it holds several).
 
 \code{control$nsims}, \code{control$ncores} and \code{control$future.use.plan} are

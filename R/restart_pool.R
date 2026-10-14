@@ -257,7 +257,8 @@ validate_restart_pool <- function(path) {
 #' If `path_to_x` is a restart pool directory of size `N` (see
 #' `make_restart_pool`), simulation `k` starts from pool element
 #' `(k - 1) %% N + 1`: the pool is reused in order when there are more
-#' simulations than pool elements. If `path_to_x` is a file, every simulation
+#' simulations than pool elements; the path of the restart point used is saved
+#' in `$restart_point`. If `path_to_x` is a file, every simulation
 #' starts from it (from its first simulation if it holds several).
 #'
 #' `control$nsims`, `control$ncores` and `control$future.use.plan` are
@@ -280,7 +281,6 @@ validate_restart_pool <- function(path) {
 #'
 #' @export
 netsim_path_wrapper <- function(path_to_x, param, init, control, sim_nums) {
-  # TODO: somewhere in here, save the pool number
   control$nsims <- 1
   control$ncores <- 1
   control$future.use.plan <- FALSE

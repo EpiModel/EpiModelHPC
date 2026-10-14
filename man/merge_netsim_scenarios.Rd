@@ -39,12 +39,15 @@ the original \code{x} and \code{y} elements.}
 
 \item{keep.other}{If \code{TRUE}, keep the other simulation elements (as set
 by the \code{save.other} parameter in \code{control.net}) from the
-original \code{x} and \code{y} elements.}
+original \code{x} and \code{y} elements. Elements with their own \verb{keep.*}
+argument (e.g. \code{run}) follow that argument instead.}
 
 \item{param.error}{If \code{TRUE}, if \code{x} and \code{y} have different
 params (in \code{\link[EpiModel:param.net]{param.net()}}) or controls (passed in
 \code{\link[EpiModel:control.net]{control.net()}}) an error will prevent the merge. Use
-\code{FALSE} to override that check.}
+\code{FALSE} to override that check. The controls for how the runs were
+executed rather than what they simulated (\code{nsims}, \code{ncores},
+\code{verbose}, \code{verbose.int}, and the checkpoint settings) may differ.}
 
 \item{keep.diss.stats}{If \code{TRUE}, keep \code{diss.stats} from the
 original \code{x} and \code{y} objects.}
@@ -53,18 +56,16 @@ original \code{x} and \code{y} objects.}
 
 \item{keep.run}{If \code{TRUE}, keep the \code{run} sublists (as set by the
 \code{save.run} parameter in \code{control.net}) from the original \code{x} and
-\code{y} elements. These are required to use the merged object as a
-restart point in \code{\link[EpiModel:netsim]{netsim()}}.}
+\code{y} elements. These are required to restart from a simulation of the
+merged object in \code{\link[EpiModel:netsim]{netsim()}}, selected with \code{\link[EpiModel:get_sims]{get_sims()}}.}
 
 \item{keep.cumulative.edgelist}{If \code{TRUE}, keep the cumulative edgelists
 (as set by the \code{save.cumulative.edgelist} parameter in
 \code{control.net}) from the original \code{x} and \code{y} elements. \code{FALSE} by
 default, as these grow with the length of the simulation.}
 
-\item{keep.attr.history}{If \code{TRUE}, keep the recorded histories (as set by
-\code{\link[EpiModel:record_attr_history]{record_attr_history()}} and \code{\link[EpiModel:record_raw_object]{record_raw_object()}}) from the original
-\code{x} and \code{y} elements. This governs both \code{attr.history} and
-\code{raw.records}.}
+\item{keep.attr.history}{If \code{TRUE}, keep the attribute histories (as set by
+\code{\link[EpiModel:record_attr_history]{record_attr_history()}}) from the original \code{x} and \code{y} elements.}
 }
 \description{
 Create a Single Sim File per Scenarios Using the Files From
