@@ -280,6 +280,7 @@ validate_restart_pool <- function(path) {
 #'
 #' @export
 netsim_path_wrapper <- function(path_to_x, param, init, control, sim_nums) {
+  # TODO: somewhere in here, save the pool number
   control$nsims <- 1
   control$ncores <- 1
   control$future.use.plan <- FALSE
@@ -308,8 +309,13 @@ netsim_path_wrapper <- function(path_to_x, param, init, control, sim_nums) {
           paste0(checkpoint_dir, "/sim_", sim_nums[i])
       }
       sim <- EpiModel::netsim(readRDS(orig_paths[i]), param, init, control)
-      # `merge.netsim` requires identical controls
-      sim$control[[".checkpoint.dir"]] <- checkpoint_dir
+
+      # If `sim` is a `netsim` - raw.output = FALSE
+      if (inherits(sim, "netsim")) {
+        # `merge.netsim` requires identical controls
+        sim$control[[".checkpoint.dir"]] <- checkpoint_dir
+        sim$restart_point <- list(sim1 = orig_paths[i])
+      }
       sim
     },
     future.seed = TRUE
