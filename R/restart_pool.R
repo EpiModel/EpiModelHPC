@@ -4,18 +4,62 @@ get_restart_pool_files <- function(pool_dir) {
   pool[order(as.integer(sub("\\.rds$", "", pool)))]
 }
 
-# Save each element of `sims` as the next numbered file of the restart pool at
-# `pool_dir`. The directory is created if needed.
-add_to_restart_pool <- function(sims, pool_dir) {
-  if (!fs::dir_exists(pool_dir)) {
-    message("Creating a new restart pool at: \n\"", pool_dir, "\"")
-    fs::dir_create(pool_dir, recurse = TRUE)
+# The `pool_index.csv` of the restart pool at `pool_dir`. A directory is a
+# restart pool if it holds one, with a `pool_num` column numbering the
+# elements `1` to `N` and an `epimodel_version` column
+read_restart_pool_index <- function(pool_dir) {
+  index_path <- fs::path(pool_dir, "pool_index.csv")
+  if (!fs::file_exists(index_path)) {
+    stop(
+      "\"", pool_dir, "\" is not a restart pool: it has no `pool_index.csv`. ",
+      "Make restart pools with `make_restart_pool`"
+    )
   }
-  pool_last <- length(get_restart_pool_files(pool_dir))
-  for (i in seq_along(sims)) {
-    saveRDS(sims[[i]], fs::path(pool_dir, paste0(pool_last + i, ".rds")))
+  pool_index <- utils::read.csv(index_path)
+  missing_cols <- setdiff(c("pool_num", "epimodel_version"), names(pool_index))
+  if (length(missing_cols) > 0) {
+    stop(
+      "\"", index_path, "\" has no ",
+      paste0("`", missing_cols, "`", collapse = " or "),
+      " column. Remake the pool with `make_restart_pool`"
+    )
   }
-  invisible(pool_last + seq_along(sims))
+  if (nrow(pool_index) == 0 ||
+        !identical(pool_index$pool_num, seq_len(nrow(pool_index)))) {
+    stop(
+      "The `pool_num` column of \"", index_path, "\" must number the pool ",
+      "elements `1` to `N`"
+    )
+  }
+  pool_index$epimodel_version <- as.character(pool_index$epimodel_version)
+  pool_index
+}
+
+# Stop unless `version`, the EpiModel version a restart point was made with,
+# has the major.minor version of the installed EpiModel: `netsim` does not
+# restart from other ones. `what` names the restart point in the error
+check_restart_point_version <- function(version, what) {
+  installed <- utils::packageVersion("EpiModel")
+  if (is.null(version)) version <- NA_character_
+  version <- numeric_version(as.character(version), strict = FALSE)
+  if (is.na(version) || format(version[, 1:2]) != format(installed[, 1:2])) {
+    stop(
+      what, " was made with EpiModel ",
+      if (is.na(version)) "< 2.7 (no version recorded)" else paste0("v", version),
+      " but EpiModel v", installed, " is installed: `netsim` cannot restart ",
+      "from it. Rebuild it with the current version"
+    )
+  }
+  invisible(TRUE)
+}
+
+# The hidden sibling directory `make_restart_pool` writes the pool at
+# `pool_dir` in, before renaming it to `pool_dir`
+get_partial_pool_dir <- function(pool_dir) {
+  fs::path(
+    fs::path_dir(pool_dir),
+    paste0(".", fs::path_file(pool_dir), ".partial")
+  )
 }
 
 #' Make a Restart Pool From Simulations Run With Scenarios
@@ -28,12 +72,19 @@ add_to_restart_pool <- function(sims, pool_dir) {
 #'
 #' Pool element `i` is made from row `i` of `keep_sims`, with
 #' `EpiModel::make_restart_point` (keeping only the last time step). Each batch
-#' file is read once. The pool directory also receives a `pool_index.csv` file
+#' file is read once, and each element is written to the pool as soon as it is
+#' made, so only one batch file's elements are in memory at a time.
+#' The pool directory also receives a `pool_index.csv` file
 #' with one row per pool element: `pool_num`, `scenario_name`, `batch_number`,
-#' `sim_number` and `file_path` (the batch file it was made from).
+#' `sim_number`, `file_path` (the batch file it was made from) and
+#' `epimodel_version` (the EpiModel version recorded in the element, which
+#' `netsim` requires to have the installed major.minor version to restart from
+#' it). A directory is used as a restart pool only if it holds this file.
 #'
-#' If an error occurs while writing the pool, the partial pool directory is
-#' removed.
+#' The pool is written in a hidden `.<pool name>.partial` directory next to
+#' `pool_dir`, renamed to `pool_dir` once complete: `pool_dir` never holds a
+#' partial pool, even if R is killed. The partial directory is removed if an
+#' error occurs, or at the next call if R was killed.
 #'
 #' @param pool_dir Path to the restart pool directory to create. It must not
 #'   exist.
@@ -96,8 +147,22 @@ make_restart_pool <- function(
     )
   }
 
-  restart_points <- vector("list", nrow(keep_sims))
+  partial_dir <- get_partial_pool_dir(pool_dir)
+  if (fs::dir_exists(partial_dir)) {
+    message(
+      "Removing the partial restart pool left by an interrupted run at: \n\"",
+      partial_dir, "\""
+    )
+    fs::dir_delete(partial_dir)
+  }
+  on.exit(
+    if (fs::dir_exists(partial_dir)) fs::dir_delete(partial_dir),
+    add = TRUE
+  )
+  fs::dir_create(partial_dir)
+
   file_paths <- character(nrow(keep_sims))
+  epimodel_versions <- character(nrow(keep_sims))
   for (batch in unique(keep_sims$batch_number)) {
     rows <- which(keep_sims$batch_number == batch)
     batch_path <- b_infos$file_path[b_infos$batch_number == batch]
@@ -114,54 +179,65 @@ make_restart_pool <- function(
       )
     }
     for (i in rows) {
-      restart_points[[i]] <- EpiModel::make_restart_point(
+      restart_point <- EpiModel::make_restart_point(
         sim_obj,
         time_attrs = time_attrs,
         sim_num = keep_sims$sim_number[i]
       )
+      x_ver <- attr(restart_point, "version")
+      epimodel_versions[i] <-
+        if (is.null(x_ver)) NA_character_ else as.character(x_ver)
+      saveRDS(restart_point, fs::path(partial_dir, paste0(i, ".rds")))
     }
     file_paths[rows] <- batch_path
     rm(sim_obj)
   }
 
-  pool_written <- FALSE
-  on.exit(
-    if (!pool_written && fs::dir_exists(pool_dir)) fs::dir_delete(pool_dir),
-    add = TRUE
-  )
-  add_to_restart_pool(restart_points, pool_dir)
   pool_index <- data.frame(
     pool_num = seq_len(nrow(keep_sims)),
     scenario_name = scenario_name,
     batch_number = keep_sims$batch_number,
     sim_number = keep_sims$sim_number,
-    file_path = as.character(file_paths)
+    file_path = as.character(file_paths),
+    epimodel_version = epimodel_versions
   )
   utils::write.csv(
     pool_index,
-    fs::path(pool_dir, "pool_index.csv"),
+    fs::path(partial_dir, "pool_index.csv"),
     row.names = FALSE
   )
-  pool_written <- TRUE
+  # a single `rename(2)`: `partial_dir` is on the same filesystem
+  fs::file_move(partial_dir, pool_dir)
 
   invisible(pool_index)
 }
 
 #' Validate a Restart Pool
 #'
-#' Checks that a restart pool (a directory made by `make_restart_pool`) can be
-#' used by `netsim_path_wrapper`. This function is not called by the
-#' simulation functions: call it after making a pool, or before starting a
-#' long run from it.
+#' Checks that a restart pool (a directory made by `make_restart_pool`, holding
+#' a `pool_index.csv`) can be used by `netsim_path_wrapper`. This function is
+#' not called by the simulation functions: call it after making a pool, or
+#' before starting a long run from it.
 #'
 #' Errors are raised when:
-#' - the pool files are not numbered `1.rds` to `N.rds`;
+#' - `path` is a directory without a `pool_index.csv`, or its `pool_index.csv`
+#'   has no `pool_num` or `epimodel_version` column, or does not number the
+#'   elements `1` to `N`;
+#' - an element listed in `pool_index.csv` has no `<pool_num>.rds` file;
 #' - an element is not a single simulation `netsim` restart point with the
-#'   elements needed to restart (`param`, `nwparam`, `epi`, `run`,
-#'   `coef.form` and `num.nw`).
+#'   elements needed to restart (`param`, `control`, `nwparam`, `epi`, `run`,
+#'   `coef.form` and `num.nw`);
+#' - an element was made with another major.minor version of EpiModel than
+#'   the one installed, according to `pool_index.csv` (checked by
+#'   `netsim_path_wrapper` before running) or to the element itself (checked
+#'   by `netsim`). Run this function with the EpiModel version the simulations
+#'   will use (e.g. in the HPC `renv`);
+#' - the elements do not all hold the same number of time steps: `netsim`
+#'   requires `control$start` to be that number + 1 for each of them.
 #'
 #' Warnings are raised when:
-#' - `pool_index.csv` does not have one row per element;
+#' - the pool directory holds `<n>.rds` files not listed in `pool_index.csv`,
+#'   which are never used;
 #' - `path` is a single file holding several simulations:
 #'   `netsim_path_wrapper` restarts every replicate from its first simulation.
 #'
@@ -169,8 +245,9 @@ make_restart_pool <- function(
 #'   file.
 #'
 #' @return A `data.frame` with one row per pool element (invisibly):
-#'   `pool_num`, `file_path`, `n_runs` and `nsteps` (the time step the
-#'   element was made at).
+#'   `pool_num`, `file_path`, `n_runs`, `nsteps` (the number of time steps
+#'   kept in the element, `1` for a pool made by [make_restart_pool()]) and
+#'   `epimodel_version`.
 #'
 #' @seealso [make_restart_pool()], [netsim_path_wrapper()]
 #'
@@ -178,24 +255,40 @@ make_restart_pool <- function(
 validate_restart_pool <- function(path) {
   is_pool_dir <- fs::dir_exists(path)
   if (is_pool_dir) {
-    pool <- get_restart_pool_files(path)
-    if (length(pool) == 0) {
-      stop("The restart pool at \"", path, "\" contains no `<n>.rds` file")
-    }
-    if (!identical(pool, sprintf("%d.rds", seq_along(pool)))) {
-      stop(
-        "The restart pool files must be named `1.rds` to `", length(pool),
-        ".rds`. Found: ", paste(pool, collapse = ", ")
+    pool_index <- read_restart_pool_index(path)
+    # The check `netsim_path_wrapper` makes before running
+    for (n in pool_index$pool_num) {
+      check_restart_point_version(
+        pool_index$epimodel_version[n],
+        paste0("Element ", n, " of the restart pool at \"", path, "\"")
       )
     }
+    pool <- paste0(pool_index$pool_num, ".rds")
     file_paths <- fs::path(path, pool)
+    missing_paths <- file_paths[!fs::file_exists(file_paths)]
+    if (length(missing_paths) > 0) {
+      stop(
+        "Missing restart pool element(s): ",
+        paste0("\"", missing_paths, "\"", collapse = ", ")
+      )
+    }
+    unlisted <- setdiff(get_restart_pool_files(path), pool)
+    if (length(unlisted) > 0) {
+      warning(
+        "\"", path, "\" holds element files not listed in its ",
+        "`pool_index.csv`, which are never used: ",
+        paste(unlisted, collapse = ", ")
+      )
+    }
   } else if (fs::file_exists(path)) {
     file_paths <- path
   } else {
     stop("`path` points to neither a file nor a directory: \"", path, "\"")
   }
 
-  required_elts <- c("param", "nwparam", "epi", "run", "coef.form", "num.nw")
+  required_elts <- c(
+    "param", "control", "nwparam", "epi", "run", "coef.form", "num.nw"
+  )
   infos <- vector("list", length(file_paths))
   for (i in seq_along(file_paths)) {
     x <- readRDS(file_paths[i])
@@ -209,6 +302,11 @@ validate_restart_pool <- function(path) {
         paste(missing_elts, collapse = ", ")
       )
     }
+    # The check `netsim` makes when it starts
+    check_restart_point_version(
+      attr(x, "version"),
+      paste0("\"", file_paths[i], "\"")
+    )
     n_runs <- length(x$run)
     if (is_pool_dir && n_runs != 1) {
       stop(
@@ -221,23 +319,26 @@ validate_restart_pool <- function(path) {
       pool_num = i,
       file_path = as.character(file_paths[i]),
       n_runs = n_runs,
-      nsteps = x$control$nsteps
+      nsteps = x$control$nsteps,
+      epimodel_version = as.character(attr(x, "version"))
     )
   }
   infos <- do.call(rbind, infos)
 
-  if (is_pool_dir) {
-    index_path <- fs::path(path, "pool_index.csv")
-    if (fs::file_exists(index_path)) {
-      pool_index <- utils::read.csv(index_path)
-      if (!identical(as.integer(pool_index$pool_num), infos$pool_num)) {
-        warning(
-          "\"", index_path, "\" does not have one row per pool element ",
-          "(numbered 1 to ", nrow(infos), ")"
-        )
-      }
-    }
-  } else if (infos$n_runs > 1) {
+  if (length(unique(infos$nsteps)) > 1) {
+    elts_by_steps <- split(infos$pool_num, infos$nsteps)
+    stop(
+      "The pool elements must all hold the same number of time steps, as ",
+      "`netsim` requires `control$start` to be that number + 1. Found: ",
+      paste0(
+        names(elts_by_steps), " step(s) for element(s) ",
+        vapply(elts_by_steps, paste, character(1), collapse = ", "),
+        collapse = "; "
+      )
+    )
+  }
+
+  if (!is_pool_dir && infos$n_runs > 1) {
     warning(
       "\"", path, "\" holds ", infos$n_runs, " simulations. ",
       "`netsim_path_wrapper` restarts every replicate from the first one. ",
@@ -254,21 +355,27 @@ validate_restart_pool <- function(path) {
 #' of `sim_nums`, in parallel with `future.apply::future_lapply` (using the
 #' current `future` plan).
 #'
-#' If `path_to_x` is a restart pool directory of size `N` (see
-#' `make_restart_pool`), simulation `k` starts from pool element
-#' `(k - 1) %% N + 1`: the pool is reused in order when there are more
+#' If `path_to_x` is a restart pool directory (one holding a `pool_index.csv`,
+#' see `make_restart_pool`) of `N` elements, simulation `k` starts from pool
+#' element `(k - 1) %% N + 1`: the pool is reused in order when there are more
 #' simulations than pool elements; the path of the restart point used is saved
-#' in `$restart_point`. If `path_to_x` is a file, every simulation
+#' in `$restart_point`. Before any simulation starts, the elements used are
+#' checked to have been made with the installed major.minor version of
+#' EpiModel, according to `pool_index.csv`. `netsim` checks the version of
+#' each restart point again when it starts.
+#' If `path_to_x` is a file, every simulation
 #' starts from it (from its first simulation if it holds several).
 #'
 #' `control$nsims`, `control$ncores` and `control$future.use.plan` are
-#' overridden. If `control$.checkpoint.dir` is set, each simulation
+#' overridden. As `netsim` does for several simulations, `control$verbose` is
+#' set to `FALSE` when `sim_nums` has more than one element.
+#' If `control$.checkpoint.dir` is set, each simulation
 #' checkpoints in its own `<.checkpoint.dir>/sim_<k>` sub directory.
 #'
 #' Use `validate_restart_pool` to check a pool before using it.
 #'
-#' @param path_to_x Path to a restart pool directory, or to a single file
-#'   saved with `saveRDS` (a fitted network model or a restart point, see the
+#' @param path_to_x Path to a restart pool directory (holding a
+#'   `pool_index.csv`), or to a single file saved with `saveRDS` (a fitted network model or a restart point, see the
 #'   `x` argument to `EpiModel::netsim`).
 #' @param sim_nums The simulation numbers to run, used to pick the pool
 #'   elements.
@@ -284,15 +391,24 @@ netsim_path_wrapper <- function(path_to_x, param, init, control, sim_nums) {
   control$nsims <- 1
   control$ncores <- 1
   control$future.use.plan <- FALSE
+  # `netsim` turns `verbose` off for several simulations. Here each one is its
+  # own `netsim` call, so do it for the whole set
+  if (length(sim_nums) > 1) control$verbose <- FALSE
 
   if (dir.exists(path_to_x)) {
-    # case: point to a dir of start objects
-    size <- length(list.files(path_to_x, "^\\d+\\.rds$"))
-    start_nums <- (sim_nums - 1) %% size + 1
-    orig_paths <- paste0(path_to_x, "/", start_nums, ".rds")
-    if (!all(file.exists(orig_paths))) {
-      stop("Error in the restart paths. Check the directory.")
+    # case: a restart pool, its size is given by its `pool_index.csv`.
+    # `validate_restart_pool` makes the full checks
+    pool_index <- utils::read.csv(fs::path(path_to_x, "pool_index.csv"))
+    start_nums <- (sim_nums - 1) %% max(pool_index$pool_num) + 1
+    # First check of the EpiModel version of the elements used, before
+    # starting any simulation. `netsim` checks it again when it starts
+    for (n in unique(start_nums)) {
+      check_restart_point_version(
+        pool_index$epimodel_version[match(n, pool_index$pool_num)],
+        paste0("Element ", n, " of the restart pool at \"", path_to_x, "\"")
+      )
     }
+    orig_paths <- as.character(fs::path(path_to_x, paste0(start_nums, ".rds")))
   } else if (file.exists(path_to_x)) {
     # case: it's a file
     orig_paths <- rep(path_to_x, length(sim_nums))

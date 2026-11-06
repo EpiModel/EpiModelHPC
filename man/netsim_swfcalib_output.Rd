@@ -68,7 +68,8 @@ This function takes care of editing \code{.checkpoint.dir} to create unique sub
 directories for each scenario, batch and simulation:
 "<.checkpoint.dir>/sim__\if{html}{\out{<scenario id>}}__<batch_num>/sim_\if{html}{\out{<k>}}". The
 \code{EpiModel::control.net} way of setting up checkpoints can be used
-transparently.
+transparently. Unless \code{.checkpoint.keep} is \code{TRUE}, the batch directory is
+removed once the batch file is saved.
 }
 
 \section{Step Template}{

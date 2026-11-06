@@ -55,6 +55,10 @@ test_that("make_restart_pool makes pool element i from row i of keep_sims", {
   expect_equal(pool_index_csv$pool_num, 1:4)
   expect_equal(pool_index_csv$batch_number, keep_sims$batch_number)
   expect_equal(pool_index_csv$sim_number, keep_sims$sim_number)
+  expect_equal(
+    pool_index_csv$epimodel_version,
+    rep(as.character(utils::packageVersion("EpiModel")), 4)
+  )
   expect_equal(pool_index$batch_number, keep_sims$batch_number)
 
   for (i in seq_len(nrow(keep_sims))) {
@@ -107,20 +111,6 @@ test_that("make_restart_pool rejects bad keep_sims without leaving a pool", {
   expect_false(fs::dir_exists(pool_dir))
 })
 
-test_that("add_to_restart_pool appends to empty and existing pools", {
-  pool_dir <- fs::path(tempdir(), "rp_pool_add")
-  on.exit(fs::dir_delete(pool_dir))
-  fs::dir_create(pool_dir)
-
-  expect_equal(add_to_restart_pool(list("a", "b"), pool_dir), 1:2)
-  expect_equal(add_to_restart_pool(list("c"), pool_dir), 3)
-  expect_equal(readRDS(fs::path(pool_dir, "3.rds")), "c")
-
-  new_dir <- fs::path(pool_dir, "sub", "pool")
-  expect_message(add_to_restart_pool(list("a"), new_dir), "Creating")
-  expect_true(fs::file_exists(fs::path(new_dir, "1.rds")))
-})
-
 test_that("validate_restart_pool checks pools and single files", {
   skip_on_cran()
   scen_dir <- fs::path(tempdir(), "rp_scen_valid")
@@ -130,12 +120,24 @@ test_that("validate_restart_pool checks pools and single files", {
   make_toy_batches(scen_dir)
   keep_sims <- data.frame(batch_number = c(1, 2, 2), sim_number = c(2, 1, 3))
   make_restart_pool(pool_dir, scen_dir, "base", keep_sims, "infTime")
+  epimodel_ver <- utils::packageVersion("EpiModel")
+
+  # each case below starts from a fresh copy of the pool
+  reset_copy <- function() {
+    if (fs::dir_exists(copy_dir)) fs::dir_delete(copy_dir)
+    fs::dir_copy(pool_dir, copy_dir)
+  }
+  edit_copy_index <- function(f) {
+    index_path <- fs::path(copy_dir, "pool_index.csv")
+    utils::write.csv(f(utils::read.csv(index_path)), index_path, row.names = FALSE)
+  }
 
   # a valid pool
   expect_warning(infos <- validate_restart_pool(pool_dir), NA)
   expect_equal(infos$pool_num, 1:3)
   expect_equal(infos$n_runs, rep(1, 3))
   expect_equal(infos$nsteps, rep(1, 3))
+  expect_equal(infos$epimodel_version, rep(as.character(epimodel_ver), 3))
 
   # a single restart point file
   expect_warning(validate_restart_pool(fs::path(pool_dir, "1.rds")), NA)
@@ -146,23 +148,92 @@ test_that("validate_restart_pool checks pools and single files", {
   )
   expect_error(validate_restart_pool(fs::path(tempdir(), "no_such_pool")), "neither")
 
-  # numbering gap
-  fs::dir_copy(pool_dir, copy_dir)
+  # a directory without `pool_index.csv` is not a restart pool
+  reset_copy()
+  fs::file_delete(fs::path(copy_dir, "pool_index.csv"))
+  expect_error(validate_restart_pool(copy_dir), "not a restart pool")
+
+  # an index without the version column, or not numbering the elements 1 to N
+  reset_copy()
+  edit_copy_index(function(idx) {
+    idx$epimodel_version <- NULL
+    idx
+  })
+  expect_error(validate_restart_pool(copy_dir), "no `epimodel_version` column")
+  reset_copy()
+  edit_copy_index(function(idx) idx[-2, ])
+  expect_error(validate_restart_pool(copy_dir), "`1` to `N`")
+
+  # an element listed in the index without its file
+  reset_copy()
   fs::file_delete(fs::path(copy_dir, "2.rds"))
-  expect_error(validate_restart_pool(copy_dir), "must be named")
+  expect_error(validate_restart_pool(copy_dir), "Missing restart pool element.*2\\.rds")
+
+  # an element file not listed in the index
+  reset_copy()
+  fs::file_copy(fs::path(pool_dir, "1.rds"), fs::path(copy_dir, "4.rds"))
+  expect_warning(validate_restart_pool(copy_dir), "not listed.*4\\.rds")
 
   # an element holding several simulations
-  fs::file_copy(fs::path(scen_dir, "sim__base__1.rds"), fs::path(copy_dir, "2.rds"))
+  reset_copy()
+  fs::file_copy(
+    fs::path(scen_dir, "sim__base__1.rds"), fs::path(copy_dir, "2.rds"),
+    overwrite = TRUE
+  )
   expect_error(validate_restart_pool(copy_dir), "holds 3 simulations")
 
-  # pool index not matching the files
-  fs::file_copy(fs::path(pool_dir, "2.rds"), fs::path(copy_dir, "2.rds"), overwrite = TRUE)
-  fs::file_delete(fs::path(copy_dir, "3.rds"))
-  expect_warning(validate_restart_pool(copy_dir), "pool_index.csv")
+  # an element without `control`
+  x <- readRDS(fs::path(pool_dir, "1.rds"))
+  reset_copy()
+  x_bad <- x
+  x_bad$control <- NULL
+  saveRDS(x_bad, fs::path(copy_dir, "2.rds"))
+  expect_error(validate_restart_pool(copy_dir), "restart element\\(s\\): control")
 
-  # no pool element
-  fs::file_delete(fs::dir_ls(copy_dir, regexp = "\\.rds$"))
-  expect_error(validate_restart_pool(copy_dir), "contains no")
+  # another major.minor EpiModel version, or none recorded (before 2.7), in
+  # the index (checked by `netsim_path_wrapper`) or in the element itself
+  # (checked by `netsim`). Only the patch version may differ
+  patch_ver <- paste0(epimodel_ver[, 1:2], ".99")
+  reset_copy()
+  edit_copy_index(function(idx) {
+    idx$epimodel_version[2] <- "2.6.0"
+    idx
+  })
+  expect_error(
+    validate_restart_pool(copy_dir),
+    "Element 2 of the restart pool .* made with EpiModel v2.6.0"
+  )
+  edit_copy_index(function(idx) {
+    idx$epimodel_version[2] <- NA
+    idx
+  })
+  expect_error(validate_restart_pool(copy_dir), "Element 2 .* made with EpiModel < 2.7")
+  edit_copy_index(function(idx) {
+    idx$epimodel_version[2] <- patch_ver
+    idx
+  })
+  expect_warning(validate_restart_pool(copy_dir), NA)
+
+  x_bad <- x
+  attr(x_bad, "version") <- numeric_version("2.6.0")
+  saveRDS(x_bad, fs::path(copy_dir, "2.rds"))
+  expect_error(validate_restart_pool(copy_dir), "2\\.rds\" was made with EpiModel v2.6.0")
+  attr(x_bad, "version") <- NULL
+  saveRDS(x_bad, fs::path(copy_dir, "2.rds"))
+  expect_error(validate_restart_pool(copy_dir), "2\\.rds\" was made with EpiModel < 2.7")
+  attr(x_bad, "version") <- numeric_version(patch_ver)
+  saveRDS(x_bad, fs::path(copy_dir, "2.rds"))
+  expect_warning(validate_restart_pool(copy_dir), NA)
+
+  # elements holding different numbers of time steps
+  reset_copy()
+  x_bad <- x
+  x_bad$control$nsteps <- 5
+  saveRDS(x_bad, fs::path(copy_dir, "2.rds"))
+  expect_error(
+    validate_restart_pool(copy_dir),
+    "1 step\\(s\\) for element\\(s\\) 1, 3; 5 step\\(s\\) for element\\(s\\) 2"
+  )
 })
 
 test_that("netsim_run_one_scenario restarts simulation k from pool element (k - 1) %% N + 1", {
@@ -244,4 +315,158 @@ test_that("netsim_run_one_scenario gives each simulation its own checkpoint dire
     fs::path_file(fs::dir_ls(batch_ckpt_dir)),
     c("sim_1", "sim_2")
   )
+
+  # without `.checkpoint.keep`, the batch directory goes once the batch is saved
+  fs::dir_delete(c(out_dir, ckpt_dir))
+  control$.checkpoint.keep <- FALSE
+  netsim_run_one_scenario(
+    scenario, 1, pool_dir, toy_param, toy_init, control,
+    libraries = NULL, output_dir = out_dir,
+    n_batch = 1, n_rep = 2, n_cores = 2
+  )
+  expect_true(fs::file_exists(fs::path(out_dir, "sim__base__1.rds")))
+  expect_false(fs::dir_exists(batch_ckpt_dir))
+})
+
+test_that("a failure while writing the pool removes the partial directory", {
+  skip_on_cran()
+  scen_dir <- fs::path(tempdir(), "rp_scen_partial")
+  pool_dir <- fs::path(tempdir(), "rp_pool_partial")
+  on.exit(fs::dir_delete(c(scen_dir, pool_dir[fs::dir_exists(pool_dir)])))
+  make_toy_batches(scen_dir)
+
+  # batch 1 is written before batch 2 fails, so this exercises the cleanup of
+  # an already partially written pool
+  keep_sims <- data.frame(batch_number = c(1, 2), sim_number = c(1, 99))
+  expect_error(
+    make_restart_pool(pool_dir, scen_dir, "base", keep_sims, "infTime"),
+    "out of range"
+  )
+  expect_false(fs::dir_exists(pool_dir))
+  expect_false(fs::dir_exists(get_partial_pool_dir(pool_dir)))
+})
+
+test_that("netsim_path_wrapper checks versions from the pool index, netsim checks the elements", {
+  skip_on_cran()
+  scen_dir <- fs::path(tempdir(), "rp_scen_wrapper")
+  pool_dir <- fs::path(tempdir(), "rp_pool_wrapper")
+  on.exit(fs::dir_delete(c(scen_dir, pool_dir)))
+  make_toy_batches(scen_dir)
+  make_restart_pool(
+    pool_dir, scen_dir, "base",
+    data.frame(batch_number = 1, sim_number = 1:3), "infTime"
+  )
+  index_path <- fs::path(pool_dir, "pool_index.csv")
+  pool_index <- utils::read.csv(index_path)
+  run <- function(sim_nums) {
+    netsim_path_wrapper(
+      pool_dir, toy_param, toy_init, toy_control_restart, sim_nums
+    )
+  }
+  with(future::plan("sequential"), local = TRUE)
+
+  # first check: the index records element 2 as made with another EpiModel
+  # version. Only the elements used are checked
+  bad_index <- pool_index
+  bad_index$epimodel_version[2] <- "2.6.0"
+  utils::write.csv(bad_index, index_path, row.names = FALSE)
+  expect_error(run(1:2), "Element 2 of the restart pool .* made with EpiModel v2.6.0")
+  expect_length(run(c(1, 3)), 2)
+  utils::write.csv(pool_index, index_path, row.names = FALSE)
+
+  # second check, by `netsim`: the element itself was made with another version
+  x <- readRDS(fs::path(pool_dir, "2.rds"))
+  x_bad <- x
+  attr(x_bad, "version") <- numeric_version("2.6.0")
+  saveRDS(x_bad, fs::path(pool_dir, "2.rds"))
+  # `future.apply` warns that it cancels the other iterations
+  expect_error(suppressWarnings(run(2)), "Please rebuild the restart object")
+  saveRDS(x, fs::path(pool_dir, "2.rds"))
+
+  # the pool size comes from the index (3 elements), not from the files:
+  # simulation 4 uses element 1 even when element 3 is missing, and the
+  # missing element only fails when read
+  fs::file_move(fs::path(pool_dir, "3.rds"), fs::path(pool_dir, "3.rds.bak"))
+  expect_equal(
+    run(4)[[1]]$restart_point$sim1,
+    as.character(fs::path(pool_dir, "1.rds"))
+  )
+  expect_error(suppressWarnings(run(3)), "cannot open")
+
+  # a directory without `pool_index.csv` fails when it is read
+  fs::file_delete(index_path)
+  expect_error(suppressWarnings(run(1)), "cannot open")
+})
+
+test_that("the scenario runners reject raw.output = TRUE at setup", {
+  control <- control.net(
+    type = "SI", start = 2, nsteps = 4, tergmLite = TRUE,
+    resimulate.network = TRUE, raw.output = TRUE, verbose = FALSE
+  )
+
+  # `netsim_scenarios_setup` is called by `netsim_scenarios`,
+  # `step_tmpl_netsim_scenarios` and the `swfcalib` runners
+  expect_error(
+    netsim_scenarios_setup(
+      fs::path(tempdir(), "rp_pool_raw"), toy_param, toy_init, control,
+      scenarios_list = NULL, n_rep = 1, n_cores = 1,
+      output_dir = fs::path(tempdir(), "rp_out_raw"), libraries = NULL
+    ),
+    "raw.output = TRUE"
+  )
+})
+
+test_that("netsim_path_wrapper turns verbose off for several simulations", {
+  skip_on_cran()
+  scen_dir <- fs::path(tempdir(), "rp_scen_verbose")
+  on.exit(fs::dir_delete(scen_dir))
+  make_toy_batches(scen_dir)
+  x_path <- fs::path(scen_dir, "restart.rds")
+  saveRDS(
+    EpiModel::make_restart_point(
+      readRDS(fs::path(scen_dir, "sim__base__1.rds")),
+      time_attrs = "infTime", sim_num = 1
+    ),
+    x_path
+  )
+  control <- toy_control_restart
+  control$verbose <- TRUE
+
+  with(future::plan("sequential"), local = TRUE)
+  expect_output(
+    netsim_path_wrapper(x_path, toy_param, toy_init, control, sim_nums = 1),
+    "Timestep"
+  )
+  expect_silent(
+    netsim_path_wrapper(x_path, toy_param, toy_init, control, sim_nums = 1:2)
+  )
+})
+
+test_that("the partial pool left by a killed make_restart_pool is removed", {
+  skip_on_cran()
+  scen_dir <- fs::path(tempdir(), "rp_scen_killed")
+  pool_dir <- fs::path(tempdir(), "rp_pool_killed")
+  partial_dir <- get_partial_pool_dir(pool_dir)
+  on.exit(fs::dir_delete(c(scen_dir, pool_dir)))
+  make_toy_batches(scen_dir)
+
+  # what a `make_restart_pool` killed while writing leaves behind
+  expect_equal(fs::path_file(partial_dir), ".rp_pool_killed.partial")
+  fs::dir_create(partial_dir)
+  saveRDS("stale", fs::path(partial_dir, "1.rds"))
+  saveRDS("stale", fs::path(partial_dir, "3.rds"))
+
+  expect_message(
+    make_restart_pool(
+      pool_dir, scen_dir, "base",
+      data.frame(batch_number = 1, sim_number = 1:2), "infTime"
+    ),
+    "partial restart pool"
+  )
+  expect_false(fs::dir_exists(partial_dir))
+  expect_setequal(
+    fs::path_file(fs::dir_ls(pool_dir, all = TRUE)),
+    c("1.rds", "2.rds", "pool_index.csv")
+  )
+  expect_s3_class(readRDS(fs::path(pool_dir, "1.rds")), "netsim")
 })

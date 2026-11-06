@@ -62,11 +62,7 @@ step_tmpl_netsim_swfcalib_output <- function(path_to_x, param, init, control,
                                              output_dir, libraries = NULL,
                                              setup_lines = NULL,
                                              max_array_size = NULL) {
-  # Set a `multicore` plan with `n_cores` workers by default.
-  # Bypassed if `control$future.use.plan` is manually set
-  if (!inherits(control$future.use.plan, c("tweaked", "future"))) {
-    control$future.use.plan <- future::tweak("multicore", workers = n_cores)
-  }
+  control$future.use.plan <- get_batch_plan(control, future::multicore, n_cores)
 
   p_list <- netsim_swfcalib_output_setup(
     path_to_x, param, init, control,

@@ -12,27 +12,39 @@ file.}
 }
 \value{
 A \code{data.frame} with one row per pool element (invisibly):
-\code{pool_num}, \code{file_path}, \code{n_runs} and \code{nsteps} (the time step the
-element was made at).
+\code{pool_num}, \code{file_path}, \code{n_runs}, \code{nsteps} (the number of time steps
+kept in the element, \code{1} for a pool made by \code{\link[=make_restart_pool]{make_restart_pool()}}) and
+\code{epimodel_version}.
 }
 \description{
-Checks that a restart pool (a directory made by \code{make_restart_pool}) can be
-used by \code{netsim_path_wrapper}. This function is not called by the
-simulation functions: call it after making a pool, or before starting a
-long run from it.
+Checks that a restart pool (a directory made by \code{make_restart_pool}, holding
+a \code{pool_index.csv}) can be used by \code{netsim_path_wrapper}. This function is
+not called by the simulation functions: call it after making a pool, or
+before starting a long run from it.
 }
 \details{
 Errors are raised when:
 \itemize{
-\item the pool files are not numbered \verb{1.rds} to \code{N.rds};
+\item \code{path} is a directory without a \code{pool_index.csv}, or its \code{pool_index.csv}
+has no \code{pool_num} or \code{epimodel_version} column, or does not number the
+elements \code{1} to \code{N};
+\item an element listed in \code{pool_index.csv} has no \verb{<pool_num>.rds} file;
 \item an element is not a single simulation \code{netsim} restart point with the
-elements needed to restart (\code{param}, \code{nwparam}, \code{epi}, \code{run},
-\code{coef.form} and \code{num.nw}).
+elements needed to restart (\code{param}, \code{control}, \code{nwparam}, \code{epi}, \code{run},
+\code{coef.form} and \code{num.nw});
+\item an element was made with another major.minor version of EpiModel than
+the one installed, according to \code{pool_index.csv} (checked by
+\code{netsim_path_wrapper} before running) or to the element itself (checked
+by \code{netsim}). Run this function with the EpiModel version the simulations
+will use (e.g. in the HPC \code{renv});
+\item the elements do not all hold the same number of time steps: \code{netsim}
+requires \code{control$start} to be that number + 1 for each of them.
 }
 
 Warnings are raised when:
 \itemize{
-\item \code{pool_index.csv} does not have one row per element;
+\item the pool directory holds \verb{<n>.rds} files not listed in \code{pool_index.csv},
+which are never used;
 \item \code{path} is a single file holding several simulations:
 \code{netsim_path_wrapper} restarts every replicate from its first simulation.
 }
