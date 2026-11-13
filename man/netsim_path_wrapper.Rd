@@ -7,8 +7,8 @@
 netsim_path_wrapper(path_to_x, param, init, control, sim_nums)
 }
 \arguments{
-\item{path_to_x}{Path to a restart pool directory, or to a single file
-saved with \code{saveRDS} (a fitted network model or a restart point, see the
+\item{path_to_x}{Path to a restart pool directory (holding a
+\code{pool_index.csv}), or to a single file saved with \code{saveRDS} (a fitted network model or a restart point, see the
 \code{x} argument to \code{EpiModel::netsim}).}
 
 \item{param}{Model parameters, as an object of class \code{\link[EpiModel]{param.net}}.
@@ -42,15 +42,21 @@ of \code{sim_nums}, in parallel with \code{future.apply::future_lapply} (using t
 current \code{future} plan).
 }
 \details{
-If \code{path_to_x} is a restart pool directory of size \code{N} (see
-\code{make_restart_pool}), simulation \code{k} starts from pool element
-\code{(k - 1) \%\% N + 1}: the pool is reused in order when there are more
+If \code{path_to_x} is a restart pool directory (one holding a \code{pool_index.csv},
+see \code{make_restart_pool}) of \code{N} elements, simulation \code{k} starts from pool
+element \code{(k - 1) \%\% N + 1}: the pool is reused in order when there are more
 simulations than pool elements; the path of the restart point used is saved
-in \verb{$restart_point}. If \code{path_to_x} is a file, every simulation
+in \verb{$restart_point}. Before any simulation starts, the elements used are
+checked to have been made with the installed major.minor version of
+EpiModel, according to \code{pool_index.csv}. \code{netsim} checks the version of
+each restart point again when it starts.
+If \code{path_to_x} is a file, every simulation
 starts from it (from its first simulation if it holds several).
 
 \code{control$nsims}, \code{control$ncores} and \code{control$future.use.plan} are
-overridden. If \code{control$.checkpoint.dir} is set, each simulation
+overridden. As \code{netsim} does for several simulations, \code{control$verbose} is
+set to \code{FALSE} when \code{sim_nums} has more than one element.
+If \code{control$.checkpoint.dir} is set, each simulation
 checkpoints in its own \verb{<.checkpoint.dir>/sim_<k>} sub directory.
 
 Use \code{validate_restart_pool} to check a pool before using it.

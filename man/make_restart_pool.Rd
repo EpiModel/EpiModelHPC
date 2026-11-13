@@ -42,12 +42,19 @@ directory can be passed as \code{path_to_x} to these functions (see
 \details{
 Pool element \code{i} is made from row \code{i} of \code{keep_sims}, with
 \code{EpiModel::make_restart_point} (keeping only the last time step). Each batch
-file is read once. The pool directory also receives a \code{pool_index.csv} file
+file is read once, and each element is written to the pool as soon as it is
+made, so only one batch file's elements are in memory at a time.
+The pool directory also receives a \code{pool_index.csv} file
 with one row per pool element: \code{pool_num}, \code{scenario_name}, \code{batch_number},
-\code{sim_number} and \code{file_path} (the batch file it was made from).
+\code{sim_number}, \code{file_path} (the batch file it was made from) and
+\code{epimodel_version} (the EpiModel version recorded in the element, which
+\code{netsim} requires to have the installed major.minor version to restart from
+it). A directory is used as a restart pool only if it holds this file.
 
-If an error occurs while writing the pool, the partial pool directory is
-removed.
+The pool is written in a hidden \verb{.<pool name>.partial} directory next to
+\code{pool_dir}, renamed to \code{pool_dir} once complete: \code{pool_dir} never holds a
+partial pool, even if R is killed. The partial directory is removed if an
+error occurs, or at the next call if R was killed.
 }
 \examples{
 \dontrun{

@@ -22,12 +22,7 @@ step_tmpl_netsim_scenarios <- function(path_to_x, param, init, control,
                                        output_dir, libraries = NULL,
                                        setup_lines = NULL,
                                        max_array_size = NULL, ...) {
-
-  # Set a `multicore` plan with `n_cores` workers by default.
-  # Bypassed if `control$future.use.plan` is manually set
-  if (!inherits(control$future.use.plan, c("tweaked", "future"))) {
-    control$future.use.plan <- future::tweak("multicore", workers = n_cores)
-  }
+  control$future.use.plan <- get_batch_plan(control, future::multicore, n_cores)
 
   p_list <- netsim_scenarios_setup(
     path_to_x, param, init, control,
@@ -122,6 +117,15 @@ netsim_scenarios_setup <- function(path_to_x, param, init, control,
     )
   }
 
+  if (isTRUE(control$raw.output)) {
+    stop(
+      "`raw.output = TRUE` is not supported by the scenario runners: each ",
+      "simulation of a batch is run as its own `netsim()` call and the batch ",
+      "is rebuilt with `merge.netsim()`, which needs `netsim` objects. ",
+      "Set `control$raw.output <- FALSE`."
+    )
+  }
+
   list(
     scenarios_list = scenarios_list,
     batchs_list = batchs_list,
@@ -137,6 +141,24 @@ netsim_scenarios_setup <- function(path_to_x, param, init, control,
       n_cores = n_cores
     )
   )
+}
+
+# The `future` plan to run the simulations of a batch with:
+# `control$future.use.plan` if it is set with `future::tweak()`, else `strategy`
+# (a `future` backend function, e.g. `future::multicore`) with `n_cores`
+# workers.
+# Only builds the plan: `with(future::plan(<plan>), local = TRUE)` must be
+# called by the function running the simulations, as it resets the plan when
+# its caller exits.
+# `strategy` is a function rather than a name, as `future::tweak()` looks a
+# name up from the calling frame (this namespace, then the search path) before
+# the `future` namespace.
+get_batch_plan <- function(control, strategy, n_cores) {
+  if (inherits(control$future.use.plan, c("tweaked", "future"))) {
+    control$future.use.plan
+  } else {
+    future::tweak(strategy, workers = n_cores)
+  }
 }
 
 #' Run one batch of `netsim` simulations with a scenario and saves the results
@@ -174,7 +196,8 @@ netsim_scenarios_setup <- function(path_to_x, param, init, control,
 #' directories for each scenario, batch and simulation:
 #' "<.checkpoint.dir>/sim__<scenario id>__<batch_num>/sim_<k>". The
 #' `EpiModel::control.net` way of setting up checkpoints can be used
-#' transparently.
+#' transparently. Unless `.checkpoint.keep` is `TRUE`, the batch directory is
+#' removed once the batch file is saved.
 netsim_run_one_scenario <- function(scenario, batch_num,
                                     path_to_x, param, init, control,
                                     libraries, output_dir,
@@ -199,22 +222,27 @@ netsim_run_one_scenario <- function(scenario, batch_num,
     )
   }
 
-  # `multisession` plan with `n_cores` workers unless set in `future.use.plan`
-  # The step templates set a `multicore` plan before reaching here
-  sim_plan <- control$future.use.plan
-  if (!inherits(sim_plan, c("tweaked", "future"))) {
-    sim_plan <- future::tweak("multisession", workers = n_cores)
-  }
+  # The step templates set a `multicore` plan before reaching here. After the
+  # last batch adjustment of `n_cores`, to not start idle workers
+  sim_plan <- get_batch_plan(control, future::multisession, n_cores)
 
   print(paste0("Starting simulation for scenario: ", scenario[["id"]]))
   print(paste0("Batch number: ", batch_num, " / ", n_batch))
   with(future::plan(sim_plan), local = TRUE)
+  # `keep.cumulative.edgelist` is the only `merge.netsim` default that drops an
+  # element a single `netsim` call with several simulations keeps
   sim <- netsim_path_wrapper(path_to_x, param_sc, init, control, sim_nums) |>
-    Reduce(f = merge)
+    Reduce(f = \(x, y) merge(x, y, keep.cumulative.edgelist = TRUE))
 
   file_name <- paste0("sim__", scenario[["id"]], "__", batch_num, ".rds")
   print(paste0("Saving simulation in file: ", file_name))
   saveRDS(sim, fs::path(output_dir, file_name))
+
+  # Each `netsim` call only clears its own `sim_<k>` checkpoint directory
+  batch_ckpt_dir <- control[[".checkpoint.dir"]]
+  if (!is.null(batch_ckpt_dir) && !isTRUE(control[[".checkpoint.keep"]])) {
+    unlink(batch_ckpt_dir, recursive = TRUE)
+  }
 
   print("Done in: ")
   print(Sys.time() - start_time)
