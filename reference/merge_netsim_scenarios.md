@@ -15,7 +15,10 @@ merge_netsim_scenarios(
   keep.other = TRUE,
   param.error = FALSE,
   keep.diss.stats = TRUE,
-  truncate.at = NULL
+  truncate.at = NULL,
+  keep.run = TRUE,
+  keep.cumulative.edgelist = FALSE,
+  keep.attr.history = TRUE
 )
 ```
 
@@ -50,7 +53,8 @@ merge_netsim_scenarios(
 
   If `TRUE`, keep the other simulation elements (as set by the
   `save.other` parameter in `control.net`) from the original `x` and `y`
-  elements.
+  elements. Elements with their own `keep.*` argument (e.g. `run`)
+  follow that argument instead.
 
 - param.error:
 
@@ -59,6 +63,9 @@ merge_netsim_scenarios(
   or controls (passed in
   [`control.net()`](https://epimodel.github.io/EpiModel/reference/control.net.html))
   an error will prevent the merge. Use `FALSE` to override that check.
+  The controls for how the runs were executed rather than what they
+  simulated (`nsims`, `ncores`, `verbose`, `verbose.int`, and the
+  checkpoint settings) may differ.
 
 - keep.diss.stats:
 
@@ -67,3 +74,25 @@ merge_netsim_scenarios(
 - truncate.at:
 
   Time step at which to left-truncate the time series.
+
+- keep.run:
+
+  If `TRUE`, keep the `run` sublists (as set by the `save.run` parameter
+  in `control.net`) from the original `x` and `y` elements. These are
+  required to restart from a simulation of the merged object in
+  [`netsim()`](https://epimodel.github.io/EpiModel/reference/netsim.html),
+  selected with
+  [`get_sims()`](https://epimodel.github.io/EpiModel/reference/get_sims.html).
+
+- keep.cumulative.edgelist:
+
+  If `TRUE`, keep the cumulative edgelists (as set by the
+  `save.cumulative.edgelist` parameter in `control.net`) from the
+  original `x` and `y` elements. `FALSE` by default, as these grow with
+  the length of the simulation.
+
+- keep.attr.history:
+
+  If `TRUE`, keep the attribute histories (as set by
+  [`record_attr_history()`](https://epimodel.github.io/EpiModel/reference/record_attr_history.html))
+  from the original `x` and `y` elements.

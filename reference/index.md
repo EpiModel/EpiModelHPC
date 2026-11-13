@@ -27,6 +27,9 @@
   Make an EpiModel scenario using the result of an `swfcalib`
   calibration
 
+- [`make_restart_pool()`](http://epimodel.github.io/EpiModelHPC/reference/make_restart_pool.md)
+  : Make a Restart Pool From Simulations Run With Scenarios
+
 - [`merge_netsim_scenarios()`](http://epimodel.github.io/EpiModelHPC/reference/merge_netsim_scenarios.md)
   :
 
@@ -39,11 +42,14 @@
   Create a Single Sim File per Scenarios Using the Files From
   `netsim_scenarios`
 
+- [`netsim_path_wrapper()`](http://epimodel.github.io/EpiModelHPC/reference/netsim_path_wrapper.md)
+  : Run Single Simulations From a Restart Pool or a Single Object
+
 - [`netsim_run_one_scenario()`](http://epimodel.github.io/EpiModelHPC/reference/netsim_run_one_scenario.md)
   :
 
-  Run one `netsim` call with a scenario and saves the results
-  deterministically
+  Run one batch of `netsim` simulations with a scenario and saves the
+  results deterministically
 
 - [`netsim_run_swfcalib_scenario()`](http://epimodel.github.io/EpiModelHPC/reference/netsim_run_swfcalib_scenario.md)
   :
@@ -106,3 +112,6 @@
 
 - [`swfcalib_proposal_to_scenario()`](http://epimodel.github.io/EpiModelHPC/reference/swfcalib_proposal_to_scenario.md)
   : Convert an swfcalib Proposal into an EpiModel Scenario
+
+- [`validate_restart_pool()`](http://epimodel.github.io/EpiModelHPC/reference/validate_restart_pool.md)
+  : Validate a Restart Pool

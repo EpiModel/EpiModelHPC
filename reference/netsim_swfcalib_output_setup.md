@@ -23,10 +23,10 @@ netsim_swfcalib_output_setup(
 
 - path_to_x:
 
-  Path to a Fitted network model object saved with `saveRDS`. (See the
-  `x` argument to the
+  Path to a fitted network model or a restart point saved with `saveRDS`
+  (See the `x` argument to the
   [`EpiModel::netsim`](https://epimodel.github.io/EpiModel/reference/netsim.html)
-  function)
+  function), or to a restart pool directory (see `make_restart_pool`).
 
 - param:
 
@@ -65,7 +65,7 @@ netsim_swfcalib_output_setup(
 
 - n_cores:
 
-  number of cores to run the processing on
+  The number of CPUs on which the simulations will be run.
 
 - output_dir:
 

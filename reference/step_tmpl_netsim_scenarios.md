@@ -4,10 +4,12 @@ This step template is similar to `netsim_scenarios` but for the HPC. It
 uses
 [`slurmworkflow::step_tmpl_map`](https://epimodel.github.io/slurmworkflow/reference/step_tmpl_map.html)
 internally and should be used as any `slurmworkflow` step. For details,
-see `netsim_scenarios` documentation. The inner parallelization is by
-default handled with `future::plan("multicore", workers = n_cores)`.
-Using `control$future.use.plan <- future::tweaked(<your plan>)` will
-bypass this setting.
+see `netsim_scenarios` documentation. The simulations of a batch are run
+in parallel, one `netsim` call per simulation (see
+`netsim_path_wrapper`), by default with
+`future::plan("multicore", workers = n_cores)`. Using
+`control$future.use.plan <- future::tweak(<your plan>)` will bypass this
+setting.
 
 ## Usage
 
@@ -32,10 +34,10 @@ step_tmpl_netsim_scenarios(
 
 - path_to_x:
 
-  Path to a Fitted network model object saved with `saveRDS`. (See the
-  `x` argument to the
+  Path to a fitted network model or a restart point saved with `saveRDS`
+  (See the `x` argument to the
   [`EpiModel::netsim`](https://epimodel.github.io/EpiModel/reference/netsim.html)
-  function)
+  function), or to a restart pool directory (see `make_restart_pool`).
 
 - param:
 
@@ -113,9 +115,12 @@ a template function to be used by `add_workflow_step`
 ## Checkpointing
 
 This function takes care of editing `.checkpoint.dir` to create unique
-sub directories for each scenario. The
+sub directories for each scenario, batch and simulation:
+"\<.checkpoint.dir\>/sim\_\_\_\_\<batch_num\>/sim\_". The
 [`EpiModel::control.net`](https://epimodel.github.io/EpiModel/reference/control.net.html)
-way of setting up checkpoints can be used transparently.
+way of setting up checkpoints can be used transparently. Unless
+`.checkpoint.keep` is `TRUE`, the batch directory is removed once the
+batch file is saved.
 
 ## Step Template
 

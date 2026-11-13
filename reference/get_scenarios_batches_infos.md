@@ -20,4 +20,5 @@ get_scenarios_batches_infos(scenario_dir)
 
 a `tibble` with three columns: `file_path` - the full paths of the
 simulation file, `scenario_name` the associated scenario name,
-`batch_number` the associated batch number.
+`batch_number` the associated batch number. Sorted by scenario name,
+then batch number (`2` before `10`).

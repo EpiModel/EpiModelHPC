@@ -6,10 +6,17 @@ simulations at a time. The simfiles are then stored in the `output_dir`
 folder and are named using the following pattern:
 "sim\_\_name_of_scenario\_\_2.rds". Where the last number is the batch
 number for this particular scenario. Each scenario is therefore run over
-`ceiling(n_rep / n_cores)` batches. This function is meant to mimic the
-behavior of `step_tmpl_netsim_scenarios` in your local machine. It
-should fail in a similar fashion an reciprocally, if it runs correctly
-locally, moving to an HPC should not produce any issue.
+`ceiling(n_rep / n_cores)` batches. The simulations of a batch are run
+in parallel, one `netsim` call per simulation (see
+`netsim_path_wrapper`), by default with
+`future::plan("multisession", workers = n_cores)`. Unlike the
+`multicore` default of `step_tmpl_netsim_scenarios`, this also runs in
+parallel from RStudio and on Windows. Using
+`control$future.use.plan <- future::tweak(<your plan>)` will bypass this
+setting. This function is meant to mimic the behavior of
+`step_tmpl_netsim_scenarios` in your local machine. It should fail in a
+similar fashion an reciprocally, if it runs correctly locally, moving to
+an HPC should not produce any issue.
 
 ## Usage
 
@@ -32,10 +39,10 @@ netsim_scenarios(
 
 - path_to_x:
 
-  Path to a Fitted network model object saved with `saveRDS`. (See the
-  `x` argument to the
+  Path to a fitted network model or a restart point saved with `saveRDS`
+  (See the `x` argument to the
   [`EpiModel::netsim`](https://epimodel.github.io/EpiModel/reference/netsim.html)
-  function)
+  function), or to a restart pool directory (see `make_restart_pool`).
 
 - param:
 
@@ -94,6 +101,9 @@ netsim_scenarios(
 ## Checkpointing
 
 This function takes care of editing `.checkpoint.dir` to create unique
-sub directories for each scenario. The
+sub directories for each scenario, batch and simulation:
+"\<.checkpoint.dir\>/sim\_\_\_\_\<batch_num\>/sim\_". The
 [`EpiModel::control.net`](https://epimodel.github.io/EpiModel/reference/control.net.html)
-way of setting up checkpoints can be used transparently.
+way of setting up checkpoints can be used transparently. Unless
+`.checkpoint.keep` is `TRUE`, the batch directory is removed once the
+batch file is saved.

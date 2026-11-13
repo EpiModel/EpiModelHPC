@@ -39,6 +39,13 @@ from EpiModel itself (`ncores`, `.checkpoint.dir` and
   merge batch results
 - [`merge_netsim_scenarios_tibble()`](http://epimodel.github.io/EpiModelHPC/reference/merge_netsim_scenarios_tibble.md) -
   convert results to tibble
+- [`make_restart_pool()`](http://epimodel.github.io/EpiModelHPC/reference/make_restart_pool.md)
+  /
+  [`validate_restart_pool()`](http://epimodel.github.io/EpiModelHPC/reference/validate_restart_pool.md)
+  /
+  [`netsim_path_wrapper()`](http://epimodel.github.io/EpiModelHPC/reference/netsim_path_wrapper.md) -
+  restart pools (directories of single-sim restart points) used as
+  `path_to_x`
 - [`swf_configs_hyak()`](http://epimodel.github.io/EpiModelHPC/reference/swf_configs_hyak.md)
   /
   [`swf_configs_rsph()`](http://epimodel.github.io/EpiModelHPC/reference/swf_configs_rsph.md) -

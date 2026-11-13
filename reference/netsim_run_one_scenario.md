@@ -1,7 +1,18 @@
-# Run one `netsim` call with a scenario and saves the results deterministically
+# Run one batch of `netsim` simulations with a scenario and saves the results deterministically
 
 This inner function is called by `netsim_scenarios` and
-`step_tmpl_netsim_scenarios`.
+`step_tmpl_netsim_scenarios`. It runs the simulations of batch
+`batch_num` with `netsim_path_wrapper`, one `netsim` call per
+simulation, merges them and saves them as "sim\_\_\_\_\<batch_num\>.rds"
+in `output_dir`. The simulations of batch `b` are numbered
+`(b - 1) * n_cores + 1` to `b * n_cores` over all the batches of a
+scenario. With a restart pool of size `N`, simulation `k` starts from
+pool element `(k - 1) %% N + 1`, the same for every scenario. The
+simulations are run with the
+[`future::tweak()`](https://future.futureverse.org/reference/plan.html)
+plan in `control$future.use.plan`, or with
+`future::plan("multisession", workers = n_cores)` if there is none. The
+step templates set it to `multicore` before calling this function.
 
 ## Usage
 
@@ -34,10 +45,10 @@ netsim_run_one_scenario(
 
 - path_to_x:
 
-  Path to a Fitted network model object saved with `saveRDS`. (See the
-  `x` argument to the
+  Path to a fitted network model or a restart point saved with `saveRDS`
+  (See the `x` argument to the
   [`EpiModel::netsim`](https://epimodel.github.io/EpiModel/reference/netsim.html)
-  function)
+  function), or to a restart pool directory (see `make_restart_pool`).
 
 - param:
 
@@ -90,6 +101,9 @@ netsim_run_one_scenario(
 ## Checkpointing
 
 This function takes care of editing `.checkpoint.dir` to create unique
-sub directories for each scenario. The
+sub directories for each scenario, batch and simulation:
+"\<.checkpoint.dir\>/sim\_\_\_\_\<batch_num\>/sim\_". The
 [`EpiModel::control.net`](https://epimodel.github.io/EpiModel/reference/control.net.html)
-way of setting up checkpoints can be used transparently.
+way of setting up checkpoints can be used transparently. Unless
+`.checkpoint.keep` is `TRUE`, the batch directory is removed once the
+batch file is saved.
