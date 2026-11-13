@@ -13,7 +13,8 @@ simulations.}
 \value{
 a \code{tibble} with three columns: \code{file_path} - the full paths of
 the simulation file, \code{scenario_name} the associated scenario name,
-\code{batch_number} the associated batch number.
+\code{batch_number} the associated batch number. Sorted by scenario name, then
+batch number (\code{2} before \code{10}).
 }
 \description{
 This function returns the list of simulation files and the corresponding
