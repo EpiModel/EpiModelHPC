@@ -18,8 +18,8 @@ netsim_swfcalib_output_setup(
 }
 \arguments{
 \item{path_to_x}{Path to a fitted network model or a restart point saved
-with \code{saveRDS} (See the \code{x} argument to the \code{EpiModel::netsim}
-function), or to a restart pool directory (see \code{make_restart_pool}).}
+with \code{saveRDS} (See the \code{x} argument to the \code{\link[EpiModel:netsim]{netsim()}} function), or to a
+restart pool directory (see \code{\link[EpiModel:make_restart_pool]{make_restart_pool()}}).}
 
 \item{param}{Model parameters, as an object of class \code{\link[EpiModel]{param.net}}.
 Includes transmission probability (\code{inf.prob}), act rate

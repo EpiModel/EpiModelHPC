@@ -6,7 +6,7 @@
 \alias{EpiModelHPC}
 \title{EpiModel Extensions for High-Performance Computing}
 \description{
-Extension package to EpiModel to run large-scale stochastic network models on modern high-performance computing systems. Provides scenario-based batch simulation, helpers for building 'slurmworkflow' job workflows and 'swfcalib' calibrations, cluster configuration presets, and shell tooling for detecting and recovering degenerate SLURM tasks.
+Extension package to EpiModel to run large-scale stochastic network models on modern high-performance computing systems. Provides 'slurmworkflow' job workflow step templates for scenario-based batch simulation with 'EpiModel', helpers for building 'slurmworkflow' workflows and 'swfcalib' calibrations, cluster configuration presets, and shell tooling for detecting and recovering degenerate SLURM tasks.
 }
 \details{
 EpiModel provides tools for the mathematical modeling of infectious diseases.
@@ -20,6 +20,13 @@ Monte Carlo (MCMC) simulation, results in computationally intensive
 simulation processes. The goal of EpiModelHPC is to provide a standardized
 framework for extending EpiModel to run on modern high-performance computing
 (HPC) systems.
+
+Scenario-based simulation (\code{EpiModel::netsim_scenarios()}), restart pools
+(\code{EpiModel::make_restart_pool()}) and the merging of batch files
+(\code{EpiModel::merge_netsim_scenarios()}) now live in EpiModel (>= 2.7.1).
+EpiModelHPC provides the \code{slurmworkflow} step templates that run them on the
+HPC, the \code{swfcalib} helpers, cluster configuration presets and the HPC
+doctor.
 }
 \references{
 The main website for EpiModel is at \url{https://www.epimodel.org/}.

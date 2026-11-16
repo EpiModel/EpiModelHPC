@@ -289,7 +289,7 @@ wf <- add_workflow_step(
 
 These simulations restart from a previous simulation rather than from time 0, so `control` sets `start = restart_time` and `initialize.FUN = reinit_msm`, a function from EpiModelHIV-p that handles the restart.
 
-`step_tmpl_netsim_scenarios()` takes the same arguments as `netsim_scenarios()`, which runs the same thing locally:
+`step_tmpl_netsim_scenarios()` takes the same arguments as `EpiModel::netsim_scenarios()`, which runs the same thing locally:
 
 - `path_to_restart`, `param`, `init` and `control`: the inputs to `netsim()`. The first one is the path to the restart point **on the HPC**, which `netsim()` uses as its `x` argument. The `nsims` and `ncores` values in `control` are replaced by the step.
 - `scenarios_list`: the scenarios made by `EpiModel::create_scenario_list()`.
