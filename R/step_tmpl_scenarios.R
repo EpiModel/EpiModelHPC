@@ -13,7 +13,7 @@
 #' @inheritParams slurmworkflow::step_tmpl_map
 #' @inheritParams EpiModel::netsim_scenarios
 #'
-#' @inheritSection EpiModel::netsim_run_one_scenario Checkpointing
+#' @inheritSection EpiModel::internal_run_batch Checkpointing
 #' @inherit slurmworkflow::step_tmpl_rscript return
 #' @inheritSection slurmworkflow::step_tmpl_bash_lines Step Template
 #'
@@ -23,16 +23,22 @@ step_tmpl_netsim_scenarios <- function(path_to_x, param, init, control,
                                        output_dir, libraries = NULL,
                                        setup_lines = NULL,
                                        max_array_size = NULL, ...) {
-  control$future.use.plan <- EpiModel::get_batch_plan(
-    control, future::multicore, n_cores
+  control$future.use.plan <- EpiModel::internal_batch_plan(
+    control = control, strategy = future::multicore, n_cores = n_cores
   )
 
-  # `EpiModel::netsim_scenarios_setup()` does not add the HPC libraries to
+  # `EpiModel::internal_scenarios_setup()` does not add the HPC libraries to
   # `libraries`: the step runs on the HPC, so they are needed here.
-  p_list <- EpiModel::netsim_scenarios_setup(
-    path_to_x, param, init, control,
-    scenarios_list, n_rep, n_cores,
-    output_dir, c("slurmworkflow", "EpiModelHPC", libraries)
+  p_list <- EpiModel::internal_scenarios_setup(
+    path_to_x = path_to_x,
+    param = param,
+    init = init,
+    control = control,
+    scenarios_list = scenarios_list,
+    n_rep = n_rep,
+    n_cores = n_cores,
+    output_dir = output_dir,
+    libraries = c("slurmworkflow", "EpiModelHPC", libraries)
   )
 
   message(
@@ -41,7 +47,7 @@ step_tmpl_netsim_scenarios <- function(path_to_x, param, init, control,
   )
 
   slurmworkflow::step_tmpl_map(
-    FUN = EpiModel::netsim_run_one_scenario,
+    FUN = EpiModel::internal_run_batch,
     scenario = p_list$scenarios_list,
     batch_num = p_list$batchs_list,
     MoreArgs = p_list$MoreArgs,
@@ -78,6 +84,7 @@ step_tmpl_merge_netsim_scenarios <- function(sim_dir, output_dir,
 
   merge_fun <- function(n_cores, ...) {
     future::plan("multicore", workers = n_cores)
+    options(future.globals.maxSize = Inf)
     EpiModel::merge_netsim_scenarios(...)
   }
 
@@ -120,6 +127,7 @@ step_tmpl_merge_netsim_scenarios_tibble <- function(
                       setup_lines = NULL) {
   merge_fun <- function(sim_dir, output_dir, steps_to_keep, cols, n_cores) {
     future::plan("multicore", workers = n_cores)
+    options(future.globals.maxSize = Inf)
     EpiModel::merge_netsim_scenarios_tibble(
       sim_dir = sim_dir,
       output_dir = output_dir,
@@ -131,11 +139,11 @@ step_tmpl_merge_netsim_scenarios_tibble <- function(
   slurmworkflow::step_tmpl_do_call(
     what = merge_fun,
     args = list(
-      sim_dir,
-      output_dir,
-      steps_to_keep,
-      rlang::enquo(cols),
-      n_cores
+      sim_dir = sim_dir,
+      output_dir = output_dir,
+      steps_to_keep = steps_to_keep,
+      cols = rlang::enquo(cols),
+      n_cores = n_cores
     ),
     setup_lines = setup_lines
   )

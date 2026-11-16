@@ -61,9 +61,9 @@ test_that("step_tmpl_netsim_scenarios builds its map step template", {
   expect_true(any(grepl("Rscript", step$instructions)))
 
   map <- step$map
-  expect_identical(map$FUN, EpiModel::netsim_run_one_scenario)
+  expect_identical(map$FUN, EpiModel::internal_run_batch)
   expect_equal(map$dots$batch_num, c(1L, 2L))
-  # the step adds the HPC libraries, as `EpiModel::netsim_scenarios_setup()`
+  # the step adds the HPC libraries, as `EpiModel::internal_scenarios_setup()`
   # no longer does
   expect_equal(
     map$MoreArgs$libraries,
@@ -99,8 +99,11 @@ test_that("step_tmpl_merge_netsim_scenarios_tibble builds its do_call step", {
 
   step <- run_step_tmpl(step_tmpl)
   do_call <- step$do_call
-  expect_length(do_call$args, 5)
-  expect_equal(do_call$args[[3]], 5)
+  expect_named(
+    do_call$args,
+    c("sim_dir", "output_dir", "steps_to_keep", "cols", "n_cores")
+  )
+  expect_equal(do_call$args$steps_to_keep, 5)
 })
 
 test_that("step_tmpl_netsim_swfcalib_output builds its map step template", {
