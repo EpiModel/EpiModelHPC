@@ -24,7 +24,7 @@ step_tmpl_netsim_scenarios <- function(path_to_x, param, init, control,
                                        setup_lines = NULL,
                                        max_array_size = NULL, ...) {
   control$future.use.plan <- EpiModel::internal_batch_plan(
-    control = control, strategy = future::multicore, n_cores = n_cores
+    control, future::multicore, n_cores
   )
 
   # `EpiModel::internal_scenarios_setup()` does not add the HPC libraries to

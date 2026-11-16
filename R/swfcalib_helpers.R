@@ -80,7 +80,7 @@ step_tmpl_netsim_swfcalib_output <- function(path_to_x, param, init, control,
                                              setup_lines = NULL,
                                              max_array_size = NULL) {
   control$future.use.plan <- EpiModel::internal_batch_plan(
-    control = control, strategy = future::multicore, n_cores = n_cores
+    control, future::multicore, n_cores
   )
 
   p_list <- netsim_swfcalib_output_setup(

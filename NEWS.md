@@ -18,7 +18,6 @@
 - `EpiModel::validate_restart_pool()` checks a pool before use: a file for each element of `pool_index.csv`, each a single simulation restart point made with the installed EpiModel major.minor version, all with the same number of time steps. It returns a table of the elements (number of simulations, number of time steps kept).
 - `EpiModel::netsim_path_wrapper()` runs one `netsim()` call per simulation, from a pool or from a single file, and is what every batch of `EpiModel::netsim_scenarios()`, `step_tmpl_netsim_scenarios()` and the `swfcalib` output runners runs. Batches are then merged with `merge()`. Before running from a pool, it checks from `pool_index.csv` that the elements it uses were made with the installed EpiModel major.minor version.
 - `EpiModel::merge_netsim_scenarios()` and `step_tmpl_merge_netsim_scenarios()` gain the `keep.run`, `keep.cumulative.edgelist` and `keep.attr.history` arguments of `merge.netsim()`.
-- `step_tmpl_merge_netsim_scenarios()` and `step_tmpl_merge_netsim_scenarios_tibble()` set `options(future.globals.maxSize = Inf)` in their merge step, which `EpiModel::merge_netsim_scenarios()` and `EpiModel::merge_netsim_scenarios_tibble()` no longer do.
 
 ## BUG FIXES
 
