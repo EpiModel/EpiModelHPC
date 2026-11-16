@@ -13,7 +13,7 @@
 #' @inheritParams slurmworkflow::step_tmpl_map
 #' @inheritParams EpiModel::netsim_scenarios
 #'
-#' @inheritSection EpiModel::internal_run_batch Checkpointing
+#' @inheritSection EpiModel::.run_batch Checkpointing
 #' @inherit slurmworkflow::step_tmpl_rscript return
 #' @inheritSection slurmworkflow::step_tmpl_bash_lines Step Template
 #'
@@ -23,13 +23,13 @@ step_tmpl_netsim_scenarios <- function(path_to_x, param, init, control,
                                        output_dir, libraries = NULL,
                                        setup_lines = NULL,
                                        max_array_size = NULL, ...) {
-  control$future.use.plan <- EpiModel::internal_batch_plan(
+  control$future.use.plan <- EpiModel::.batch_plan(
     control, future::multicore, n_cores
   )
 
-  # `EpiModel::internal_scenarios_setup()` does not add the HPC libraries to
+  # `EpiModel::.scenarios_setup()` does not add the HPC libraries to
   # `libraries`: the step runs on the HPC, so they are needed here.
-  p_list <- EpiModel::internal_scenarios_setup(
+  p_list <- EpiModel::.scenarios_setup(
     path_to_x = path_to_x,
     param = param,
     init = init,
@@ -47,7 +47,7 @@ step_tmpl_netsim_scenarios <- function(path_to_x, param, init, control,
   )
 
   slurmworkflow::step_tmpl_map(
-    FUN = EpiModel::internal_run_batch,
+    FUN = EpiModel::.run_batch,
     scenario = p_list$scenarios_list,
     batch_num = p_list$batchs_list,
     MoreArgs = p_list$MoreArgs,

@@ -1,13 +1,13 @@
 #' Run one `netsim` call with the result of an `swfcalib` calibration
 #'
 #' @inheritParams swfcalib::calibration_step1
-#' @inheritParams EpiModel::internal_run_batch
+#' @inheritParams EpiModel::.run_batch
 netsim_run_swfcalib_scenario <- function(calib_object, batch_num,
                                          path_to_x, param, init, control,
                                          libraries, output_dir,
                                          n_batch, n_rep, n_cores) {
   scenario <- make_calibrated_scenario(calib_object)
-  EpiModel::internal_run_batch(
+  EpiModel::.run_batch(
     scenario = scenario,
     batch_num = batch_num,
     path_to_x = path_to_x,
@@ -35,14 +35,14 @@ make_calibrated_scenario <- function(calib_object) {
 #' Helper function to  create the parameters for `netsim_run_swfcalib_scenario`
 #'
 #' @inheritParams swfcalib::calibration_step1
-#' @inheritParams EpiModel::internal_scenarios_setup
+#' @inheritParams EpiModel::.scenarios_setup
 netsim_swfcalib_output_setup <- function(path_to_x, param, init, control,
                                          calib_object, n_rep, n_cores,
                                          output_dir, libraries) {
   scenarios_list <- NULL
-  # `EpiModel::internal_scenarios_setup()` does not add the HPC libraries to
+  # `EpiModel::.scenarios_setup()` does not add the HPC libraries to
   # `libraries`: the calibration output runs on the HPC.
-  p_list <- EpiModel::internal_scenarios_setup(
+  p_list <- EpiModel::.scenarios_setup(
     path_to_x = path_to_x,
     param = param,
     init = init,
@@ -69,7 +69,7 @@ netsim_swfcalib_output_setup <- function(path_to_x, param, init, control,
 #' @inheritParams step_tmpl_netsim_scenarios
 #' @inheritParams swfcalib::calibration_step1
 #'
-#' @inheritSection EpiModel::internal_run_batch Checkpointing
+#' @inheritSection EpiModel::.run_batch Checkpointing
 #' @inherit slurmworkflow::step_tmpl_rscript return
 #' @inheritSection slurmworkflow::step_tmpl_bash_lines Step Template
 #'
@@ -79,7 +79,7 @@ step_tmpl_netsim_swfcalib_output <- function(path_to_x, param, init, control,
                                              output_dir, libraries = NULL,
                                              setup_lines = NULL,
                                              max_array_size = NULL) {
-  control$future.use.plan <- EpiModel::internal_batch_plan(
+  control$future.use.plan <- EpiModel::.batch_plan(
     control, future::multicore, n_cores
   )
 
@@ -119,7 +119,7 @@ step_tmpl_netsim_swfcalib_output <- function(path_to_x, param, init, control,
 #' @inheritParams EpiModel::netsim_scenarios
 #' @inheritParams swfcalib::calibration_step1
 #'
-#' @inheritSection EpiModel::internal_run_batch Checkpointing
+#' @inheritSection EpiModel::.run_batch Checkpointing
 #' @inherit slurmworkflow::step_tmpl_rscript return
 #' @inheritSection slurmworkflow::step_tmpl_bash_lines Step Template
 #'

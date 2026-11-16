@@ -61,9 +61,9 @@ test_that("step_tmpl_netsim_scenarios builds its map step template", {
   expect_true(any(grepl("Rscript", step$instructions)))
 
   map <- step$map
-  expect_identical(map$FUN, EpiModel::internal_run_batch)
+  expect_identical(map$FUN, EpiModel::.run_batch)
   expect_equal(map$dots$batch_num, c(1L, 2L))
-  # the step adds the HPC libraries, as `EpiModel::internal_scenarios_setup()`
+  # the step adds the HPC libraries, as `EpiModel::.scenarios_setup()`
   # no longer does
   expect_equal(
     map$MoreArgs$libraries,
