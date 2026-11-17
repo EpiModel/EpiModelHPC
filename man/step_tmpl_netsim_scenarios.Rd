@@ -13,7 +13,6 @@ step_tmpl_netsim_scenarios(
   n_rep,
   n_cores,
   output_dir,
-  libraries = NULL,
   setup_lines = NULL,
   max_array_size = NULL,
   ...
@@ -50,9 +49,6 @@ For extended models, custom module functions are also passed here.}
 \item{n_cores}{The number of CPUs on which the simulations will be run.}
 
 \item{output_dir}{The folder where the simulation files are to be stored.}
-
-\item{libraries}{A character vector containing the name of the libraries
-required for the model to run. (e.g. EpiModelHIV or EpiModelCOVID)}
 
 \item{setup_lines}{(optional) a vector of bash lines to be run first.
 This can be used to load the required modules (like R, python, etc).}

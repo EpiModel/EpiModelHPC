@@ -20,15 +20,20 @@
 #' @export
 step_tmpl_netsim_scenarios <- function(path_to_x, param, init, control,
                                        scenarios_list, n_rep, n_cores,
-                                       output_dir, libraries = NULL,
+                                       output_dir,
                                        setup_lines = NULL,
                                        max_array_size = NULL, ...) {
+  if ("libraries" %in% names(list(...))) {
+    warning(
+      "`libraries` was removed and is ignored. Call package functions with ",
+      "`pkg::` in module code.",
+      call. = FALSE
+    )
+  }
   control$future.use.plan <- EpiModel::.batch_plan(
     control, future::multicore, n_cores
   )
 
-  # `EpiModel::.scenarios_setup()` does not add the HPC libraries to
-  # `libraries`: the step runs on the HPC, so they are needed here.
   p_list <- EpiModel::.scenarios_setup(
     path_to_x = path_to_x,
     param = param,
@@ -37,8 +42,7 @@ step_tmpl_netsim_scenarios <- function(path_to_x, param, init, control,
     scenarios_list = scenarios_list,
     n_rep = n_rep,
     n_cores = n_cores,
-    output_dir = output_dir,
-    libraries = c("slurmworkflow", "EpiModelHPC", libraries)
+    output_dir = output_dir
   )
 
   message(

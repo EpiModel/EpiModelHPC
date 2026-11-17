@@ -50,8 +50,7 @@ test_that("step_tmpl_netsim_scenarios builds its map step template", {
     control = test_control(),
     scenarios_list = scenarios_list,
     n_rep = 2, n_cores = 1,
-    output_dir = tempfile("scen_out_"),
-    libraries = "mypkg"
+    output_dir = tempfile("scen_out_")
   )
 
   expect_type(step_tmpl, "closure")
@@ -63,12 +62,7 @@ test_that("step_tmpl_netsim_scenarios builds its map step template", {
   map <- step$map
   expect_identical(map$FUN, EpiModel::.run_batch)
   expect_equal(map$dots$batch_num, c(1L, 2L))
-  # the step adds the HPC libraries, as `EpiModel::.scenarios_setup()`
-  # no longer does
-  expect_equal(
-    map$MoreArgs$libraries,
-    c("slurmworkflow", "EpiModelHPC", "mypkg")
-  )
+  expect_false("libraries" %in% names(map$MoreArgs))
 })
 
 test_that("step_tmpl_merge_netsim_scenarios passes its arguments by name", {
@@ -124,7 +118,7 @@ test_that("step_tmpl_netsim_swfcalib_output builds its map step template", {
   expect_identical(map$FUN, netsim_run_swfcalib_scenario)
   expect_equal(map$dots$batch_num, 1L)
   expect_equal(map$MoreArgs$calib_object, "calib_object.rds")
-  expect_equal(map$MoreArgs$libraries, c("slurmworkflow", "EpiModelHPC"))
+  expect_false("libraries" %in% names(map$MoreArgs))
 })
 
 test_that("the swfcalib output setup rejects raw.output", {
@@ -136,8 +130,7 @@ test_that("the swfcalib output setup rejects raw.output", {
       control = test_control(raw.output = TRUE),
       calib_object = "calib_object.rds",
       n_rep = 1, n_cores = 1,
-      output_dir = tempfile("swf_out_"),
-      libraries = NULL
+      output_dir = tempfile("swf_out_")
     ),
     "raw.output"
   )

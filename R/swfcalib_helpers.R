@@ -4,7 +4,7 @@
 #' @inheritParams EpiModel::.run_batch
 netsim_run_swfcalib_scenario <- function(calib_object, batch_num,
                                          path_to_x, param, init, control,
-                                         libraries, output_dir,
+                                         output_dir,
                                          n_batch, n_rep, n_cores) {
   scenario <- make_calibrated_scenario(calib_object)
   EpiModel::.run_batch(
@@ -14,7 +14,6 @@ netsim_run_swfcalib_scenario <- function(calib_object, batch_num,
     param = param,
     init = init,
     control = control,
-    libraries = libraries,
     output_dir = output_dir,
     n_batch = n_batch,
     n_rep = n_rep,
@@ -38,10 +37,8 @@ make_calibrated_scenario <- function(calib_object) {
 #' @inheritParams EpiModel::.scenarios_setup
 netsim_swfcalib_output_setup <- function(path_to_x, param, init, control,
                                          calib_object, n_rep, n_cores,
-                                         output_dir, libraries) {
+                                         output_dir) {
   scenarios_list <- NULL
-  # `EpiModel::.scenarios_setup()` does not add the HPC libraries to
-  # `libraries`: the calibration output runs on the HPC.
   p_list <- EpiModel::.scenarios_setup(
     path_to_x = path_to_x,
     param = param,
@@ -50,8 +47,7 @@ netsim_swfcalib_output_setup <- function(path_to_x, param, init, control,
     scenarios_list = scenarios_list,
     n_rep = n_rep,
     n_cores = n_cores,
-    output_dir = output_dir,
-    libraries = c("slurmworkflow", "EpiModelHPC", libraries)
+    output_dir = output_dir
   )
   p_list$scenarios_list <- NULL
   p_list$MoreArgs$calib_object <- calib_object
@@ -76,7 +72,7 @@ netsim_swfcalib_output_setup <- function(path_to_x, param, init, control,
 #' @export
 step_tmpl_netsim_swfcalib_output <- function(path_to_x, param, init, control,
                                              calib_object, n_rep, n_cores,
-                                             output_dir, libraries = NULL,
+                                             output_dir,
                                              setup_lines = NULL,
                                              max_array_size = NULL) {
   control$future.use.plan <- EpiModel::.batch_plan(
@@ -91,8 +87,7 @@ step_tmpl_netsim_swfcalib_output <- function(path_to_x, param, init, control,
     calib_object = calib_object,
     n_rep = n_rep,
     n_cores = n_cores,
-    output_dir = output_dir,
-    libraries = libraries
+    output_dir = output_dir
   )
 
   slurmworkflow::step_tmpl_map(
@@ -126,7 +121,7 @@ step_tmpl_netsim_swfcalib_output <- function(path_to_x, param, init, control,
 #' @export
 netsim_swfcalib_output <- function(path_to_x, param, init, control,
                                    calib_object, n_rep, n_cores,
-                                   output_dir, libraries = NULL) {
+                                   output_dir) {
   p_list <- netsim_swfcalib_output_setup(
     path_to_x = path_to_x,
     param = param,
@@ -135,8 +130,7 @@ netsim_swfcalib_output <- function(path_to_x, param, init, control,
     calib_object = calib_object,
     n_rep = n_rep,
     n_cores = n_cores,
-    output_dir = output_dir,
-    libraries = libraries
+    output_dir = output_dir
   )
 
   for (batch in p_list$batchs_list) {
