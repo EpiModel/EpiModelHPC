@@ -3,9 +3,10 @@ Version: 2.10.0
 Date: 2026-11-13
 Title: EpiModel Extensions for High-Performance Computing
 Description: Extension package to EpiModel to run large-scale stochastic network
-    models on modern high-performance computing systems. Provides scenario-based
-    batch simulation, helpers for building 'slurmworkflow' job workflows and
-    'swfcalib' calibrations, cluster configuration presets, and shell tooling for
+    models on modern high-performance computing systems. Provides 'slurmworkflow'
+    job workflow step templates for scenario-based batch simulation with
+    'EpiModel', helpers for building 'slurmworkflow' workflows and 'swfcalib'
+    calibrations, cluster configuration presets, and shell tooling for
     detecting and recovering degenerate SLURM tasks.
 Maintainer: Samuel Jenness <samuel.m.jenness@emory.edu>
 Authors@R: c(person("Samuel", "Jenness",
@@ -15,20 +16,16 @@ URL: https://www.epimodel.org/, https://epimodel.github.io/EpiModelHPC/
 BugReports: https://github.com/EpiModel/EpiModelHPC/issues
 Depends:
     R (>= 4.1),
-    EpiModel (>= 2.7.0)
+    EpiModel (>= 2.7.1)
 Imports:
-    callr,
     dplyr,
-    fs,
     future,
-    future.apply,
     rlang,
     slurmworkflow,
-    stringr,
     swfcalib,
-    tidyselect,
     utils
 Suggests:
+    fs,
     knitr,
     rmarkdown,
     testthat
