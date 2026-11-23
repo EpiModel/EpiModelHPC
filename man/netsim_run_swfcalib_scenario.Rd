@@ -11,7 +11,6 @@ netsim_run_swfcalib_scenario(
   param,
   init,
   control,
-  libraries,
   output_dir,
   n_batch,
   n_rep,
@@ -25,8 +24,8 @@ netsim_run_swfcalib_scenario(
 and CPUs required.}
 
 \item{path_to_x}{Path to a fitted network model or a restart point saved
-with \code{saveRDS} (See the \code{x} argument to the \code{EpiModel::netsim}
-function), or to a restart pool directory (see \code{make_restart_pool}).}
+with \code{saveRDS} (See the \code{x} argument to the \code{\link[EpiModel:netsim]{netsim()}} function), or to a
+restart pool directory (see \code{\link[EpiModel:make_restart_pool]{make_restart_pool()}}).}
 
 \item{param}{Model parameters, as an object of class \code{\link[EpiModel]{param.net}}.
 Includes transmission probability (\code{inf.prob}), act rate
@@ -45,9 +44,6 @@ Key settings include \code{type} (disease model: \code{"SI"}, \code{"SIR"}, or
 simulations), \code{tergmLite} (lightweight mode for performance), and
 \code{resimulate.network} (required for models with vital dynamics).
 For extended models, custom module functions are also passed here.}
-
-\item{libraries}{A character vector containing the name of the libraries
-required for the model to run. (e.g. EpiModelHIV or EpiModelCOVID)}
 
 \item{output_dir}{The folder where the simulation files are to be stored.}
 

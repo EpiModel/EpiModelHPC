@@ -13,15 +13,14 @@ step_tmpl_netsim_swfcalib_output(
   n_rep,
   n_cores,
   output_dir,
-  libraries = NULL,
   setup_lines = NULL,
   max_array_size = NULL
 )
 }
 \arguments{
 \item{path_to_x}{Path to a fitted network model or a restart point saved
-with \code{saveRDS} (See the \code{x} argument to the \code{EpiModel::netsim}
-function), or to a restart pool directory (see \code{make_restart_pool}).}
+with \code{saveRDS} (See the \code{x} argument to the \code{\link[EpiModel:netsim]{netsim()}} function), or to a
+restart pool directory (see \code{\link[EpiModel:make_restart_pool]{make_restart_pool()}}).}
 
 \item{param}{Model parameters, as an object of class \code{\link[EpiModel]{param.net}}.
 Includes transmission probability (\code{inf.prob}), act rate
@@ -49,9 +48,6 @@ For extended models, custom module functions are also passed here.}
 
 \item{output_dir}{The folder where the simulation files are to be stored.}
 
-\item{libraries}{A character vector containing the name of the libraries
-required for the model to run. (e.g. EpiModelHIV or EpiModelCOVID)}
-
 \item{setup_lines}{(optional) a vector of bash lines to be run first.
 This can be used to load the required modules (like R, python, etc).}
 
@@ -66,19 +62,21 @@ a template function to be used by \code{add_workflow_step}
 }
 \description{
 The simulations of a batch are run in parallel, one \code{netsim} call per
-simulation (see \code{netsim_path_wrapper}), by default with
+simulation (see \code{EpiModel::netsim_path_wrapper()}), by default with
 \code{future::plan("multicore", workers = n_cores)}.
 Using \verb{control$future.use.plan <- future::tweak(<your plan>)} will bypass
 this setting.
 }
 \section{Checkpointing}{
 
+
 This function takes care of editing \code{.checkpoint.dir} to create unique sub
 directories for each scenario, batch and simulation:
 "<.checkpoint.dir>/sim__\if{html}{\out{<scenario id>}}__<batch_num>/sim_\if{html}{\out{<k>}}". The
-\code{EpiModel::control.net} way of setting up checkpoints can be used
+\code{control.net} way of setting up checkpoints can be used
 transparently. Unless \code{.checkpoint.keep} is \code{TRUE}, the batch directory is
 removed once the batch file is saved.
+
 }
 
 \section{Step Template}{
