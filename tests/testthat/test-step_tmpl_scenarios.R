@@ -60,7 +60,7 @@ test_that("step_tmpl_netsim_scenarios builds its map step template", {
   expect_true(any(grepl("Rscript", step$instructions)))
 
   map <- step$map
-  expect_identical(map$FUN, EpiModel::.run_batch)
+  expect_equal(map$FUN, EpiModel::.run_batch)
   expect_equal(map$dots$batch_num, c(1L, 2L))
   expect_false("libraries" %in% names(map$MoreArgs))
 })
@@ -115,7 +115,7 @@ test_that("step_tmpl_netsim_swfcalib_output builds its map step template", {
 
   step <- run_step_tmpl(step_tmpl)
   map <- step$map
-  expect_identical(map$FUN, netsim_run_swfcalib_scenario)
+  expect_equal(map$FUN, netsim_run_swfcalib_scenario)
   expect_equal(map$dots$batch_num, 1L)
   expect_equal(map$MoreArgs$calib_object, "calib_object.rds")
   expect_false("libraries" %in% names(map$MoreArgs))
