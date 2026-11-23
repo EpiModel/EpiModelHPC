@@ -30,6 +30,7 @@ Suggests:
     rmarkdown,
     testthat
 Remotes:
+ github::EpiModel/EpiModel,
  github::EpiModel/slurmworkflow,
  github::EpiModel/swfcalib
 VignetteBuilder: knitr
